@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import YouTube from 'react-youtube';
+import Image from 'next/image';
 
 interface YouTubePlayerProps {
     videoId?: string;
@@ -56,10 +57,12 @@ export const YouTubePlayer = ({
                 className={`${className} relative cursor-pointer`}
                 onClick={() => setShowPlayer(true)}
             >
-                <img
-                    src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                <Image
+                    src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                     alt="Video thumbnail"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    priority
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-12 bg-red-600 rounded-lg flex items-center justify-center">

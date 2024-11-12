@@ -41,11 +41,20 @@ interface ReportingTransparency {
     conflictOfInterestDisclosed?: boolean;
 }
 
+type HierarchyOfEvidence =
+    | "Systematic Reviews and Meta-Analyses"
+    | "Randomized Controlled Trials (RCTs)"
+    | "Cohort Studies"
+    | "Case-Control Studies"
+    | "Cross-Sectional Studies"
+    | "Case Reports and Case Series"
+    | "Expert Opinion and Editorials";
+
 interface StudyClassification {
     type?: string;
     methodology?: Methodology;
     externalValidity?: ExternalValidity;
-    hierarchyOfEvidence?: string;
+    hierarchyOfEvidence?: HierarchyOfEvidence;
     statisticalAnalysis?: StatisticalAnalysis;
     peerReviewPublication?: PeerReviewPublication;
     reportingTransparency?: ReportingTransparency;
@@ -106,7 +115,7 @@ export function calculateEvidenceScore(payload: Payload): any {
     };
     const externalValidityTotal = Object.values(externalValidityScores).reduce((a, b) => a + b, 0);
 
-    const hierarchyOfEvidenceScores = {
+    const hierarchyOfEvidenceScores: Record<HierarchyOfEvidence, number> = {
         "Systematic Reviews and Meta-Analyses": 100,
         "Randomized Controlled Trials (RCTs)": 90,
         "Cohort Studies": 70,
@@ -115,7 +124,8 @@ export function calculateEvidenceScore(payload: Payload): any {
         "Case Reports and Case Series": 30,
         "Expert Opinion and Editorials": 10
     };
-    const hierarchyOfEvidenceScore = hierarchyOfEvidenceScores[payload.studyClassification?.hierarchyOfEvidence || ""] || 0;
+    const hierarchyOfEvidenceScore = (payload.studyClassification?.hierarchyOfEvidence &&
+        hierarchyOfEvidenceScores[payload.studyClassification.hierarchyOfEvidence]) || 0;
 
     const totalScore = methodologyTotal + statisticalAnalysisTotal + reportingTransparencyTotal + peerReviewPublicationTotal + externalValidityTotal + hierarchyOfEvidenceScore;
 

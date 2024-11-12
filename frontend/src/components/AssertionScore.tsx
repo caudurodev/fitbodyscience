@@ -1,8 +1,16 @@
-
 import { Chip } from "@nextui-org/react";
 import { useScore } from '@/hooks/useScore';
 
-export const AssertionComponent = ({ assertion }) => {
+interface Assertion {
+    text: string;
+    // Add other assertion properties as needed
+}
+
+interface AssertionComponentProps {
+    assertion: Assertion | null;
+}
+
+export const AssertionComponent = ({ assertion }: AssertionComponentProps) => {
     const { getAssertionScore } = useScore();
     const score = getAssertionScore(assertion);
     console.log('score', score);

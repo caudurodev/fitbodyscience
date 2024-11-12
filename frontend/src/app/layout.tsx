@@ -1,17 +1,13 @@
 "use client"
 
 import { Work_Sans } from "next/font/google";
-import { NhostClient, NhostProvider } from "@nhost/nextjs";
+import { NhostProvider } from "@nhost/nextjs";
 import { NextUIProvider } from '@nextui-org/react'
 import { NhostApolloProvider } from '@nhost/react-apollo'
 import { Header } from "@/components/Navigation/Header";
 import { useHydration } from '@/hooks/useHydration'
 import "./globals.css";
-
-export const nhost = new NhostClient({
-  subdomain: process.env.NEXT_PUBLIC_NHOST_SUBDOMAIN,
-  region: process.env.NEXT_PUBLIC_NHOST_REGION,
-})
+import { nhost } from '@/utils/nhost';
 
 const font = Work_Sans({ subsets: ["latin"] });
 

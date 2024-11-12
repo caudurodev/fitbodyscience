@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { calculateEvidenceScore } from '@/scoring/score'
 import { Chip } from "@nextui-org/react";
 
-export const StudyClassification = ({ paperClassification }) => {
+export const StudyClassification = ({ paperClassification }: { paperClassification: any }) => {
     const [scores, setScores] = useState(null)
     useEffect(() => {
         if (!!paperClassification) {

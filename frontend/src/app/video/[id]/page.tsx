@@ -11,7 +11,7 @@ import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useState } from 'react'
 import YouTubePlayer from '@/components/YouTubePlayer';
 
-export const VideoPage = ({ params }: { params: { id: string } }) => {
+const VideoPage = ({ params }: { params: { id: string } }) => {
     const { data } = useSubscription(
         GET_CONTENT_SUBSCRIPTION,
         {
@@ -102,7 +102,7 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
                             >
                                 <h4 className="uppercase text-tiny my-3">Breakdown of argument</h4>
                                 {
-                                    assertions_contents?.length > 0 && assertions_contents.map((assertions_content, index) => (
+                                    assertions_contents?.length > 0 && assertions_contents.map((assertions_content: any, index: number) => (
                                         <Card className="mb-4" key={`assertion_content_${index}`}>
                                             <CardBody >
                                                 <Link
@@ -148,7 +148,7 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
                                                 </div>
                                                 <div className="block mt-3">
                                                     {
-                                                        assertions_content?.assertion?.contents_assertions.map((o, i) => (
+                                                        assertions_content?.assertion?.contents_assertions.map((o: any, i: number) => (
                                                             <Chip
                                                                 key={i}
                                                                 color={o?.is_pro_assertion === true ? 'success' : 'danger'}
@@ -190,7 +190,7 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
                             <Spinner />
                         }
                         <ul className="my-4">
-                            {assertions_contents?.length > 0 && assertions_contents.map((assertions_content, index) => {
+                            {assertions_contents?.length > 0 && assertions_contents.map((assertions_content: any, index: number) => {
                                 return (
                                     <li key={index} className="mb-16">
                                         <div className="m-8">
@@ -219,7 +219,7 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
                                             />
                                             {/* <h5 className=" text-sm my-4 font-bold">ass id: {assertions_content.assertion.id}</h5> */}
                                             <h5 className="font-bold uppercase text-sm my-4">The author said (time: {assertions_content?.video_timestamp}):</h5>
-                                            <p className="text-xl italic">"{assertions_content?.assertion.original_sentence}"</p>
+                                            <p className="text-xl italic">&quot;{assertions_content?.assertion.original_sentence}&quot;</p>
                                             {/* <h4 className="text-sm">SEARCH: {assertions_content?.assertion?.assertion_search_verify}</h4> */}
                                             {/* <h5 className="font-bold uppercase text-sm my-4">What author cites as evidence</h5> */}
                                             {/* <p>{assertions_content.assertion.evidence_type}</p> */}
@@ -231,7 +231,7 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
                                                 <>
                                                     {
                                                         assertions_content?.assertion?.contents_assertions.map(
-                                                            (o, i) => (
+                                                            (o: any, i: number) => (
                                                                 <div key={i} id={`assertion_${i}`} className="my-4">
                                                                     <div className="my-3">
                                                                         <Chip
@@ -299,6 +299,5 @@ export const VideoPage = ({ params }: { params: { id: string } }) => {
         </main >
     );
 }
-
 
 export default VideoPage

@@ -25,7 +25,7 @@ export default function Home() {
     reset,
   } = useForm()
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: any) => {
     try {
       console.log({ data })
       const result = await addVideoMutation({

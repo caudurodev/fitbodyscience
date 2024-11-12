@@ -57,15 +57,15 @@ interface MainContent {
 // Helper function to calculate the evidence score
 export function calculateFromEvidencesScore(evidences: Evidence[]): number {
     if (evidences.length === 0) return 0;
-    const validEvidences = evidences.filter(evidence => !!calculateEvidenceScore(evidence)?.normalizedScore);
+    const validEvidences = evidences.filter((evidence: any) => !!calculateEvidenceScore(evidence)?.normalizedScore);
     let highestScore = 0;
-    validEvidences.forEach(evidence => {
+    validEvidences.forEach((evidence: any) => {
         let { normalizedScore } = calculateEvidenceScore(evidence);
         if (normalizedScore > highestScore) {
             highestScore = normalizedScore;
         }
     });
-    const distinctEvidenceTypes = new Set(validEvidences.map(evidence => {
+    const distinctEvidenceTypes = new Set(validEvidences.map((evidence: any) => {
         return evidence.studyClassification.type
     })).size;
     const additionalPoints = (distinctEvidenceTypes - 1) * 5; // Add points for each additional distinct evidence type of ranked evidence
@@ -107,7 +107,7 @@ export function calculateAggregateScore(mainContent: MainContent) {
     let totalAssertionsAgainst = 0;
     let additionaPointsMoreAssertionsAgainst = 0;
 
-    mainContent.assertions_contents.forEach(({ assertion, weight_conclusion }) => {
+    mainContent.assertions_contents.forEach(({ assertion, weight_conclusion }: any) => {
         const { pro, against } = calculateAssertionScore(assertion);
         const maxWeight = 10
         const multiplier = (1 + (maxWeight - weight_conclusion) / maxWeight)

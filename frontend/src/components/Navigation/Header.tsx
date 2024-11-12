@@ -86,7 +86,7 @@ export const Header = () => {
                             href="#"
                             size="lg"
                         >
-                            {item}
+                            {item.label}
                         </Link>
                     </NavbarMenuItem>
                 ))}
