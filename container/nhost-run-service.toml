@@ -1,0 +1,33 @@
+name = 'ai-fitbodyscience'
+
+[image]
+image = 'ai-fitbodyscience-dev:latest'
+
+[[environment]]
+
+name = 'ADM_CUSTOM'
+value = 'nhost-admin-secret'
+
+name='GRAPHQL_URL'
+value ='https://local.graphql.nhost.run/v1'
+
+name = 'STORAGE_URL'
+value = 'https://local.storage.nhost.run/v1'
+
+name = 'VERIFY_SSL_LOCAL_DEV'
+value= 'False'
+
+name = 'LOG_LEVEL'
+value = 'DEBUG'
+
+[[ports]]
+port = 5001
+type = 'http'
+publish = true
+
+[resources]
+replicas = 1
+
+[resources.compute]
+cpu = 62
+memory = 128

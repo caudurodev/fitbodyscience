@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  ai-fitbodyscience:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: run-ai-fitbodyscience
+    image: run-ai-fitbodyscience:latest
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./app:/app
+    environment:
+      - OPENAI_API_KEY
+      - FLASK_APP=main.py
+      - FLASK_RUN_HOST=0.0.0.0
+      - FLASK_ENV=production
+      - LITELLMAI_PROVIDER=ollama
+    command: ["flask", "run"]
+
+
+volumes:
+  postgres_data:

@@ -1,0 +1,260 @@
+table:
+  name: content
+  schema: public
+array_relationships:
+  - name: assertions
+    using:
+      foreign_key_constraint_on:
+        column: citation_content_id
+        table:
+          name: assertions
+          schema: public
+  - name: assertionsByContentId
+    using:
+      foreign_key_constraint_on:
+        column: content_id
+        table:
+          name: assertions
+          schema: public
+  - name: assertions_contents
+    using:
+      foreign_key_constraint_on:
+        column: content_id
+        table:
+          name: assertions_content
+          schema: public
+  - name: contentRelationshipsByChildContentId
+    using:
+      foreign_key_constraint_on:
+        column: child_content_id
+        table:
+          name: content_relationship
+          schema: public
+  - name: content_relationships
+    using:
+      foreign_key_constraint_on:
+        column: parent_content_id
+        table:
+          name: content_relationship
+          schema: public
+  - name: contents_assertions
+    using:
+      foreign_key_constraint_on:
+        column: content_id
+        table:
+          name: contents_assertion
+          schema: public
+  - name: parent_content
+    using:
+      manual_configuration:
+        column_mapping:
+          id: child_content_id
+        insertion_order: null
+        remote_table:
+          name: content_relationship
+          schema: public
+insert_permissions:
+  - role: public
+    permission:
+      check: {}
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+    comment: ""
+  - role: user
+    permission:
+      check: {}
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+    comment: ""
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: public
+    permission:
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+      filter: {}
+      check: {}
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - is_parsed
+        - crossref_info
+        - science_paper_classification
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+      filter: {}
+      check: {}
+    comment: ""
+delete_permissions:
+  - role: public
+    permission:
+      filter: {}
+    comment: ""
+  - role: user
+    permission:
+      filter: {}
+    comment: ""
+event_triggers:
+  - name: on_insert_contents
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: http://run-ai-fitbodyscience:5000/on_insert_content
+  - name: on_update_contents
+    definition:
+      enable_manual: false
+      update:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: http://run-ai-fitbodyscience:5000/on_update_content

@@ -1,0 +1,12 @@
+-- First drop all existing tables in public schema
+DROP TABLE IF EXISTS public.contents_assertion CASCADE;
+DROP TABLE IF EXISTS public.assertions_content CASCADE;
+DROP TABLE IF EXISTS public.content_relationship CASCADE;
+DROP TABLE IF EXISTS public.assertions CASCADE;
+DROP TABLE IF EXISTS public.content CASCADE;
+
+-- Then you can drop and recreate the public schema
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+ALTER SCHEMA public OWNER TO pg_database_owner;
+COMMENT ON SCHEMA public IS 'standard public schema';

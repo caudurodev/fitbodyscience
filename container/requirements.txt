@@ -1,0 +1,21 @@
+Flask
+Flask[async]
+flask-cors
+requests
+# http
+python-dotenv
+openai
+groq
+together
+
+yt_dlp
+youtube-transcript-api
+tiktoken
+
+newspaper3k
+lxml_html_clean
+bs4
+PyMuPDF
+py2neo
+
+crewai[tools]

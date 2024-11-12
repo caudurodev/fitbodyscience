@@ -1,0 +1,13 @@
+actions:
+  - name: recalculateAggregateScore
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/recalculate_aggregate_score
+      timeout: 120
+    comment: recalculate_aggregate_score
+custom_types:
+  enums: []
+  input_objects: []
+  objects:
+    - name: RecalculateAggregateScoreOutput
+  scalars: []

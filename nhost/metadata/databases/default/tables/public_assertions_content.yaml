@@ -1,0 +1,128 @@
+table:
+  name: assertions_content
+  schema: public
+object_relationships:
+  - name: assertion
+    using:
+      foreign_key_constraint_on: assertion_id
+  - name: content
+    using:
+      foreign_key_constraint_on: content_id
+insert_permissions:
+  - role: public
+    permission:
+      check: {}
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+    comment: ""
+  - role: user
+    permission:
+      check: {}
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+    comment: ""
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+update_permissions:
+  - role: public
+    permission:
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+      filter: {}
+      check: {}
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - is_pro_content
+        - weight_conclusion
+        - assertion_context
+        - original_sentence
+        - video_timestamp
+        - why_not_relevant
+        - why_relevant
+        - date_created
+        - date_last_modified
+        - assertion_id
+        - content_id
+        - id
+      filter: {}
+      check: {}
+    comment: ""
+delete_permissions:
+  - role: public
+    permission:
+      filter: {}
+    comment: ""
+  - role: user
+    permission:
+      filter: {}
+    comment: ""

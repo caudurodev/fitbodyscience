@@ -1,0 +1,6 @@
+# pipenv
+# pylint
+# pycodestyle
+# mypy
+# debugpy
+# autopep8

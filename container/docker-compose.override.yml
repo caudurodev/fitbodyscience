@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  ai-fitbodyscience-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: run-ai-fitbodyscience
+    image: run-ai-fitbodyscience:latest
+    env_file:
+      - .env
+    ports:
+      - "5001:5000"
+      - "5678:5678"
+    volumes:
+      - ./app:/app
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    command: ["python", "-Xfrozen_modules=off", "-m", "flask", "run", "--host=0.0.0.0",  "--reload"]
+  
+
+volumes:
+  postgres_data:
