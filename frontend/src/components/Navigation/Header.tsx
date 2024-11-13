@@ -1,7 +1,10 @@
 'use client'
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from '@iconify/react'
 import { useRouter } from 'next/navigation'
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { useResponsive } from "@/hooks/useResponsive";
 
 import {
     Navbar, NavbarBrand, Input, NavbarContent,
@@ -10,28 +13,39 @@ import {
 
 export const Header = () => {
     const router = useRouter()
+    const { isMobile } = useResponsive()
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const menuItems = [
-        { label: "Add", route: "/add" },
         { label: "Browse", route: "/" },
+        { label: "Add", route: "/add" },
     ];
 
     return (
-        <Navbar onMenuOpenChange={setIsMenuOpen} isBordered className="bg-black">
-            <NavbarContent>
-                <NavbarMenuToggle
-                    aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-                    className="sm:hidden"
-                />
-                <NavbarBrand>
-                    <Button
+        <Navbar
+            maxWidth="2xl"
+            onMenuOpenChange={setIsMenuOpen}
+            isBlurred={false}
+            className="sm:mb-16 mb-8"
+        >
+            <NavbarContent className="-ml-[20px]">
+                {isMobile &&
+                    <NavbarMenuToggle
+                        icon={isMenuOpen ? <Icon icon="ic:outline-close" /> : <Icon icon="ic:outline-menu" />}
+                        aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                        className="sm:hidden text-8xl text-primary"
+                    />
+                }
+                <NavbarBrand className="-ml-[5px] ">
+                    <Link
                         onPress={() => { router.push('/') }}
-                        variant="light"
-                        className="font-bold text-inherit"
+                        className="font-bold sm:text-2xl text-xl cursor-pointer text-foreground"
                     >
-                        fitbodyscience
-                    </Button>
+                        {/* <Image src="/img/icon.svg" alt="Fit Body Science" width={40} height={40} className="m-2 p-1" /> */}
+                        <span className="text-primary">Fit</span>&nbsp;
+                        <span className="text-gradient-logo">Body</span>&nbsp;
+                        <span className="text-secondary"> Science</span>
+                    </Link>
                 </NavbarBrand>
             </NavbarContent>
 
@@ -39,9 +53,8 @@ export const Header = () => {
                 {menuItems.map((item, index) => (
                     <NavbarItem key={`${item.label}-${index}`}>
                         <Button
-                            color={
-                                index === 2 ? "primary" : index === menuItems.length - 1 ? "danger" : "default"
-                            }
+                            variant="solid"
+                            color="primary"
                             onPress={() => { router.push(item.route) }}
                         >
                             {item.label}
@@ -53,43 +66,34 @@ export const Header = () => {
             </NavbarContent>
 
             <NavbarContent justify="end">
-                {/* <Input
-                    classNames={{
-                        base: "max-w-full sm:max-w-[10rem] h-10",
-                        mainWrapper: "h-full",
-                        input: "text-small",
-                        inputWrapper: "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20",
-                    }}
-                    placeholder="Type to search..."
-                    size="sm"
-                    startContent={<Icon icon="material-symbols:search" />}
-                    type="search"
-                /> */}
-                {/* <NavbarItem className="hidden lg:flex">
-                    <Link href="#">Login</Link>
-                </NavbarItem>
-                <NavbarItem>
-                    <Button as={Link} color="primary" href="#" variant="flat">
-                        Sign Up
-                    </Button>
-                </NavbarItem> */}
+                {!isMobile && <ThemeSwitcher />}
             </NavbarContent>
 
             <NavbarMenu>
-                {menuItems.map((item, index) => (
-                    <NavbarMenuItem key={`${item}-${index}`}>
-                        <Link
-                            color={
-                                index === 2 ? "primary" : index === menuItems.length - 1 ? "danger" : "foreground"
-                            }
-                            className="w-full"
-                            href="#"
-                            size="lg"
-                        >
-                            {item.label}
-                        </Link>
-                    </NavbarMenuItem>
-                ))}
+                <>
+                    {menuItems.map((item, index) => (
+                        <NavbarMenuItem key={`${item.label}-${index}`}>
+                            <Button
+                                variant="solid"
+                                color="primary"
+                                onPress={() => {
+                                    router.push(item.route);
+                                    setIsMenuOpen(false);
+                                }}
+                                className="w-full"
+                            >
+                                {item.label}
+                            </Button>
+                        </NavbarMenuItem>
+                    ))}
+
+                    <>
+                        <h6 className="flex items-center mt-8">
+                            <span className="text-sm mr-3">Dark Mode</span>
+                            <ThemeSwitcher />
+                        </h6>
+                    </>
+                </>
             </NavbarMenu>
         </Navbar>
     );

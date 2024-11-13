@@ -53,7 +53,7 @@ export default function Home() {
     }
   }, [isOpen, setSuccess, reset])
   return (
-    <main className="p-24 min-h-screen">
+    <main className="py-8">
       <h1>Add Video</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="">
         <Controller

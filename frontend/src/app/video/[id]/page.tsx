@@ -51,11 +51,10 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
 
     if (!isHydrated) { return null }
     return (
-        <main className="p-24 min-h-screen">
+        <>
             <Card>
-
-                <CardBody className="flex flex-row gap-x-8">
-                    <div className="w-1/3">
+                <CardBody className="flex sm:flex-row sm:gap-x-8">
+                    <div className="sm:w-1/3">
                         <YouTubePlayer
                             videoId={mainContent?.video_id}
                             currentTimestamp={currentTimestamp}
@@ -169,7 +168,7 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                             </motion.div>
                         }
                     </div>
-                    <div className="w-2/3">
+                    <div className="sm:w-2/3">
 
                         <h2 className="uppercase">Main point</h2>
                         <h2 className="text-3xl font-bold my-4">{mainContent?.conclusion}</h2>
@@ -296,7 +295,7 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                 <Divider />
 
             </Card>
-        </main >
+        </ >
     );
 }
 

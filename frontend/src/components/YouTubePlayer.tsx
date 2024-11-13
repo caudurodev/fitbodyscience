@@ -52,6 +52,10 @@ export const YouTubePlayer = ({
     }, [currentTimestamp, player, isReady]);
 
     if (!showPlayer) {
+        if (!videoId) {
+            return <div className={className}>No video ID provided</div>;
+        }
+
         return (
             <div
                 className={`${className} relative cursor-pointer`}
