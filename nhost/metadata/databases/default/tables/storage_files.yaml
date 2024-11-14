@@ -52,3 +52,28 @@ object_relationships:
   - name: bucket
     using:
       foreign_key_constraint_on: bucket_id
+array_relationships:
+  - name: viri
+    using:
+      foreign_key_constraint_on:
+        column: file_id
+        table:
+          name: virus
+          schema: storage
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - is_uploaded
+        - size
+        - metadata
+        - bucket_id
+        - etag
+        - mime_type
+        - name
+        - created_at
+        - updated_at
+        - id
+        - uploaded_by_user_id
+      filter: {}
+    comment: ""

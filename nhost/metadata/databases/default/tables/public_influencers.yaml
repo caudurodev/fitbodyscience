@@ -1,3 +1,36 @@
 table:
   name: influencers
   schema: public
+configuration:
+  column_config:
+    profile_img:
+      custom_name: profileImg
+    yt_channelinfo_jsonb:
+      custom_name: ytChannelInfoJsonb
+    yt_description:
+      custom_name: ytDescription
+    yt_last_updated:
+      custom_name: ytLastUpdated
+    yt_url:
+      custom_name: ytUrl
+  custom_column_names:
+    profile_img: profileImg
+    yt_channelinfo_jsonb: ytChannelInfoJsonb
+    yt_description: ytDescription
+    yt_last_updated: ytLastUpdated
+    yt_url: ytUrl
+  custom_root_fields: {}
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - yt_last_updated
+        - yt_channelinfo_jsonb
+        - name
+        - yt_description
+        - yt_url
+        - id
+        - profile_img
+      filter: {}
+      allow_aggregations: true
+    comment: ""

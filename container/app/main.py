@@ -2,7 +2,8 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from .utils.config import logger
+from .config.logging import logger
+from .endpoints.get_channel_data import upsert_influencer_endpoint
 from .content_store.error import content_parse_error
 from .content_store.assertion_store import get_assertion_parent_content_ids
 from .scoring.update import update_assertion_score, update_content_aggregate_score
@@ -10,6 +11,9 @@ from .endpoints.science_paper import analyse_science_paper
 from .endpoints.youtube_videos import analyze_youtube_video
 from .endpoints.website_page import analyse_website_page
 from .endpoints.assertions import insert_assertions_opposing
+
+# from .utils.auth.user import require_auth
+from .utils.validators import validate_input
 from .content_store.assertion_store import (
     get_content_assertion_ids,
     get_assertion_content_ids,
@@ -23,10 +27,10 @@ app = Flask(__name__)
 CORS(app)
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def hello():
     """Test method for the server"""
-    return "Hello World2!"
+    return "Hello World3!"
 
 
 @app.route("/on_insert_content", methods=["POST"])
@@ -339,6 +343,21 @@ def recalculate_aggregate_score_endpoint():
         ),
         200,
     )
+
+
+@app.route("/get_yt_channel", methods=["POST"])
+@validate_input(
+    required_fields=["url"],
+    payload_key="",
+)
+def get_yt_channel_endpoint(input_data):
+    """Test method for get_yt_channel"""
+    channel_url = input_data.get("url", None)
+    logger.info("channel_url: %s", channel_url)
+
+    result = upsert_influencer_endpoint(channel_url)
+
+    return jsonify(result)
 
 
 # @app.route("/init_grapqhdb", methods=["POST"])

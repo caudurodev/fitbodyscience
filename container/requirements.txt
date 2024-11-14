@@ -8,6 +8,8 @@ openai
 groq
 together
 
+colorlog
+
 yt_dlp
 youtube-transcript-api
 tiktoken

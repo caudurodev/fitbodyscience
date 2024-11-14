@@ -77,35 +77,3 @@ def count_tokens(text, model_name="text-davinci-003"):
 
     # Return the number of tokens
     return len(tokens)
-
-
-def get_youtube_channel_info(channel_url: str) -> dict:
-    """Get information about a YouTube channel given its URL"""
-    ydl_opts = {
-        "quiet": True,
-        "no_warnings": True,
-        "extract_flat": True,  # Don't download videos, just get metadata
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        channel_info = ydl.extract_info(channel_url, download=False)
-
-        # Extract relevant information
-        channel_data = {
-            "name": channel_info.get("channel", None),
-            "channel_id": channel_info.get("channel_id", None),
-            "description": channel_info.get("description", None),
-            "channel_url": channel_info.get("channel_url", None),
-            "thumbnail": channel_info.get("thumbnail", None),
-            "subscriber_count": channel_info.get("subscriber_count", None),
-            "view_count": channel_info.get("view_count", None),
-            "upload_date": channel_info.get("upload_date", None),
-        }
-
-        return channel_data
-
-
-def get_channel_url_from_video(video_url: str) -> str:
-    """Extract channel URL from a YouTube video URL"""
-    video_info = get_youtube_video_info(video_url)
-    return video_info.get("channel_url", None)
