@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const router = useRouter()
-  const { data, loading } = useQuery(GET_INFLUENCERS_QUERY)
+  const { data, loading } = useQuery(GET_INFLUENCERS_QUERY, { fetchPolicy: 'cache-and-network' })
   const influencers = data?.influencers
   const isHydrated = useHydration()
   if (!isHydrated) { return null }
@@ -33,7 +33,7 @@ export default function Home() {
       </section>
 
       <h2 className="text-gradient text-2xl font-bold uppercase py-2">Influencers</h2>
-      <section className="mb-24">
+      <section className="mb-24 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {influencers?.map((influencer: any) => (
           <div key={influencer.id}>
             {influencer.name}

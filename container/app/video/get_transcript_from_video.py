@@ -2,7 +2,7 @@ import yt_dlp
 import tiktoken
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import NoTranscriptFound
-from ..utils.config import logger
+from ..config.logging import logger
 
 
 def get_youtube_transcript(video_url: str) -> str:

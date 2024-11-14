@@ -11,6 +11,7 @@ from .endpoints.science_paper import analyse_science_paper
 from .endpoints.youtube_videos import analyze_youtube_video
 from .endpoints.website_page import analyse_website_page
 from .endpoints.assertions import insert_assertions_opposing
+from .video.get_yt_channel_data import get_channel_url_from_video
 
 # from .utils.auth.user import require_auth
 from .utils.validators import validate_input
@@ -68,6 +69,11 @@ def on_insert_content_endpoint():
 
         if content_type == "youtube_video":
             # #logger.info("media_type: youtube_video")
+
+            # add influencer if not in db
+            channel_url = get_channel_url_from_video(new_data.get("source_url"))
+            if channel_url:
+                upsert_influencer_endpoint(channel_url)
             result = analyze_youtube_video(content_id)
             if result["server_response"] != 200:
                 content_parse_error(content_id, result["message"])

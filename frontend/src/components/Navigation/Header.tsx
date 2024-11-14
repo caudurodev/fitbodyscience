@@ -25,6 +25,7 @@ export const Header = () => {
 
     const menuItems = [
         { label: "Browse", route: "/" },
+        { label: "Influencers", route: "/influencers" },
         { label: "Add", route: "/add" },
     ];
 
