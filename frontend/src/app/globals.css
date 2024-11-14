@@ -13,7 +13,7 @@
     text-wrap: balance;
   }
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-danger;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-secondary;
   }
   .text-gradient-logo {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-danger to-secondary;

@@ -1,14 +1,21 @@
 'use client'
+
 import { useState } from "react";
-import Image from "next/image";
 import { Icon } from '@iconify/react'
 import { useRouter } from 'next/navigation'
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useResponsive } from "@/hooks/useResponsive";
-
+import { LoginModal } from "@/components/auth/LoginModal";
 import {
-    Navbar, NavbarBrand, Input, NavbarContent,
-    NavbarItem, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Link, Button
+    Navbar,
+    NavbarBrand,
+    NavbarContent,
+    NavbarItem,
+    NavbarMenuToggle,
+    NavbarMenu,
+    NavbarMenuItem,
+    Link,
+    Button
 } from "@nextui-org/react";
 
 export const Header = () => {
@@ -53,8 +60,8 @@ export const Header = () => {
                 {menuItems.map((item, index) => (
                     <NavbarItem key={`${item.label}-${index}`}>
                         <Button
-                            variant="solid"
-                            color="primary"
+                            variant="light"
+                            color="secondary"
                             onPress={() => { router.push(item.route) }}
                         >
                             {item.label}
@@ -64,10 +71,12 @@ export const Header = () => {
 
 
             </NavbarContent>
-
-            <NavbarContent justify="end">
-                {!isMobile && <ThemeSwitcher />}
-            </NavbarContent>
+            {!isMobile &&
+                <NavbarContent justify="end">
+                    <ThemeSwitcher />
+                    <LoginModal />
+                </NavbarContent>
+            }
 
             <NavbarMenu>
                 <>
