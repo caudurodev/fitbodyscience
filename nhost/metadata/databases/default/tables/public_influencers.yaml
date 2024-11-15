@@ -35,7 +35,6 @@ select_permissions:
         - yt_last_updated
         - yt_channelinfo_jsonb
         - name
-        - slug
         - yt_description
         - yt_url
         - id
@@ -49,7 +48,6 @@ select_permissions:
         - yt_last_updated
         - yt_channelinfo_jsonb
         - name
-        - slug
         - yt_description
         - yt_url
         - id

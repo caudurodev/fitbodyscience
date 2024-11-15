@@ -1,35 +1,10 @@
---
--- PostgreSQL database dump
---
+-- Ensure schema exists
+CREATE SCHEMA IF NOT EXISTS public;
+ALTER SCHEMA public OWNER TO pg_database_owner;
+COMMENT ON SCHEMA public IS 'standard public schema';
+GRANT USAGE ON SCHEMA public TO nhost_hasura;
 
--- Dumped from database version 16.2
--- Dumped by pg_dump version 16.2
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
---
-
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: assertions; Type: TABLE; Schema: public; Owner: nhost_hasura
---
-
+-- Create assertions table first
 CREATE TABLE public.assertions (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     text text,
@@ -271,13 +246,6 @@ ALTER TABLE ONLY public.content_relationship
 
 ALTER TABLE ONLY public.content_relationship
     ADD CONSTRAINT content_relationship_referenced_by_content_id_fkey FOREIGN KEY (child_content_id) REFERENCES public.content(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
-
-
---
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
---
-
-GRANT USAGE ON SCHEMA public TO nhost_hasura;
 
 
 --

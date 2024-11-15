@@ -1,13 +1,6 @@
 table:
   name: content
   schema: public
-configuration:
-  column_config:
-    canonical_url:
-      custom_name: canonicalUrl
-  custom_column_names:
-    canonical_url: canonicalUrl
-  custom_root_fields: {}
 array_relationships:
   - name: assertions
     using:
