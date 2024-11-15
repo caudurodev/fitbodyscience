@@ -63,37 +63,36 @@ subscription GetContentTreeSubscription($contentId: uuid!) {
 
 
 export const GET_ALL_CONTENT_QUERY = gql`
-query GetAllContentQuery($mediaType: String!) {
-  content(where: {media_type: {_eq: $mediaType}}) {
-    id
-    content_type
-    title
-    summary
-    conclusion
-    video_id
-    pro_aggregate_content_score
-    against_aggregate_content_score
+  query GetAllContentQuery($mediaType: String!) {
+    content(where: {media_type: {_eq: $mediaType}}) {
+      id
+      content_type
+      title
+      summary
+      conclusion
+      video_id
+      pro_aggregate_content_score
+      against_aggregate_content_score
+    }
   }
-}
 `
 
 
 export const ADD_VIDEO_MUTATION = gql`
-mutation InsertVideoContentMutation($mediaType: String!, $sourceUrl: String!, $contentType: String!) {
-  insert_content(objects: {media_type: $mediaType, source_url: $sourceUrl, content_type: $contentType}) {
-    affected_rows
-    returning {
-      id
+  mutation UserAddContentMutation($contentType: String, $mediaType: String, $url: String!) {
+    userAddContent(url: $url, mediaType: $mediaType, contentType: $contentType) {
+      message
+      slug
+      success
     }
   }
-}
 `
 
 
 export const RECALCULATE_AGGREGATE_SCORES_MUTATION = gql`
-mutation RecalculateAggregateScoreMutation($contentId: String!) {
-  recalculateAggregateScore(contentId: $contentId) {
-    success
+  mutation RecalculateAggregateScoreMutation($contentId: String!) {
+    recalculateAggregateScore(contentId: $contentId) {
+      success
+    }
   }
-}
 `

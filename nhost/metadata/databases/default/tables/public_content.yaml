@@ -1,6 +1,67 @@
 table:
   name: content
   schema: public
+configuration:
+  column_config:
+    against_aggregate_content_score:
+      custom_name: againstAggregateContentScore
+    canonical_url:
+      custom_name: canonicalUrl
+    content_score:
+      custom_name: contentScore
+    content_type:
+      custom_name: contentType
+    crossref_info:
+      custom_name: crossrefInfo
+    date_added:
+      custom_name: dateAdded
+    date_last_modified:
+      custom_name: dateLastModified
+    direct_download_url:
+      custom_name: directDownloadUrl
+    doi_number:
+      custom_name: doiNumber
+    error_message:
+      custom_name: errorMessage
+    full_text:
+      custom_name: fullText
+    is_parsed:
+      custom_name: isParsed
+    media_type:
+      custom_name: mediaType
+    pro_aggregate_content_score:
+      custom_name: proAggregateContentScore
+    science_paper_classification:
+      custom_name: sciencePaperClassification
+    source_url:
+      custom_name: sourceUrl
+    video_description:
+      custom_name: videoDescription
+    video_id:
+      custom_name: videoId
+    video_transcript:
+      custom_name: videoTranscript
+  custom_column_names:
+    against_aggregate_content_score: againstAggregateContentScore
+    canonical_url: canonicalUrl
+    content_score: contentScore
+    content_type: contentType
+    crossref_info: crossrefInfo
+    date_added: dateAdded
+    date_last_modified: dateLastModified
+    direct_download_url: directDownloadUrl
+    doi_number: doiNumber
+    error_message: errorMessage
+    full_text: fullText
+    is_parsed: isParsed
+    media_type: mediaType
+    pro_aggregate_content_score: proAggregateContentScore
+    science_paper_classification: sciencePaperClassification
+    source_url: sourceUrl
+    video_description: videoDescription
+    video_id: videoId
+    video_transcript: videoTranscript
+  custom_root_fields: {}
 array_relationships:
   - name: assertions
     using:

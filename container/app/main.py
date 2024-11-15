@@ -12,6 +12,9 @@ from .endpoints.youtube_videos import analyze_youtube_video
 from .endpoints.website_page import analyse_website_page
 from .endpoints.assertions import insert_assertions_opposing
 from .video.get_yt_channel_data import get_channel_url_from_video
+from .store.content import upsert_content
+from .content_get.youtube_video import get_youtube_video_data
+from .store.slug import generate_slug
 
 from .utils.auth.user import require_auth
 from .utils.validators import validate_input
@@ -21,7 +24,7 @@ from .content_store.assertion_store import (
 )
 from .scoring.update import update_evidence_score
 from .video.youtube import get_clean_youtube_url
-from .store.content import update_content_source_url
+from .store.content import update_content_source_url, get_content_by_url
 
 # from .graphdb.main import create_dummy_data, read_data
 
@@ -53,143 +56,205 @@ def action_user_add_content_method(input_data, session_variables_data):
     logger.info("input_data: %s", input_data)
     logger.info("session_variables_data: %s", session_variables_data)
     try:
-        # if 1 == 2:
-        #     return (
-        #         jsonify(
-        #             {
-        #                 "message": "error",
-        #                 "slug": "slug",
-        #                 "success": False,
-        #             }
-        #         ),
-        #         500,
-        #     )
+        cleaned_url = get_clean_youtube_url(input_data["url"])
+        if cleaned_url is None:
+            return (
+                jsonify(
+                    {
+                        "message": "error",
+                        "success": False,
+                    }
+                ),
+                200,
+            )
+        try:
+            content_saved = get_content_by_url(cleaned_url)
+            if content_saved is not None:
+                return (
+                    jsonify(
+                        {
+                            "message": "Content already exists",
+                            "slug": content_saved["slug"],
+                            "success": True,
+                        }
+                    ),
+                    200,
+                )
+        except Exception:
+            logger.info("Content not found, adding content")
+
+        influencer_id = None
+        channel_url = get_channel_url_from_video(cleaned_url)
+        if channel_url:
+            influencer_id = upsert_influencer_endpoint(channel_url)
+
+        if influencer_id is None:
+            logger.error("Error upserting influencer")
+            return (
+                jsonify(
+                    {
+                        "message": "Error getting influencer id",
+                        "success": False,
+                    }
+                ),
+                500,
+            )
+
+        video_data = get_youtube_video_data(cleaned_url)
+        if video_data is not None:
+            return (
+                jsonify(
+                    {
+                        "message": "Error getting video data",
+                        "success": False,
+                    }
+                ),
+                500,
+            )
+        slug = generate_slug(video_data["video_info"]["title"])
+        logger.info("slug: %s", slug)
+
+        upsert_content(
+            video_title=video_data["video_info"]["title"],
+            video_id=video_data["video_info"]["display_id"],
+            video_url=input_data["url"],
+            content_type=input_data["contentType"],
+            canonical_url=cleaned_url,
+            transcript=video_data["transcript"],
+            video_description=video_data["video_info"]["description"],
+            full_text_transcript=video_data["full_text_transcript"],
+            slug=slug,
+        )
+        # result = analyze_youtube_video(video_data, influencer_id)
+
         return (
             jsonify(
                 {
                     "message": "success",
-                    "slug": "slug",
+                    "slug": slug,
                     "success": True,
                 }
             ),
             200,
         )
     except Exception as e:
+        logger.error("Error adding content %s", e)
+        logger.info("input_data: %s", input_data)
         return jsonify({"message": f"Error adding content {str(e)}"}), 500
 
 
-@app.route("/on_insert_content", methods=["POST"])
-def on_insert_content_endpoint():
-    """When content is added, get extra information and classify when possible"""
-    data = request.get_json()
-    # #logger.info("on_insert_content data %s", data)
-    if data is None:
-        logger.error("No data provided")
-        return (
-            jsonify(
-                {
-                    "message": "Error: no data provided",
-                }
-            ),
-            400,
-        )
-    else:
-        new_data = data["event"]["data"]["new"]
-        content_id = new_data["id"]
-        media_type = new_data["media_type"]
-        content_type = new_data["content_type"]
-        is_parsed = new_data["is_parsed"]
-        if is_parsed:
-            # #logger.info("Content already parsed, skipping...")
-            return (
-                jsonify(
-                    {
-                        "message": "Content already parsed, skipping...",
-                    }
-                ),
-                200,
-            )
-        # #logger.info("Content not parsed, processing...")
+# @app.route("/on_insert_content", methods=["POST"])
+# def on_insert_content_endpoint():
+#     """When content is added, get extra information and classify when possible"""
+#     data = request.get_json()
+#     # #logger.info("on_insert_content data %s", data)
+#     if data is None:
+#         logger.error("No data provided")
+#         return (
+#             jsonify(
+#                 {
+#                     "message": "Error: no data provided",
+#                 }
+#             ),
+#             400,
+#         )
+#     else:
+#         new_data = data["event"]["data"]["new"]
+#         content_id = new_data["id"]
+#         media_type = new_data["media_type"]
+#         content_type = new_data["content_type"]
+#         is_parsed = new_data["is_parsed"]
+#         if is_parsed:
+#             # #logger.info("Content already parsed, skipping...")
+#             return (
+#                 jsonify(
+#                     {
+#                         "message": "Content already parsed, skipping...",
+#                     }
+#                 ),
+#                 200,
+#             )
+#         # #logger.info("Content not parsed, processing...")
 
-        if content_type == "youtube_video":
-            # #logger.info("media_type: youtube_video")
-            logger.info("new_data.get('source_url'): %s", new_data.get("source_url"))
-            cleaned_url = get_clean_youtube_url(new_data.get("source_url"))
-            logger.info("cleaned_url: %s", cleaned_url)
+#         if content_type == "youtube_video":
+#             # #logger.info("media_type: youtube_video")
+#             logger.info("new_data.get('source_url'): %s", new_data.get("source_url"))
+#             cleaned_url = get_clean_youtube_url(new_data.get("source_url"))
+#             logger.info("cleaned_url: %s", cleaned_url)
 
-            if cleaned_url is None:
-                logger.error("Error cleaning YouTube URL")
-                return (
-                    jsonify(
-                        {
-                            "message": "Error cleaning YouTube URL",
-                        }
-                    ),
-                    500,
-                )
-            if cleaned_url != new_data.get("source_url"):
-                update_content_source_url(content_id, cleaned_url)
-            # add influencer if not in db
-            influencer_id = None
-            channel_url = get_channel_url_from_video(cleaned_url)
-            if channel_url:
-                influencer_id = upsert_influencer_endpoint(channel_url)
+#             if cleaned_url is None:
+#                 logger.error("Error cleaning YouTube URL")
+#                 return (
+#                     jsonify(
+#                         {
+#                             "message": "Error cleaning YouTube URL",
+#                         }
+#                     ),
+#                     500,
+#                 )
+#             if cleaned_url != new_data.get("source_url"):
+#                 update_content_source_url(content_id, cleaned_url)
+#             # add influencer if not in db
+#             influencer_id = None
+#             channel_url = get_channel_url_from_video(cleaned_url)
+#             if channel_url:
+#                 influencer_id = upsert_influencer_endpoint(channel_url)
 
-            if influencer_id is None:
-                logger.error("Error upserting influencer")
-                return (
-                    jsonify(
-                        {
-                            "message": "Error getting influencer id",
-                        }
-                    ),
-                    500,
-                )
-            result = analyze_youtube_video(content_id, influencer_id)
-            if result["server_response"] != 200:
-                content_parse_error(content_id, result["message"])
-            return (
-                jsonify(
-                    {
-                        "message": str(result["message"]),
-                    }
-                ),
-                result["server_response"],
-            )
-        if new_data.get("doi_number") is not None:
-            content_id = analyse_science_paper(content_id)
-            update_evidence_score(content_id)
-            if content_id is None:
-                content_parse_error(content_id, "Error parsing content")
-                return (
-                    jsonify(
-                        {
-                            "message": "Error parsing content",
-                        }
-                    ),
-                    500,
-                )
-        if new_data.get("source_url") is not None:
-            if media_type == "text":
-                # logger.info("media_type: text")
-                analyse_website_page(content_id)
-                return (
-                    jsonify(
-                        {
-                            "message": "Content Parsed.",
-                            "content_id": content_id,
-                        }
-                    ),
-                    200,
-                )
-        return (
-            jsonify(
-                {
-                    "message": "Unknown media type",
-                }
-            ),
-            400,
-        )
+#             if influencer_id is None:
+#                 logger.error("Error upserting influencer")
+#                 return (
+#                     jsonify(
+#                         {
+#                             "message": "Error getting influencer id",
+#                         }
+#                     ),
+#                     500,
+#                 )
+#             result = analyze_youtube_video(content_id, influencer_id)
+#             if result["server_response"] != 200:
+#                 content_parse_error(content_id, result["message"])
+#             return (
+#                 jsonify(
+#                     {
+#                         "message": str(result["message"]),
+#                     }
+#                 ),
+#                 result["server_response"],
+#             )
+#         if new_data.get("doi_number") is not None:
+#             content_id = analyse_science_paper(content_id)
+#             update_evidence_score(content_id)
+#             if content_id is None:
+#                 content_parse_error(content_id, "Error parsing content")
+#                 return (
+#                     jsonify(
+#                         {
+#                             "message": "Error parsing content",
+#                         }
+#                     ),
+#                     500,
+#                 )
+#         if new_data.get("source_url") is not None:
+#             if media_type == "text":
+#                 # logger.info("media_type: text")
+#                 analyse_website_page(content_id)
+#                 return (
+#                     jsonify(
+#                         {
+#                             "message": "Content Parsed.",
+#                             "content_id": content_id,
+#                         }
+#                     ),
+#                     200,
+#                 )
+#         return (
+#             jsonify(
+#                 {
+#                     "message": "Unknown media type",
+#                 }
+#             ),
+#             400,
+#         )
 
 
 @app.route("/on_insert_assertion", methods=["POST"])

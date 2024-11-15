@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useResponsive } from "@/hooks/useResponsive";
 import { LoginModal } from "@/components/auth/LoginModal";
+import { motion } from 'framer-motion'
+import { useSignOut, useUserData, useAuthenticationStatus } from '@nhost/nextjs'
 import {
     Navbar,
     NavbarBrand,
@@ -15,11 +17,22 @@ import {
     NavbarMenu,
     NavbarMenuItem,
     Link,
-    Button
+    Button,
+    Spinner,
+    Dropdown,
+    DropdownTrigger,
+    DropdownMenu,
+    DropdownItem,
+    Avatar
 } from "@nextui-org/react";
 
 export const Header = () => {
+    const userData = useUserData()
+    const { isAuthenticated, isLoading: isLoadingAuth } =
+        useAuthenticationStatus()
     const router = useRouter()
+    const { signOut } = useSignOut()
+
     const { isMobile } = useResponsive()
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -49,7 +62,6 @@ export const Header = () => {
                         onPress={() => { router.push('/') }}
                         className="font-bold sm:text-2xl text-xl cursor-pointer text-foreground"
                     >
-                        {/* <Image src="/img/icon.svg" alt="Fit Body Science" width={40} height={40} className="m-2 p-1" /> */}
                         <span className="text-primary">Fit</span>&nbsp;
                         <span className="text-gradient-logo">Body</span>&nbsp;
                         <span className="text-secondary"> Science</span>
@@ -75,7 +87,90 @@ export const Header = () => {
             {!isMobile &&
                 <NavbarContent justify="end">
                     <ThemeSwitcher />
-                    <LoginModal />
+                    {isLoadingAuth ?
+                        <Spinner />
+                        :
+                        <>
+                            {!isAuthenticated &&
+                                <motion.div
+                                    initial={{ opacity: 0, }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{
+                                        opacity: 0,
+                                        transition: {
+                                            opacity: { duration: 1 },
+                                        },
+                                    }}
+                                    transition={{
+                                        opacity: { duration: 1 },
+                                    }}>
+
+                                    <NavbarItem className=" lg:flex">
+                                        <LoginModal buttonLabel="Login or join" defaultTab="register" />
+                                    </NavbarItem>
+                                </motion.div>
+                            }
+                            {isAuthenticated &&
+                                <motion.div
+                                    initial={{ opacity: 0, }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{
+                                        opacity: 0,
+                                        transition: {
+                                            opacity: { duration: 1 },
+                                        },
+                                    }}
+                                    transition={{
+                                        opacity: { duration: 1 },
+                                    }}
+                                >
+                                    <div className="flex gap-4">
+                                        <h6 className="text-gray-700 text-xs mt-2 text-gray-500">{userData?.displayName}</h6>
+
+                                        <Dropdown placement="bottom-end">
+                                            <DropdownTrigger>
+                                                <Avatar
+                                                    src={userData?.avatarUrl}
+                                                    isBordered
+                                                    showFallback
+                                                    as={Link}
+                                                    className="transition-transform"
+                                                    color="primary"
+                                                    name={userData?.displayName}
+                                                    size="sm"
+                                                />
+                                            </DropdownTrigger>
+                                            <DropdownMenu
+                                                aria-label="Profile Actions"
+                                                variant="flat"
+                                                color="primary"
+                                            >
+                                                <DropdownItem
+                                                    key="account"
+                                                    as={Link}
+                                                    href="/account"
+                                                >
+                                                    My Account
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    key="logout"
+                                                    as={Link}
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        signOut();
+                                                    }}
+                                                >
+                                                    Log Out
+                                                </DropdownItem>
+                                            </DropdownMenu>
+                                        </Dropdown>
+                                    </div>
+                                </motion.div>
+                            }
+                        </>
+                    }
+
                 </NavbarContent>
             }
 

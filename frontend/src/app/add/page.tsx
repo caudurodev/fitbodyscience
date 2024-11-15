@@ -27,18 +27,21 @@ export default function Home() {
 
   const onSubmit = async (data: any) => {
     try {
-      console.log({ data })
       const result = await addVideoMutation({
         variables: {
           mediaType: 'video',
           contentType: 'youtube_video',
-          sourceUrl: data.videoUrl,
+          url: data.videoUrl,
         },
       })
-      // setSuccess(true)
-      toast.success(`Message sent - Thanks for the feedback!`)
-      const videoId = result?.data?.insert_content?.returning?.[0]?.id
-      router.push('/video/' + videoId)
+      console.log({ result })
+      const slug = result?.data?.userAddVideo?.slug
+      if (slug) {
+        toast.success(`Added!`)
+        router.push('/video/' + slug)
+      } else {
+        toast.error(`Server Error saving feedback!`)
+      }
     } catch (e) {
       setSuccess(false)
       //console.log((e)
