@@ -35,7 +35,8 @@ export default function Home() {
         },
       })
       console.log({ result })
-      const slug = result?.data?.userAddVideo?.slug
+      const slug = result?.data?.userAddContent?.slug
+      console.log({ slug })
       if (slug) {
         toast.success(`Added!`)
         router.push('/video/' + slug)

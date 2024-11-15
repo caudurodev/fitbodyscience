@@ -94,19 +94,26 @@ def get_content_by_url(url: str):
     query = {
         "variables": {"url": url},
         "query": """
-            query GetContentByUrl($url: String!) {
-                content(where: {canonicalUrl: {_eq: $url}}) {
-                    id
+          query GetContentByUrl($url: String!) {
+            content(where: {canonicalUrl: {_eq: $url}}) {
+                id
+                slug
+                influencer_contents {
+                influencer {
                     slug
                 }
+                }
             }
+            }
+
         """,
     }
     try:
         response = make_graphql_call(query)
         return response["data"]["content"][0]
     except Exception as e:
-        logger.error(f"Error getting content by URL: {e}")
+        # logger.error(f"Error getting content by URL: {e}")
+        # logger.info("response: %s", response)
         return None
 
 

@@ -3,27 +3,40 @@
 import { Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chip } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
-import { useSubscription, useMutation } from '@apollo/client'
-import { GET_CONTENT_SUBSCRIPTION, RECALCULATE_AGGREGATE_SCORES_MUTATION } from '@/store/index'
+import { useSubscription, useMutation, useQuery } from '@apollo/client'
+import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY, RECALCULATE_AGGREGATE_SCORES_MUTATION } from '@/store/index'
 import { useHydration } from '@/hooks/useHydration'
 import StudyClassification from "@/components/StudyClassification";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useState } from 'react'
 import YouTubePlayer from '@/components/YouTubePlayer';
 
-const VideoPage = ({ params }: { params: { id: string } }) => {
-    const { data } = useSubscription(
+const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
+
+    const { data: contentData } = useQuery(GET_CONTENT_QUERY, {
+        variables: {
+            contentSlug: params?.content_slug,
+            influencerSlug: params?.influencer_slug
+        },
+        skip: !params.content_slug || !params.influencer_slug
+    })
+    const isParsed = contentData?.content?.[0]?.isParsed
+    const { data: subscriptionData } = useSubscription(
         GET_CONTENT_SUBSCRIPTION,
         {
             variables: {
-                contentId: params?.id
+                contentSlug: params?.content_slug,
+                influencerSlug: params?.influencer_slug
             },
-            skip: !params.id
+            skip: !params.content_slug || !params.influencer_slug || isParsed === true
         },
     )
+
+    console.log({ params })
+    console.log({ subscriptionData, contentData })
     const [recalculateAggregateScores] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
-    const mainContent = data?.content?.[0]
-    const assertions_contents = mainContent?.assertions_contents
+    const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
+    const assertions_contents = mainContent?.assertionsContents
     const isHydrated = useHydration()
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
     const [player, setPlayer] = useState<any>(null);
@@ -56,7 +69,7 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                 <CardBody className="flex sm:flex-row sm:gap-x-8">
                     <div className="sm:w-1/3">
                         <YouTubePlayer
-                            videoId={mainContent?.video_id}
+                            videoId={mainContent?.videoId}
                             currentTimestamp={currentTimestamp}
                             onPlayerReady={setPlayer}
                             className="w-full aspect-video"
@@ -74,11 +87,11 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                         <div className="mb-5">
                             <Chip color="danger" size="lg" className="mr-2 text-white">
                                 <Icon icon="ci:stop-sign" className="inline mr-2" />
-                                {mainContent?.against_aggregate_content_score} / 100
+                                {mainContent?.againstAggregateContentScore} / 100
                             </Chip>
                             <Chip color="success" size="lg" className="mr-2 text-white">
                                 <Icon icon="mdi:approve" className="inline mr-2" />
-                                {mainContent?.pro_aggregate_content_score} / 100
+                                {mainContent?.proAggregateContentScore} / 100
                             </Chip>
                             <Button
                                 size="sm"
@@ -107,7 +120,7 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                                                 <Link
                                                     onPress={() => {
                                                         if (!player) return;
-                                                        const seconds = convertTimestampToSeconds(assertions_content?.video_timestamp);
+                                                        const seconds = convertTimestampToSeconds(assertions_content?.videoTimestamp);
                                                         try {
                                                             player.seekTo(seconds);
                                                         } catch (error) {
@@ -120,7 +133,7 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                                                     size="sm"
                                                     className="cursor-pointer"
                                                 >
-                                                    {index + 1}) (time: {assertions_content?.video_timestamp}): {assertions_content?.assertion.text}
+                                                    {index + 1}) (time: {assertions_content?.videoTimestamp}): {assertions_content?.assertion.text}
                                                 </Link>
                                                 <Slider
                                                     step={1}
@@ -132,31 +145,31 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                                                     showSteps={false}
                                                     maxValue={10}
                                                     minValue={0}
-                                                    defaultValue={Number(assertions_content?.weight_conclusion)}
+                                                    defaultValue={Number(assertions_content?.weightConclusion)}
                                                     className="max-w-md mb-2"
                                                 />
                                                 <div>
                                                     <Chip color="success" className="text-white mr-2 ">
                                                         <Icon icon="mdi:approve" className="inline" />{' '}
-                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.pro_evidence_aggregate_score || 0} /> / 100
+                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.proEvidenceAggregateScore || 0} /> / 100
                                                     </Chip>
                                                     <Chip color="danger" className="text-white">
                                                         <Icon icon="ci:stop-sign" className="inline" />{' '}
-                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.against_evidence_aggregate_score || 0} /> / 100
+                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.againstEvidenceAggregateScore || 0} /> / 100
                                                     </Chip>
                                                 </div>
                                                 <div className="block mt-3">
                                                     {
-                                                        assertions_content?.assertion?.contents_assertions.map((o: any, i: number) => (
+                                                        assertions_content?.assertion?.contentsAssertions.map((o: any, i: number) => (
                                                             <Chip
                                                                 key={i}
-                                                                color={o?.is_pro_assertion === true ? 'success' : 'danger'}
+                                                                color={o?.isProAssertion === true ? 'success' : 'danger'}
                                                                 className="text-white mr-2"
                                                             // className={`${o?.is_pro_assertion === true ? 'bg-green-500' : 'bg-red-500'} px-4 text-tiny  inline-block mr-2 p-1 text-white rounded-full`}
                                                             >
                                                                 {/* {o?.is_pro_assertion === true ? <Icon icon="mdi:approve" className="inline" /> : <Icon icon="ci:stop-sign" className="inline" />} */}
                                                                 {/* {Math.round(o?.content?.content_score) || 0} */}
-                                                                <AnimatedNumber targetNumber={Math.round(o?.content?.content_score) || 0} /> / 100
+                                                                <AnimatedNumber targetNumber={Math.round(o?.content?.contentScore) || 0} /> / 100
                                                             </Chip>
                                                         ))
                                                     }
@@ -194,12 +207,12 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                                     <li key={index} className="mb-16">
                                         <div className="m-8">
                                             <h4 className="text-2xl font-bold my-4">{index + 1}) {assertions_content.assertion.text}</h4>
-                                            <h4 className="text-sm my-2"> {assertions_content.assertion_context}</h4>
+                                            <h4 className="text-sm my-2"> {assertions_content.assertionContext}</h4>
                                             {/* <h5>assertion id {assertions_content?.assertion?.id}</h5> */}
                                             {assertions_content?.assertion &&
                                                 <>
-                                                    <Chip color="success" size="lg" className="text-white mr-2"><Icon icon="mdi:approve" className="inline" /> {assertions_content?.assertion?.pro_evidence_aggregate_score || 0} / 100</Chip>
-                                                    <Chip color="danger" size="lg" className=" text-white"> <Icon icon="ci:stop-sign" className="inline" /> {assertions_content?.assertion?.against_evidence_aggregate_score || 0} / 100</Chip>
+                                                    <Chip color="success" size="lg" className="text-white mr-2"><Icon icon="mdi:approve" className="inline" /> {assertions_content?.assertion?.proEvidenceAggregateScore || 0} / 100</Chip>
+                                                    <Chip color="danger" size="lg" className=" text-white"> <Icon icon="ci:stop-sign" className="inline" /> {assertions_content?.assertion?.againstEvidenceAggregateScore || 0} / 100</Chip>
                                                 </>
                                             }
                                             <Slider
@@ -209,71 +222,71 @@ const VideoPage = ({ params }: { params: { id: string } }) => {
                                                 hideThumb={true}
                                                 hideValue={true}
                                                 color="success"
-                                                label={`Importance to conclusion ${assertions_content?.weight_conclusion}/10`}
+                                                label={`Importance to conclusion ${assertions_content?.weightConclusion}/10`}
                                                 showSteps={false}
                                                 maxValue={10}
                                                 minValue={0}
-                                                defaultValue={Number(assertions_content?.weight_conclusion)}
+                                                defaultValue={Number(assertions_content?.weightConclusion)}
                                                 className="max-w-md my-4"
                                             />
                                             {/* <h5 className=" text-sm my-4 font-bold">ass id: {assertions_content.assertion.id}</h5> */}
-                                            <h5 className="font-bold uppercase text-sm my-4">The author said (time: {assertions_content?.video_timestamp}):</h5>
-                                            <p className="text-xl italic">&quot;{assertions_content?.assertion.original_sentence}&quot;</p>
-                                            {/* <h4 className="text-sm">SEARCH: {assertions_content?.assertion?.assertion_search_verify}</h4> */}
+                                            <h5 className="font-bold uppercase text-sm my-4">The author said (time: {assertions_content?.videoTimestamp}):</h5>
+                                            <p className="text-xl italic">&quot;{assertions_content?.assertion.originalSentence}&quot;</p>
+                                            {/* <h4 className="text-sm">SEARCH: {assertions_content?.assertion?.assertionSearchVerify}</h4> */}
                                             {/* <h5 className="font-bold uppercase text-sm my-4">What author cites as evidence</h5> */}
-                                            {/* <p>{assertions_content.assertion.evidence_type}</p> */}
+                                            {/* <p>{assertions_content.assertion.evidenceType}</p> */}
                                             <h5 className="uppercase font-bold text-sm my-4">Evidence related to assertion</h5>
-                                            {!assertions_content?.assertion?.contents_assertions?.length || assertions_content?.assertion?.contents_assertions?.length === 0 &&
+                                            {!assertions_content?.assertion?.contentsAssertions?.length || assertions_content?.assertion?.contentsAssertions?.length === 0 &&
                                                 <Spinner />
                                             }
-                                            {assertions_content?.assertion?.contents_assertions?.length > 0 ?
+                                            {assertions_content?.assertion?.contentsAssertions?.length > 0 ?
                                                 <>
                                                     {
-                                                        assertions_content?.assertion?.contents_assertions.map(
+                                                        assertions_content?.assertion?.contentsAssertions.map(
                                                             (o: any, i: number) => (
                                                                 <div key={i} id={`assertion_${i}`} className="my-4">
                                                                     <div className="my-3">
                                                                         <Chip
-                                                                            color={o?.is_pro_assertion ? 'success' : 'danger'}
+                                                                            color={o?.isProAssertion ? 'success' : 'danger'}
                                                                             className="text-white"
                                                                         >
-                                                                            <Icon className="inline text-lg" icon={o?.is_pro_assertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
+                                                                            <Icon className="inline text-lg" icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
                                                                             {/* {o?.is_pro_assertion ? 'supports' : 'refutes'} */}
-                                                                            {' '}{Math.round(o?.content?.content_score || 0)} / 100
+                                                                            {' '}{Math.round(o?.content?.contentScore || 0)} / 100
                                                                         </Chip>
                                                                     </div>
 
                                                                     <div className="ml-8 my-2">
-                                                                        <h6 className="text-tiny mb-4 uppercase">{o?.is_citation_from_original_content ? 'From Author' : 'Ai Research'}</h6>
-                                                                        {/* {o?.content?.content_score === 0 ?
+                                                                        <h6 className="text-tiny mb-4 uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
+                                                                        {/* {o?.content?.contentScore === 0 ?
                                                                             <Chip color="default">0</Chip> :
                                                                             <Chip
-                                                                                color={o?.content?.content_score > 0 ? "success" : "danger"}
+                                                                                color={o?.content?.contentScore > 0 ? "success" : "danger"}
                                                                                 className="mr-2 text-white"
                                                                             >
                                                                                 <Icon
-                                                                                    icon={o?.is_pro_assertion ? "mdi:approve" : "ci:stop-sign"}
+                                                                                    icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"}
                                                                                     className="inline"
                                                                                 />
-                                                                                {Math.round(o?.content?.content_score || 0)}
+                                                                                {Math.round(o?.content?.contentScore || 0)}
                                                                             </Chip>
                                                                         } */}
-                                                                        <Link href={o?.content?.source_url}>{o?.content?.title}</Link>
-                                                                        <h6 className="text-tiny my-3">DOI: {o?.content?.doi_number}</h6>
+                                                                        <Link href={o?.content?.sourceUrl}>{o?.content?.title}</Link>
+                                                                        <h6 className="text-tiny my-3">DOI: {o?.content?.doiNumber}</h6>
 
-                                                                        <h6>{o?.why_relevant}</h6>
+                                                                        <h6>{o?.whyRelevant}</h6>
                                                                         <h6>content id: {o?.content?.id}</h6>
                                                                         <div className="my-3">
-                                                                            <Chip color="warning" className="text-white">{o?.content?.content_type}</Chip>
+                                                                            <Chip color="warning" className="text-white">{o?.content?.contentType}</Chip>
                                                                         </div>
-                                                                        {o?.content?.science_paper_classification ?
-                                                                            <StudyClassification paperClassification={o?.content?.science_paper_classification} /> :
+                                                                        {o?.content?.sciencePaperClassification ?
+                                                                            <StudyClassification paperClassification={o?.content?.sciencePaperClassification} /> :
                                                                             <div>
                                                                                 <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
-                                                                                {/* <h6 className="">{o?.content?.source_url}</h6> */}
+                                                                                {/* <h6 className="">{o?.content?.sourceUrl}</h6> */}
                                                                             </div>
                                                                         }
-                                                                        {/* <h6 className="text-tiny">{o?.content?.why_relevant}</h6> */}
+                                                                        {/* <h6 className="text-tiny">{o?.content?.whyRelevant}</h6> */}
                                                                     </div>
 
                                                                 </div>

@@ -4,27 +4,17 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from .config.logging import logger
 from .endpoints.get_channel_data import upsert_influencer_endpoint
-from .content_store.error import content_parse_error
 from .content_store.assertion_store import get_assertion_parent_content_ids
 from .scoring.update import update_assertion_score, update_content_aggregate_score
-from .endpoints.science_paper import analyse_science_paper
-from .endpoints.youtube_videos import analyze_youtube_video
-from .endpoints.website_page import analyse_website_page
 from .endpoints.assertions import insert_assertions_opposing
-from .video.get_yt_channel_data import get_channel_url_from_video
-from .store.content import upsert_content
-from .content_get.youtube_video import get_youtube_video_data
-from .store.slug import generate_slug
-
 from .utils.auth.user import require_auth
 from .utils.validators import validate_input
 from .content_store.assertion_store import (
     get_content_assertion_ids,
     get_assertion_content_ids,
 )
-from .scoring.update import update_evidence_score
-from .video.youtube import get_clean_youtube_url
-from .store.content import update_content_source_url, get_content_by_url
+
+from .endpoints.actions.user_add_content import user_add_content_endpoint
 
 # from .graphdb.main import create_dummy_data, read_data
 
@@ -46,100 +36,15 @@ def hello():
     optional_fields=["mediaType", "contentType"],
     payload_key="input",
 )
-@validate_input(
-    required_fields=["x-hasura-user-id", "x-hasura-role"],
-    payload_key="session_variables",
-)
-def action_user_add_content_method(input_data, session_variables_data):
+def action_user_add_content_method(input_data):
     """Action to add user content"""
-    logger.info("action_user_add_content_method")
-    logger.info("input_data: %s", input_data)
-    logger.info("session_variables_data: %s", session_variables_data)
     try:
-        cleaned_url = get_clean_youtube_url(input_data["url"])
-        if cleaned_url is None:
-            return (
-                jsonify(
-                    {
-                        "message": "error",
-                        "success": False,
-                    }
-                ),
-                200,
-            )
-        try:
-            content_saved = get_content_by_url(cleaned_url)
-            if content_saved is not None:
-                return (
-                    jsonify(
-                        {
-                            "message": "Content already exists",
-                            "slug": content_saved["slug"],
-                            "success": True,
-                        }
-                    ),
-                    200,
-                )
-        except Exception:
-            logger.info("Content not found, adding content")
-
-        influencer_id = None
-        channel_url = get_channel_url_from_video(cleaned_url)
-        if channel_url:
-            influencer_id = upsert_influencer_endpoint(channel_url)
-
-        if influencer_id is None:
-            logger.error("Error upserting influencer")
-            return (
-                jsonify(
-                    {
-                        "message": "Error getting influencer id",
-                        "success": False,
-                    }
-                ),
-                500,
-            )
-
-        video_data = get_youtube_video_data(cleaned_url)
-        if video_data is not None:
-            return (
-                jsonify(
-                    {
-                        "message": "Error getting video data",
-                        "success": False,
-                    }
-                ),
-                500,
-            )
-        slug = generate_slug(video_data["video_info"]["title"])
-        logger.info("slug: %s", slug)
-
-        upsert_content(
-            video_title=video_data["video_info"]["title"],
-            video_id=video_data["video_info"]["display_id"],
-            video_url=input_data["url"],
-            content_type=input_data["contentType"],
-            canonical_url=cleaned_url,
-            transcript=video_data["transcript"],
-            video_description=video_data["video_info"]["description"],
-            full_text_transcript=video_data["full_text_transcript"],
-            slug=slug,
+        response = user_add_content_endpoint(
+            content_url=input_data["url"], content_type=input_data["contentType"]
         )
-        # result = analyze_youtube_video(video_data, influencer_id)
-
-        return (
-            jsonify(
-                {
-                    "message": "success",
-                    "slug": slug,
-                    "success": True,
-                }
-            ),
-            200,
-        )
+        return jsonify(response), 200
     except Exception as e:
         logger.error("Error adding content %s", e)
-        logger.info("input_data: %s", input_data)
         return jsonify({"message": f"Error adding content {str(e)}"}), 500
 
 

@@ -16,9 +16,9 @@ def upsert_influencer_endpoint(url: str):
     """Upserts influencer data to the database"""
 
     # check if duplicate
-    if influencer_id := get_influencer_by_url(url):
-        logger.info("Influencer already exists: %s", influencer_id)
-        return influencer_id
+    if influencer_info := get_influencer_by_url(url):
+        logger.info("Influencer already exists: %s", influencer_info)
+        return influencer_info
 
     channel_data = get_youtube_channel_info(url)
     # logger.info("channel_data: %s", channel_data)
@@ -54,7 +54,7 @@ def upsert_influencer_endpoint(url: str):
     slug = generate_slug(channel_data["name"])
     logger.info("Generated slug: %s", slug)
 
-    influencer_id = upsert_influencer(
+    influencer_info = upsert_influencer(
         name=channel_data["name"],
         profile_img=profile_img_id,
         yt_channel_info_jsonb=channel_data,
@@ -63,8 +63,8 @@ def upsert_influencer_endpoint(url: str):
         slug=slug,
     )
 
-    if influencer_id is None:
+    if influencer_info is None:
         logger.error("Failed to upsert influencer")
         return {"error": "Failed to upsert influencer"}
 
-    return influencer_id
+    return influencer_info

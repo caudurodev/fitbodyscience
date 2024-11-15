@@ -253,6 +253,7 @@ update_permissions:
         - content_score
         - pro_aggregate_content_score
         - abstract
+        - canonical_url
         - conclusion
         - content_type
         - direct_download_url
@@ -260,6 +261,7 @@ update_permissions:
         - error_message
         - full_text
         - media_type
+        - slug
         - source_url
         - summary
         - title
@@ -282,6 +284,7 @@ update_permissions:
         - content_score
         - pro_aggregate_content_score
         - abstract
+        - canonical_url
         - conclusion
         - content_type
         - direct_download_url
@@ -289,6 +292,7 @@ update_permissions:
         - error_message
         - full_text
         - media_type
+        - slug
         - source_url
         - summary
         - title

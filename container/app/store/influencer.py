@@ -60,6 +60,7 @@ def upsert_influencer(
                     affected_rows
                     returning {
                         id
+                        slug
                     }
                 }
             }
@@ -70,7 +71,7 @@ def upsert_influencer(
         if response.get("errors"):
             logger.error("GraphQL Error: %s", response["errors"])
             return None
-        return response["data"]["insert_influencers"]
+        return response["data"]["insert_influencers"]["returning"][0]
     except Exception as e:
         logger.error(f"Error upserting influencer: {e}")
         logger.info(f"Response: {response}")
@@ -85,6 +86,7 @@ def get_influencer_by_url(url: str):
             query CheckInfluencerExistsQuery($url: String!) {
                 influencers(where: {ytUrl: {_eq: $url}}) {
                     id
+                    slug
                 }
             }
         """,
@@ -95,7 +97,7 @@ def get_influencer_by_url(url: str):
         if response.get("errors"):
             logger.error("GraphQL Error: %s", response["errors"])
             return None
-        return response["data"]["influencers"]
+        return response["data"]["influencers"][0]
     except Exception as e:
         logger.error(f"Error getting influencer by URL: {e}")
         return None
