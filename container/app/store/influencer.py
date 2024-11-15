@@ -11,6 +11,7 @@ def upsert_influencer(
     yt_channel_info_jsonb: dict,
     yt_description: str,
     yt_url: str,
+    slug: str,
 ):
     """Upsert influencer data into the database"""
     date_now = datetime.now().strftime("%Y-%m-%d")
@@ -26,6 +27,7 @@ def upsert_influencer(
             "ytDescription": yt_description,
             "ytLastUpdated": date_now,
             "ytUrl": yt_url,
+            "slug": slug,
         },
         "query": """
             mutation UpsertInfluencersMutation(
@@ -34,7 +36,8 @@ def upsert_influencer(
                 $ytChannelInfoJsonb: jsonb = "", 
                 $ytDescription: String = "", 
                 $ytLastUpdated: date = "", 
-                $ytUrl: String!
+                $ytUrl: String!,
+                $slug: String!
             ) {
                 insert_influencers(objects: {
                     name: $name, 
@@ -42,14 +45,16 @@ def upsert_influencer(
                     ytChannelInfoJsonb: $ytChannelInfoJsonb, 
                     ytDescription: $ytDescription, 
                     ytLastUpdated: $ytLastUpdated, 
-                    ytUrl: $ytUrl
+                    ytUrl: $ytUrl,
+                    slug: $slug
                 }, on_conflict: {constraint: influencers_pkey, update_columns: [
                         name, 
                         profileImg, 
                         ytChannelInfoJsonb, 
                         ytDescription, 
                         ytLastUpdated, 
-                        ytUrl
+                        ytUrl,
+                        slug
                     ]
                 }) {
                     affected_rows
@@ -69,4 +74,28 @@ def upsert_influencer(
     except Exception as e:
         logger.error(f"Error upserting influencer: {e}")
         logger.info(f"Response: {response}")
+        return None
+
+
+def get_influencer_by_url(url: str):
+    """Get influencer by URL"""
+    query = {
+        "variables": {"url": url},
+        "query": """
+            query CheckInfluencerExistsQuery($url: String!) {
+                influencers(where: {ytUrl: {_eq: $url}}) {
+                    id
+                }
+            }
+        """,
+    }
+
+    try:
+        response = make_graphql_call(query)
+        if response.get("errors"):
+            logger.error("GraphQL Error: %s", response["errors"])
+            return None
+        return response["data"]["influencers"]
+    except Exception as e:
+        logger.error(f"Error getting influencer by URL: {e}")
         return None

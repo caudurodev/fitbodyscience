@@ -9,6 +9,7 @@ groq
 together
 
 colorlog
+unidecode
 
 yt_dlp
 youtube-transcript-api

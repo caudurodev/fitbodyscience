@@ -6,13 +6,20 @@ import os
 import tempfile
 import requests
 from ..video.get_yt_channel_data import get_youtube_channel_info
-from ..store.influencer import upsert_influencer
+from ..store.influencer import upsert_influencer, get_influencer_by_url
 from ..config.logging import logger
 from ..utils.nhost.upload import upload_files_to_nhost
+from ..store.slug import generate_slug
 
 
 def upsert_influencer_endpoint(url: str):
     """Upserts influencer data to the database"""
+
+    # check if duplicate
+    if influencer_id := get_influencer_by_url(url):
+        logger.info("Influencer already exists: %s", influencer_id)
+        return influencer_id
+
     channel_data = get_youtube_channel_info(url)
     logger.info("channel_data: %s", channel_data)
 
@@ -43,12 +50,17 @@ def upsert_influencer_endpoint(url: str):
             logger.error("Error uploading profile image: %s", e)
             # Continue without profile image if upload fails
 
+    logger.info("Generating slug for influencer: %s", channel_data["name"])
+    slug = generate_slug(channel_data["name"])
+    logger.info("Generated slug: %s", slug)
+
     influencer_id = upsert_influencer(
         name=channel_data["name"],
         profile_img=profile_img_id,
         yt_channel_info_jsonb=channel_data,
         yt_description=channel_data["description"],
         yt_url=url,
+        slug=slug,
     )
 
     if influencer_id is None:
