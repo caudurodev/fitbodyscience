@@ -16,4 +16,5 @@
 - "!include public_influencers.yaml"
 - "!include storage_buckets.yaml"
 - "!include storage_files.yaml"
+- "!include storage_schema_migrations.yaml"
 - "!include storage_virus.yaml"

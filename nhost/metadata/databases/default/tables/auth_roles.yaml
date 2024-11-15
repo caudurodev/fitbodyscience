@@ -26,7 +26,7 @@ array_relationships:
         table:
           name: user_roles
           schema: auth
-  - name: usersByDefaultRole
+  - name: users
     using:
       foreign_key_constraint_on:
         column: default_role
