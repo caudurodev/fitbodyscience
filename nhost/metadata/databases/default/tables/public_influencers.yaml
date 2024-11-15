@@ -20,6 +20,14 @@ configuration:
     yt_last_updated: ytLastUpdated
     yt_url: ytUrl
   custom_root_fields: {}
+array_relationships:
+  - name: influencer_contents
+    using:
+      foreign_key_constraint_on:
+        column: influencer_id
+        table:
+          name: influencer_contents
+          schema: public
 select_permissions:
   - role: public
     permission:
@@ -27,6 +35,21 @@ select_permissions:
         - yt_last_updated
         - yt_channelinfo_jsonb
         - name
+        - slug
+        - yt_description
+        - yt_url
+        - id
+        - profile_img
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - yt_last_updated
+        - yt_channelinfo_jsonb
+        - name
+        - slug
         - yt_description
         - yt_url
         - id

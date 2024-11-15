@@ -23,7 +23,7 @@ def get_youtube_video_data(video_url: str) -> Dict[str, Any]:
     """
     try:
         transcript = get_youtube_transcript(video_url)
-        logger.info("transcript: %s", transcript)
+        # logger.info("transcript: %s", transcript)
         full_text_transcript = " ".join([segment["text"] for segment in transcript])
 
         count_tokens_response = count_tokens(full_text_transcript)

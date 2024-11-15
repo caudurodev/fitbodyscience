@@ -4,7 +4,21 @@ type Mutation {
   ): RecalculateAggregateScoreOutput
 }
 
+type Mutation {
+  userAddContent(
+    url: String!
+    mediaType: String
+    contentType: String
+  ): UserAddContentOutput
+}
+
 type RecalculateAggregateScoreOutput {
   success: Boolean!
+}
+
+type UserAddContentOutput {
+  message: String
+  slug: String
+  success: Boolean
 }
 

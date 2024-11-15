@@ -21,7 +21,7 @@ def upsert_influencer_endpoint(url: str):
         return influencer_id
 
     channel_data = get_youtube_channel_info(url)
-    logger.info("channel_data: %s", channel_data)
+    # logger.info("channel_data: %s", channel_data)
 
     # Handle profile image upload
     profile_img_id = ""

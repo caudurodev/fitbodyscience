@@ -19,6 +19,10 @@ handler.setFormatter(
     )
 )
 
-logger = colorlog.getLogger(__name__)
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# Configure root logger first
+root_logger = colorlog.getLogger()
+root_logger.addHandler(handler)
+root_logger.setLevel(logging.INFO)
+
+# Then create and export a logger instance
+logger = logging.getLogger(__name__)

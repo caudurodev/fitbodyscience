@@ -13,13 +13,15 @@ from .endpoints.website_page import analyse_website_page
 from .endpoints.assertions import insert_assertions_opposing
 from .video.get_yt_channel_data import get_channel_url_from_video
 
-# from .utils.auth.user import require_auth
+from .utils.auth.user import require_auth
 from .utils.validators import validate_input
 from .content_store.assertion_store import (
     get_content_assertion_ids,
     get_assertion_content_ids,
 )
 from .scoring.update import update_evidence_score
+from .video.youtube import get_clean_youtube_url
+from .store.content import update_content_source_url
 
 # from .graphdb.main import create_dummy_data, read_data
 
@@ -32,6 +34,48 @@ CORS(app)
 def hello():
     """Test method for the server"""
     return "Hello World3!"
+
+
+@app.route("/action_user_add_content", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["url"],
+    optional_fields=["mediaType", "contentType"],
+    payload_key="input",
+)
+@validate_input(
+    required_fields=["x-hasura-user-id", "x-hasura-role"],
+    payload_key="session_variables",
+)
+def action_user_add_content_method(input_data, session_variables_data):
+    """Action to add user content"""
+    logger.info("action_user_add_content_method")
+    logger.info("input_data: %s", input_data)
+    logger.info("session_variables_data: %s", session_variables_data)
+    try:
+        # if 1 == 2:
+        #     return (
+        #         jsonify(
+        #             {
+        #                 "message": "error",
+        #                 "slug": "slug",
+        #                 "success": False,
+        #             }
+        #         ),
+        #         500,
+        #     )
+        return (
+            jsonify(
+                {
+                    "message": "success",
+                    "slug": "slug",
+                    "success": True,
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"message": f"Error adding content {str(e)}"}), 500
 
 
 @app.route("/on_insert_content", methods=["POST"])
@@ -69,12 +113,39 @@ def on_insert_content_endpoint():
 
         if content_type == "youtube_video":
             # #logger.info("media_type: youtube_video")
+            logger.info("new_data.get('source_url'): %s", new_data.get("source_url"))
+            cleaned_url = get_clean_youtube_url(new_data.get("source_url"))
+            logger.info("cleaned_url: %s", cleaned_url)
 
+            if cleaned_url is None:
+                logger.error("Error cleaning YouTube URL")
+                return (
+                    jsonify(
+                        {
+                            "message": "Error cleaning YouTube URL",
+                        }
+                    ),
+                    500,
+                )
+            if cleaned_url != new_data.get("source_url"):
+                update_content_source_url(content_id, cleaned_url)
             # add influencer if not in db
-            channel_url = get_channel_url_from_video(new_data.get("source_url"))
+            influencer_id = None
+            channel_url = get_channel_url_from_video(cleaned_url)
             if channel_url:
-                upsert_influencer_endpoint(channel_url)
-            result = analyze_youtube_video(content_id)
+                influencer_id = upsert_influencer_endpoint(channel_url)
+
+            if influencer_id is None:
+                logger.error("Error upserting influencer")
+                return (
+                    jsonify(
+                        {
+                            "message": "Error getting influencer id",
+                        }
+                    ),
+                    500,
+                )
+            result = analyze_youtube_video(content_id, influencer_id)
             if result["server_response"] != 200:
                 content_parse_error(content_id, result["message"])
             return (

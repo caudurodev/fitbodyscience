@@ -1,0 +1,38 @@
+table:
+  name: influencer_contents
+  schema: public
+configuration:
+  column_config:
+    content_id:
+      custom_name: contentId
+    influencer_id:
+      custom_name: influencerId
+  custom_column_names:
+    content_id: contentId
+    influencer_id: influencerId
+  custom_root_fields: {}
+object_relationships:
+  - name: content
+    using:
+      foreign_key_constraint_on: content_id
+  - name: influencer
+    using:
+      foreign_key_constraint_on: influencer_id
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - content_id
+        - id
+        - influencer_id
+      filter: {}
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - content_id
+        - id
+        - influencer_id
+      filter: {}
+      allow_aggregations: true
+    comment: ""

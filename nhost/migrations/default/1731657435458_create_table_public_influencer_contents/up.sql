@@ -1,0 +1,2 @@
+CREATE TABLE "public"."influencer_contents" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "influencer_id" uuid NOT NULL, "content_id" uuid NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("content_id") REFERENCES "public"."content"("id") ON UPDATE restrict ON DELETE restrict, FOREIGN KEY ("influencer_id") REFERENCES "public"."influencers"("id") ON UPDATE restrict ON DELETE restrict);
+CREATE EXTENSION IF NOT EXISTS pgcrypto;

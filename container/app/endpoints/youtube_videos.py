@@ -6,9 +6,10 @@ from ..content_get.youtube_video import get_youtube_video_data
 from ..content_store.youtube_store import save_youtube_data, video_exists_in_db
 from ..content_store.assertion_store import parse_assertions_long_text
 from ..meaning.summarize import summarise_text_and_add_to_content
+from ..store.slug import generate_slug
 
 
-def analyze_youtube_video(content_id):
+def analyze_youtube_video(content_id, influencer_id):
     """Analyze a YouTube video and save the data to the database"""
     response = {
         "message": "Success",
@@ -21,12 +22,13 @@ def analyze_youtube_video(content_id):
 
     # logger.info("content_id: %s", content_id)
     exists_result = video_exists_in_db(content_id)
-    source_url = exists_result["source_url"]
+    logger.info("exists_result: %s", exists_result)
+    canonical_url = exists_result["canonicalUrl"]
     is_parsed = exists_result["is_parsed"]
     error_message = exists_result["error_message"]
     # logger.info("exists_result: %s", exists_result)
     is_skip = exists_result["exists"] and not error_message and is_parsed is True
-    if source_url is None:
+    if canonical_url is None:
         response["message"] = "Error: content does not exist in the database"
         response["server_response"] = 400
         return response
@@ -44,7 +46,7 @@ def analyze_youtube_video(content_id):
 
     try:
         # logger.info("Getting YouTube video data...")
-        video_data = get_youtube_video_data(source_url)
+        video_data = get_youtube_video_data(canonical_url)
     except Exception as e:
         logger.error("Error getting YouTube video data: %s", e)
         response["message"] = "Error getting YouTube video data"
@@ -70,19 +72,23 @@ def analyze_youtube_video(content_id):
         response["server_response"] = 500
         return response
 
+    slug = generate_slug(video_title)
+
     try:
         # #logger.info("Saving YouTube data...")
         video_content_id = save_youtube_data(
             content_id=content_id,
             video_title=video_title,
             video_id=video_id,
-            video_url=source_url,
+            video_url=canonical_url,
             transcript=video_transcript,
             video_description=video_description,
             full_text_transcript=full_text_transcript,
+            influencer_id=influencer_id,
+            slug=slug,
         )
 
-        # #logger.info("video_content_id: %s", video_content_id)
+        logger.info("video_content_id: %s", video_content_id)
 
         if full_text_transcript is not None:
             simplified_transcript = []
@@ -93,20 +99,20 @@ def analyze_youtube_video(content_id):
             simplified_transcription = "\n".join(simplified_transcript)
 
             # #logger.info("parse_assertions_long_text starts")
-            run_method_async(
-                parse_assertions_long_text,
-                video_content_id,
-                simplified_transcription,
-                video_description,
-            )
+            # run_method_async(
+            #     parse_assertions_long_text,
+            #     video_content_id,
+            #     simplified_transcription,
+            #     video_description,
+            # )
 
             # #logger.info("summarise_text_and_add_to_content starts")
-            run_method_async(
-                summarise_text_and_add_to_content,
-                video_content_id,
-                full_text_transcript,
-                video_description,
-            )
+            # run_method_async(
+            #     summarise_text_and_add_to_content,
+            #     video_content_id,
+            #     full_text_transcript,
+            #     video_description,
+            # )
             response["message"] = "Success"
             response["server_response"] = 200
             return response

@@ -13,6 +13,7 @@
 - "!include public_content.yaml"
 - "!include public_content_relationship.yaml"
 - "!include public_contents_assertion.yaml"
+- "!include public_influencer_contents.yaml"
 - "!include public_influencers.yaml"
 - "!include storage_buckets.yaml"
 - "!include storage_files.yaml"

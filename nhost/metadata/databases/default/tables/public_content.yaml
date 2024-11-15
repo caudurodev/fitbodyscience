@@ -1,6 +1,13 @@
 table:
   name: content
   schema: public
+configuration:
+  column_config:
+    canonical_url:
+      custom_name: canonicalUrl
+  custom_column_names:
+    canonical_url: canonicalUrl
+  custom_root_fields: {}
 array_relationships:
   - name: assertions
     using:
@@ -43,6 +50,13 @@ array_relationships:
         column: content_id
         table:
           name: contents_assertion
+          schema: public
+  - name: influencer_contents
+    using:
+      foreign_key_constraint_on:
+        column: content_id
+        table:
+          name: influencer_contents
           schema: public
   - name: parent_content
     using:
@@ -122,6 +136,7 @@ select_permissions:
         - content_score
         - pro_aggregate_content_score
         - abstract
+        - canonical_url
         - conclusion
         - content_type
         - direct_download_url
@@ -129,6 +144,7 @@ select_permissions:
         - error_message
         - full_text
         - media_type
+        - slug
         - source_url
         - summary
         - title
@@ -151,6 +167,7 @@ select_permissions:
         - content_score
         - pro_aggregate_content_score
         - abstract
+        - canonical_url
         - conclusion
         - content_type
         - direct_download_url
@@ -158,6 +175,7 @@ select_permissions:
         - error_message
         - full_text
         - media_type
+        - slug
         - source_url
         - summary
         - title
