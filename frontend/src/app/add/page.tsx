@@ -11,7 +11,7 @@ import {
 } from '@nextui-org/react'
 import { useMutation } from '@apollo/client'
 import { useForm, Controller } from 'react-hook-form'
-import { ADD_VIDEO_MUTATION } from '@/store/index'
+import { ADD_VIDEO_MUTATION } from '@/store/content/mutation'
 
 export default function Home() {
   const router = useRouter()

@@ -7,10 +7,11 @@ from ..meaning.assertions import extract_assertions_from_long_text
 from ..content_get.related_links import retrieve_video_description_links_and_save
 
 
-def parse_assertions_long_text(content_id, long_text, additional_information):
+def parse_assertions_long_text(content_id, long_text, additional_information=""):
     """parse assertions from long text"""
 
     # save related links and connect to assertions if they match
+    logger.info(f"parse_assertions_long_text content_id: {content_id}")
     related_content = []
     try:
         related_content = get_content_related_links(content_id)
@@ -25,6 +26,7 @@ def parse_assertions_long_text(content_id, long_text, additional_information):
     else:
         logger.error("links already extracted")
 
+    # logger.info(f"parse_assertions_long_text long_text: {long_text}")
     extraction = extract_assertions_from_long_text(
         long_text=long_text,
         additional_information=additional_information,
@@ -35,45 +37,61 @@ def parse_assertions_long_text(content_id, long_text, additional_information):
         logger.error("Error extracting assertions from long text")
         return None
 
-    assertions = extraction["assertions"]
-    if assertions is not None or len(assertions) > 0:
-        for assertion in assertions:
-            assertion_id = add_assertion_to_content(content_id, assertion)
-            logger.info("add_assertion_to_content content_id: %s", content_id)
-            logger.info("add_assertion_to_content assertion_id: %s", assertion_id)
-            assertion_weight = assertion.get("assertion_weight", "0")
-            why_relevant = assertion.get("why_relevant_main_point", "")
-            assertion_context = assertion.get("assertion_context", "")
-            logger.info("parse_assertions_long_text assertion_id: %s", assertion_id)
-            if assertion_id is not None:
-                logger.info("add_assertion_relation_to_content PRO")
-                add_assertion_relation_to_content(
-                    assertion_id,
-                    content_id,
-                    assertion_weight,
-                    why_relevant,
-                    assertion_context,
-                    is_pro_content=True,
-                    original_sentence=assertion.get("part_of_text_assertion_made", ""),
-                    timestamp=assertion.get(
-                        "part_of_transcript_assertion_timestamp", ""
-                    ),
-                )
-            if len(assertion.get("citations", [])):
-                for citation in assertion.get("citations"):
-                    logger.info("add_assertion_relation_to_content AGAINST")
-                    # evidence that supports assertion extracted from long text, not original content id
-                    add_content_relation_to_assertion(
-                        assertion_id=assertion_id,
-                        content_id=citation.get("contentId"),
-                        content_weight_to_assertion=citation.get(
-                            "content_weight_to_assertion"
+    try:
+        # logger.info(f"parse_assertions_long_text extraction: {extraction}")
+        assertions = extraction["assertions"]
+        if assertions is not None or len(assertions) > 0:
+            for assertion in assertions:
+                try:
+                    assertion_id = add_assertion_to_content(content_id, assertion)
+                    if assertion_id is None:
+                        logger.error(
+                            "Error adding assertion to content: assertion_id is None"
+                        )
+                        continue
+                except Exception as e:
+                    logger.error("Error adding assertion to content: %s", e)
+                    continue
+                logger.info("add_assertion_to_content content_id: %s", content_id)
+                logger.info("add_assertion_to_content assertion_id: %s", assertion_id)
+                assertion_weight = assertion.get("assertion_weight", "0")
+                why_relevant = assertion.get("why_relevant_main_point", "")
+                assertion_context = assertion.get("assertion_context", "")
+                logger.info("parse_assertions_long_text assertion_id: %s", assertion_id)
+                if assertion_id is not None:
+                    logger.info("add_assertion_relation_to_content PRO")
+                    add_assertion_relation_to_content(
+                        assertion_id,
+                        content_id,
+                        assertion_weight,
+                        why_relevant,
+                        assertion_context,
+                        is_pro_content=True,
+                        original_sentence=assertion.get(
+                            "part_of_text_assertion_made", ""
                         ),
-                        why_relevant=citation.get("why_relevant"),
-                        why_not_relevant="",
-                        is_pro_assertion=True,
-                        is_citation_from_original_content=True,
+                        timestamp=assertion.get(
+                            "part_of_transcript_assertion_timestamp", ""
+                        ),
                     )
+                if len(assertion.get("citations", [])):
+                    for citation in assertion.get("citations"):
+                        logger.info("add_assertion_relation_to_content AGAINST")
+                        # evidence that supports assertion extracted from long text, not original content id
+                        logger.info(f"citation: {citation}")
+                        add_content_relation_to_assertion(
+                            assertion_id=assertion_id,
+                            content_id=citation.get("contentId"),
+                            content_weight_to_assertion=citation.get(
+                                "content_weight_to_assertion"
+                            ),
+                            why_relevant=citation.get("why_relevant"),
+                            why_not_relevant="",
+                            is_pro_assertion=True,
+                            is_citation_from_original_content=True,
+                        )
+    except Exception as e:
+        logger.error("Error adding assertions to content: %s", e)
 
 
 def add_assertion_to_content(content_id, assertion):
@@ -81,12 +99,15 @@ def add_assertion_to_content(content_id, assertion):
     now = datetime.datetime.now()
     citations = assertion.get("citations", [])
 
+    logger.info(
+        f"content_id: {content_id} add_assertion_to_content citations: {citations}"
+    )
+    logger.info(f"assertion: {assertion}")
+
     citation_content_id = ""
     if isinstance(citations, list):
-        # Assuming you need to handle multiple citations
         citation_content_ids = [citation.get("contentId", "") for citation in citations]
     else:
-        # If citations is not a list, handle it as a single citation
         citation_content_ids = [citations.get("contentId", "")]
     if len(citation_content_ids) > 0:
         citation_content_id = citation_content_ids[0]
@@ -115,48 +136,50 @@ def add_assertion_to_content(content_id, assertion):
                 ),
             },
             "query": """
-            mutation InsertContentAssertionMutation(
-                $contentId: uuid = "", 
-                $citations: jsonb = "[]",
-                $evidenceType: String = "", 
-                $isFallacy: Boolean = false, 
-                $text: String = "",
-                $originalSentence: String = "",
-                $timestamp: String = "",
-                $citationContentId: uuid = "",
-                $assertionSearchVerify: String = "",
-                $dateCreated: timestamptz = "",
-                $standaloneAssertionReliability: String = 0,
-            ) {
-                insert_assertions(objects: {
-                    citations: $citations,
-                    content_id: $contentId, 
-                    evidence_type: $evidenceType, 
-                    is_fallacy: $isFallacy, 
-                    assertion_search_verify: $assertionSearchVerify,
-                    text: $text,
-                    original_sentence: $originalSentence,
-                    timestamp: $timestamp,
-                    date_created: $dateCreated, 
-                    citation_content_id: $citationContentId,
-                    standalone_assertion_reliability: $standaloneAssertionReliability,
-                }) {
-                    affected_rows
-                    returning {
-                        id
+                mutation InsertContentAssertionMutation(
+                    $contentId: uuid!, 
+                    $citations: jsonb!, 
+                    $evidenceType: String!, 
+                    $isFallacy: Boolean!, 
+                    $text: String!,
+                    $originalSentence: String!,
+                    $timestamp: String!,
+                    $citationContentId: uuid,
+                    $assertionSearchVerify: String!,
+                    $dateCreated: timestamptz!,
+                    $standaloneAssertionReliability: String!
+                ) {
+                    insert_assertions(objects: {
+                        citations: $citations,
+                        contentId: $contentId, 
+                        evidenceType: $evidenceType, 
+                        isFallacy: $isFallacy, 
+                        assertionSearchVerify: $assertionSearchVerify,
+                        text: $text,
+                        originalSentence: $originalSentence,
+                        timestamp: $timestamp,
+                        dateCreated: $dateCreated, 
+                        citationContentId: $citationContentId,
+                        standaloneAssertionReliability: $standaloneAssertionReliability
+                    }) {
+                        affected_rows
+                        returning {
+                            id
+                        }
                     }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-        # logger.info("add_assertion_to_content result: %s", result)
+        logger.info("add_assertion_to_content result: %s", result)
         assertion_id = (
             result.get("data", {})
             .get("insert_assertions", {})
             .get("returning", [{}])[0]
             .get("id", None)
         )
+        if assertion_id is None:
+            logger.error("Failed to get assertion_id from result: %s", result)
         return assertion_id
     except Exception as e:
         logger.error("Error adding assertions to content: %s", e)
@@ -173,6 +196,17 @@ def add_content_relation_to_assertion(
     is_citation_from_original_content=False,
 ):
     """add assertions to content"""
+    logger.info(
+        "params: 1 %s  2 %s 3 %s 4 %s 5 %s 6 %s 7 %s",
+        assertion_id,
+        content_id,
+        content_weight_to_assertion,
+        why_relevant,
+        why_not_relevant,
+        is_pro_assertion,
+        is_citation_from_original_content,
+    )
+
     if not assertion_id or not content_id:
         logger.error(
             "assertion_id or content_id is None %s %s",
@@ -195,32 +229,32 @@ def add_content_relation_to_assertion(
                 "isCitationFromOriginalContent": is_citation_from_original_content,
             },
             "query": """
-            mutation InsertContentAssertionRelationMutation(
-                $assertionId: uuid!, 
-                $contentId: uuid!, 
-                $weightConclusion: numeric!,
-                $whyRelevant: String = "",
-                $whyNotRelevant: String = "",
-                $dateCreated: timestamptz!,
-                $isProAssertion: Boolean = true,
-                $isCitationFromOriginalContent: Boolean = true
-            ) {
-                insert_contents_assertion(objects: {
-                    assertion_id: $assertionId, 
-                    content_id: $contentId, 
-                    weight_conclusion: $weightConclusion,
-                    date_created: $dateCreated
-                    why_relevant: $whyRelevant,
-                    why_not_relevant: $whyNotRelevant,
-                    is_pro_assertion: $isProAssertion,
-                    is_citation_from_original_content: $isCitationFromOriginalContent
-                }) {
-                    affected_rows
-                    returning {
-                        id
+                mutation InsertContentAssertionRelationMutation(
+                    $assertionId: uuid!, 
+                    $contentId: uuid!, 
+                    $weightConclusion: numeric!,
+                    $whyRelevant: String = "",
+                    $whyNotRelevant: String = "",
+                    $dateCreated: timestamptz!,
+                    $isProAssertion: Boolean = true,
+                    $isCitationFromOriginalContent: Boolean = true
+                ) {
+                    insert_contents_assertion(objects: {
+                        assertionId: $assertionId, 
+                        contentId: $contentId, 
+                        weightConclusion: $weightConclusion,
+                        dateCreated: $dateCreated
+                        whyRelevant: $whyRelevant,
+                        whyNotRelevant: $whyNotRelevant,
+                        isProAssertion: $isProAssertion,
+                        isCitationFromOriginalContent: $isCitationFromOriginalContent
+                    }) {
+                        affected_rows
+                        returning {
+                            id
+                        }
                     }
                 }
-            }
             """,
         }
 
@@ -289,41 +323,37 @@ def add_assertion_relation_to_content(
                 "videoTimestamp": timestamp,
             },
             "query": """
-            mutation InsertAssertionContentMutation(
-                $assertionId: uuid!, 
-                $contentId: uuid!, 
-                $weightConclusion: numeric!,
-                $whyRelevant: String = "",
-                $assertionContext: String = "",
-                $dateCreated: timestamptz!,
-                $isProContent: Boolean = true,
-                $originalSentence: String = "",
-                $videoTimestamp: String = ""
-            ) {
-                insert_assertions_content(objects: {
-                    assertion_id: $assertionId, 
-                    content_id: $contentId, 
-                    weight_conclusion: $weightConclusion,
-                    date_created: $dateCreated
-                    why_relevant: $whyRelevant,
-                    assertion_context: $assertionContext,
-                    is_pro_content: $isProContent,
-                    original_sentence: $originalSentence,
-                    video_timestamp: $videoTimestamp
-                }) {
-                    affected_rows
-                    returning {
-                        id
+                mutation InsertAssertionContentMutation(
+                    $assertionId: uuid!, 
+                    $contentId: uuid!, 
+                    $weightConclusion: numeric!,
+                    $whyRelevant: String = "",
+                    $assertionContext: String = "",
+                    $dateCreated: timestamptz!,
+                    $isProContent: Boolean = true,
+                    $originalSentence: String = "",
+                    $videoTimestamp: String = ""
+                ) {
+                    insert_assertions_content(objects: {
+                        assertionId: $assertionId, 
+                        contentId: $contentId, 
+                        weightConclusion: $weightConclusion,
+                        dateCreated: $dateCreated
+                        whyRelevant: $whyRelevant,
+                        assertionContext: $assertionContext,
+                        isProContent: $isProContent,
+                        originalSentence: $originalSentence,
+                        videoTimestamp: $videoTimestamp
+                    }) {
+                        affected_rows
+                        returning {
+                            id
+                        }
                     }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-        logger.info(
-            "asdasdasdasdasdasd ====== add_assertion_relation_to_content result: %s",
-            result,
-        )
         assertion_id = (
             result.get("data", {})
             .get("insert_assertions", {})
@@ -344,17 +374,17 @@ def get_content_related_links(content_id):
                 "contentId": content_id,
             },
             "query": """
-            query GetRelatedContentQuery($contentId: uuid!) {
-                content_relationship(where: {parent_content_id: {_eq: $contentId}}) {
-                    child_content {
-                        id
-                        source_url
-                        doi_number
-                        content_type
-                        media_type
+                query GetRelatedContentQuery($contentId: uuid!) {
+                    content_relationship(where: {parentContentId: {_eq: $contentId}}) {
+                        child_content {
+                            id
+                            sourceUrl
+                            doiNumber
+                            contentType
+                            mediaType
+                        }
                     }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
@@ -393,13 +423,12 @@ def get_content_assertion_ids(content_id):
                 "contentId": content_id,
             },
             "query": """
-            query GetContentAssertionIdsQuery($contentId: uuid!) {
-                contents_assertion(where: {content_id: {_eq: $contentId}}) {
-                    content_id
-                    assertion_id
+                query GetContentAssertionIdsQuery($contentId: uuid!) {
+                    contents_assertion(where: {contentId: {_eq: $contentId}}) {
+                        contentId
+                        assertionId
+                    }
                 }
-            }
-
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
@@ -420,39 +449,39 @@ def get_assertion_content(assertion_id):
                 "assertionId": assertion_id,
             },
             "query": """
-            query GetAssertionContentQuery($assertionId: uuid = "") {
-                assertions(where: {id: {_eq: $assertionId}}) {
-                    assertion_search_verify
-                    citation_content_id
-                    citations
-                    content_context
-                    content_id
-                    date_created
-                    date_last_modified
-                    evidence_type
-                    is_fallacy
-                    id
-                    original_sentence
-                    source
-                    standalone_assertion_reliability
-                    text
-                    timestamp
-                    contents_assertions{
+                query GetAssertionContentQuery($assertionId: uuid = "") {
+                    assertions(where: {id: {_eq: $assertionId}}) {
+                        assertionSearchVerify
+                        citationContentId
+                        citations
+                        contentContext
+                        contentId
+                        dateCreated
+                        dateLastModified
+                        evidenceType
+                        isFallacy
+                        id
+                        originalSentence
+                        source
+                        standaloneAssertionReliability
+                        text
+                        timestamp
+                        contents_assertions{
+                            content {
+                                title
+                                doiNumber
+                                sourceUrl
+                            }
+                        }
                         content {
+                            id
                             title
-                            doi_number
-                            source_url
+                            summary
+                            sourceUrl
+                            doiNumber
                         }
                     }
-                    content {
-                        id
-                        title
-                        summary
-                        source_url
-                        doi_number
-                    }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
@@ -473,19 +502,19 @@ def get_assertion_evidence_scores(assertion_id):
                 "assertionId": assertion_id,
             },
             "query": """
-            query GetAssertionEvidenceScoresQuery($assertionId: uuid!) {
-                assertions(where: {id: {_eq: $assertionId}}) {
-                    id
-                    contents_assertions {
-                        is_pro_assertion
-                        content {
-                            id
-                            content_score
-                            science_paper_classification
+                query GetAssertionEvidenceScoresQuery($assertionId: uuid!) {
+                    assertions(where: {id: {_eq: $assertionId}}) {
+                        id
+                        contents_assertions {
+                            isProAssertion
+                            content {
+                                id
+                                contentScore
+                                sciencePaperClassification
+                            }
                         }
                     }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
@@ -506,11 +535,11 @@ def get_assertion_content_ids(assertion_id):
                 "assertionId": assertion_id,
             },
             "query": """
-            query GetAssertionContentQuery($assertionId: uuid!) {
-                assertions(where: {id: {_eq: $assertionId}}) {
-                    content_id
+                query GetAssertionContentQuery($assertionId: uuid!) {
+                    assertions(where: {id: {_eq: $assertionId}}) {
+                        contentId
+                    }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
@@ -531,13 +560,12 @@ def get_assertion_parent_content_ids(assertion_id):
                 "assertionId": assertion_id,
             },
             "query": """
-            query GetAssertionParentContentIds($assertionId: uuid!) {
-                assertions_content(where: {assertion_id: {_eq: $assertionId}}) {
-                    assertion_id
-                    content_id
+                query GetAssertionParentContentIds($assertionId: uuid!) {
+                    assertions_content(where: {assertionId: {_eq: $assertionId}}) {
+                        assertionId
+                        contentId
+                    }
                 }
-            }
-
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)

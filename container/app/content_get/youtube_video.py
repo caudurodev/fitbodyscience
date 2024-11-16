@@ -22,12 +22,16 @@ def get_youtube_video_data(video_url: str) -> Dict[str, Any]:
                         video description, and token count response.
     """
     try:
+        # Get video info first to ensure it's available even if transcript fails
+        video_info = get_youtube_video_info(video_url)
+
+        # Get transcript
         transcript = get_youtube_transcript(video_url)
-        # logger.info("transcript: %s", transcript)
-        full_text_transcript = " ".join([segment["text"] for segment in transcript])
+
+        # The transcript is already a string from get_youtube_transcript
+        full_text_transcript = transcript
 
         count_tokens_response = count_tokens(full_text_transcript)
-        video_info = get_youtube_video_info(video_url)
 
         return {
             "transcript": transcript,
@@ -38,4 +42,5 @@ def get_youtube_video_data(video_url: str) -> Dict[str, Any]:
     except Exception as e:
         # Handle the exception (e.g., log it, raise a custom error, etc.)
         logger.error("Failed to get YouTube video data: %s", e)
+        # Don't try to log video_info here as it might not exist
         return None

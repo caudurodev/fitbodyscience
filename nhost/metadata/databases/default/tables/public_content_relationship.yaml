@@ -1,6 +1,22 @@
 table:
   name: content_relationship
   schema: public
+configuration:
+  column_config:
+    child_content_id:
+      custom_name: childContentId
+    date_added:
+      custom_name: dateAdded
+    date_updated:
+      custom_name: dateUpdated
+    parent_content_id:
+      custom_name: parentContentId
+  custom_column_names:
+    child_content_id: childContentId
+    date_added: dateAdded
+    date_updated: dateUpdated
+    parent_content_id: parentContentId
+  custom_root_fields: {}
 object_relationships:
   - name: child_content
     using:

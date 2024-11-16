@@ -12,24 +12,24 @@ def get_content_by_id(content_id):
             "contentId": content_id,
         },
         "query": """
-        query GetContentByIdQuery($contentId: uuid!) {
-            content(where: {id: {_eq: $contentId}}) {
-                content_type
-                date_added
-                date_last_modified
-                summary
-                full_text
-                is_parsed
-                media_type
-                source_url
-                video_description
-                video_transcript
-                doi_number
-                crossref_info
-                science_paper_classification
-                id
+            query GetContentByIdQuery($contentId: uuid!) {
+                content(where: {id: {_eq: $contentId}}) {
+                    contentType
+                    dateAdded
+                    dateLastModified
+                    summary
+                    fullText
+                    isParsed
+                    mediaType
+                    sourceUrl
+                    videoDescription
+                    videoTranscript
+                    doiNumber
+                    crossrefInfo
+                    sciencePaperClassification
+                    id
+                }
             }
-        }
         """,
     }
     try:
@@ -52,18 +52,18 @@ def get_content_property_by_id(content_id, property_name):
             "contentId": content_id,
         },
         "query": f"""
-        query GetContentPropertyByIdQuery($contentId: uuid!) {{
-            content(
-                where: {{
-                    id: {{
-                        _eq: $contentId
+            query GetContentPropertyByIdQuery($contentId: uuid!) {{
+                content(
+                    where: {{
+                        id: {{
+                            _eq: $contentId
+                        }}
                     }}
+                ) {{
+                    id
+                    {property_name}
                 }}
-            ) {{
-                id
-                {property_name}
             }}
-        }}
         """,
     }
     try:
@@ -84,18 +84,18 @@ def get_content_assertion_tree(content_id):
                 "contentId": content_id,
             },
             "query": """
-            query GetAssertionEvidenceScoresQuery($contentId: uuid!) {
-               content(where: {id: {_eq: $contentId}}) {
-                    assertions {
+                query GetAssertionEvidenceScoresQuery($contentId: uuid!) {
+                    content(where: {id: {_eq: $contentId}}) {
+                        assertions {
                         id
-                        against_evidence_aggregate_score
-                        pro_evidence_aggregate_score
-                        assertions_contents{
-                            weight_conclusion
+                        againstEvidenceAggregateScore
+                        proEvidenceAggregateScore
+                            assertions_contents {
+                                weightConclusion
+                            }
                         }
                     }
                 }
-            }
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)

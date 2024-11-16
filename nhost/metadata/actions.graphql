@@ -12,6 +12,12 @@ type Mutation {
   ): UserAddContentOutput
 }
 
+type Mutation {
+  userAnalyseContent(
+    contentId: String!
+  ): UserAnalyseContentOutput
+}
+
 type RecalculateAggregateScoreOutput {
   success: Boolean!
 }
@@ -19,6 +25,11 @@ type RecalculateAggregateScoreOutput {
 type UserAddContentOutput {
   message: String
   slug: String
+  success: Boolean
+}
+
+type UserAnalyseContentOutput {
+  message: String
   success: Boolean
 }
 

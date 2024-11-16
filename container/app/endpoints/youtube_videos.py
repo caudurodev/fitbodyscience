@@ -23,6 +23,7 @@ def analyze_youtube_video(content_id, influencer_id):
     # logger.info("content_id: %s", content_id)
     exists_result = video_exists_in_db(content_id)
     logger.info("exists_result: %s", exists_result)
+    # influencer_id = exists_result["influencer_contents"][0]["influencer"]["id"]
     canonical_url = exists_result["canonicalUrl"]
     is_parsed = exists_result["is_parsed"]
     error_message = exists_result["error_message"]
@@ -72,10 +73,9 @@ def analyze_youtube_video(content_id, influencer_id):
         response["server_response"] = 500
         return response
 
-    slug = generate_slug(video_title)
+    slug = f"{generate_slug(video_title)}-{video_id}"
 
     try:
-        # #logger.info("Saving YouTube data...")
         video_content_id = save_youtube_data(
             content_id=content_id,
             video_title=video_title,

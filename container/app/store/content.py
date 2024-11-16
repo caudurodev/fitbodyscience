@@ -14,6 +14,7 @@ def upsert_content(
     transcript,
     video_description,
     full_text_transcript,
+    is_parsed,
     slug,
 ):
     """save content to database"""
@@ -29,7 +30,7 @@ def upsert_content(
             "videoDescription": video_description,
             "fullText": full_text_transcript,
             "contentType": content_type,
-            "isParsed": True,
+            "isParsed": is_parsed,
             "dateAdded": now.strftime("%Y-%m-%d %H:%M:%S"),
             "dateLastModified": now.strftime("%Y-%m-%d %H:%M:%S"),
             "slug": slug,
@@ -105,13 +106,12 @@ def get_content_by_url(url: str):
                 }
             }
             }
-
         """,
     }
     try:
         response = make_graphql_call(query)
         return response["data"]["content"][0]
-    except Exception as e:
+    except Exception:
         # logger.error(f"Error getting content by URL: {e}")
         # logger.info("response: %s", response)
         return None

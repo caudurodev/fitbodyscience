@@ -36,7 +36,7 @@ export default function Home() {
       <section className="mb-24 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {influencers?.map((influencer: any) => (
           <div key={influencer.id}>
-            {influencer.name}
+            {influencer.name} ({influencer.influencer_contents_aggregate.aggregate.count})
             <StorageImage fileId={influencer.profileImg} />
           </div>
         ))}

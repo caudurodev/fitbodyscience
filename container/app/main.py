@@ -14,6 +14,7 @@ from .content_store.assertion_store import (
     get_assertion_content_ids,
 )
 
+from .endpoints.actions.user_analyse_content import user_analyse_content_endpoint
 from .endpoints.actions.user_add_content import user_add_content_endpoint
 
 # from .graphdb.main import create_dummy_data, read_data
@@ -21,12 +22,6 @@ from .endpoints.actions.user_add_content import user_add_content_endpoint
 
 app = Flask(__name__)
 CORS(app)
-
-
-@app.route("/", methods=["GET", "POST"])
-def hello():
-    """Test method for the server"""
-    return "Hello World3!"
 
 
 @app.route("/action_user_add_content", methods=["POST"])
@@ -46,6 +41,24 @@ def action_user_add_content_method(input_data):
     except Exception as e:
         logger.error("Error adding content %s", e)
         return jsonify({"message": f"Error adding content {str(e)}"}), 500
+
+
+@app.route("/action_user_analyse_content", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["contentId"],
+    payload_key="input",
+)
+def action_analyse_content_method(input_data):
+    """Action to add user content"""
+    try:
+        return user_analyse_content_endpoint(content_id=input_data["contentId"])
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
 
 
 # @app.route("/on_insert_content", methods=["POST"])
@@ -439,6 +452,12 @@ def get_yt_channel_endpoint(input_data):
 #         ),
 #         200,
 #     )
+
+
+@app.route("/", methods=["GET", "POST"])
+def hello():
+    """Test method for the server"""
+    return "sup"
 
 
 if __name__ == "__main__":

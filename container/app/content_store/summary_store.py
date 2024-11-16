@@ -29,7 +29,7 @@ def add_summary_to_content(content_id, summary, conclusion):
                     _set: {
                         conclusion: $conclusion,
                         summary: $summary,
-                        date_last_modified: $dateLastModified
+                        dateLastModified: $dateLastModified
                     }
                 ) {
                     affected_rows

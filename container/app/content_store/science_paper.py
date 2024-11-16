@@ -24,13 +24,13 @@ def update_science_paper_content(source_url, full_text):
             ) {
                 update_content(
                     where: {
-                        source_url: {_eq: $sourceURL}
+                        sourceUrl: {_eq: $sourceURL}
                     },
                     _set: {
-                        media_type: $mediaType,
-                        is_parsed: true, 
-                        full_text: $fullText, 
-                        date_last_modified: $dateLastModified
+                        mediaType: $mediaType,
+                        isParsed: true, 
+                        fullText: $fullText, 
+                        dateLastModified: $dateLastModified
                     }
                 ) {
                     affected_rows
@@ -76,13 +76,13 @@ def update_science_paper_crossref_content(source_url, crossref_jsonb):
                 $abstract: String = ""
             ) {
             update_content(where: {
-                source_url: {_eq: $sourceURL}
+                sourceUrl: {_eq: $sourceURL}
                 },
                   _set: {
                     title: $title,
                     abstract: $abstract,
-                    crossref_info: $crossrefInfo, 
-                    date_last_modified: $dateLastModified
+                    crossrefInfo: $crossrefInfo, 
+                    dateLastModified: $dateLastModified
                     }) {
                 affected_rows
                  returning {
@@ -120,9 +120,9 @@ def update_science_paper_classification_content(content_id, classification_jsonb
                 update_content(
                     where: {id: {_eq: $contentId}}, 
                     _set: {
-                        science_paper_classification: $classificationJsonb
-                        date_last_modified: $dateLastModified, 
-                        is_parsed: true
+                        sciencePaperClassification: $classificationJsonb
+                        dateLastModified: $dateLastModified, 
+                        isParsed: true
                     }) {
                         affected_rows
                         returning {
@@ -130,7 +130,6 @@ def update_science_paper_classification_content(content_id, classification_jsonb
                         }
                 }
             }
-
         """,
     }
     try:
@@ -159,10 +158,10 @@ def update_science_paper_direct_download_content(source_url, direct_download_url
                 $dateLastModified: timestamptz!
             ) {
             update_content(
-                where: {source_url: {_eq: $sourceURL}},
+                where: {sourceUrl: {_eq: $sourceURL}},
                   _set: {
-                    direct_download_url: $directDownloadUrl, 
-                    date_last_modified: $dateLastModified
+                    directDownloadUrl: $directDownloadUrl, 
+                    dateLastModified: $dateLastModified
                 }
             ) {
                 affected_rows

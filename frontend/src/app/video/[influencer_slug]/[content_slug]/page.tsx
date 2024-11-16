@@ -4,7 +4,8 @@ import { Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chi
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
-import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY, RECALCULATE_AGGREGATE_SCORES_MUTATION } from '@/store/index'
+import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY } from '@/store/content/query'
+import { RECALCULATE_AGGREGATE_SCORES_MUTATION, USER_ANALYSE_CONTENT_MUTATION, DELETE_CONTENT_MUTATION } from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
 import StudyClassification from "@/components/StudyClassification";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
@@ -20,7 +21,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
         },
         skip: !params.content_slug || !params.influencer_slug
     })
-    const isParsed = contentData?.content?.[0]?.isParsed
+    const isParsed = contentData?.content?.[0]?.isParsed === true
     const { data: subscriptionData } = useSubscription(
         GET_CONTENT_SUBSCRIPTION,
         {
@@ -31,16 +32,14 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
             skip: !params.content_slug || !params.influencer_slug || isParsed === true
         },
     )
-
-    console.log({ params })
-    console.log({ subscriptionData, contentData })
     const [recalculateAggregateScores] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
+    const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
+    const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
     const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
     const assertions_contents = mainContent?.assertionsContents
     const isHydrated = useHydration()
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
     const [player, setPlayer] = useState<any>(null);
-
     const convertTimestampToSeconds = (timestamp: string) => {
         if (!timestamp) return 0;
 
@@ -61,10 +60,31 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
         // Handle single number with 's' format
         return parseInt(timestamp.replace('s', ''));
     };
-
     if (!isHydrated) { return null }
     return (
         <>
+
+            <h6>{isParsed === true ? 'is Parsed' : 'is not parsed'} {mainContent?.id}</h6>
+            <Button
+                className="my-2"
+                color="primary"
+                isLoading={isAnalysingContent}
+                onPress={() => {
+                    userAnalyseContent({ variables: { contentId: mainContent?.id } })
+                }}
+            >
+                Analyse content
+            </Button>
+            <Button
+                className="my-2 mx-4"
+                color="danger"
+                isLoading={isDeletingContent}
+                onPress={async () => {
+                    deleteContent({ variables: { contentId: mainContent?.id } })
+                }}
+            >
+                Delete content
+            </Button>
             <Card>
                 <CardBody className="flex sm:flex-row sm:gap-x-8">
                     <div className="sm:w-1/3">

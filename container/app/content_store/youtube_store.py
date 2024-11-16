@@ -99,43 +99,30 @@ def video_exists_in_db(content_id):
     query = {
         "variables": {"contentId": content_id},
         "query": """
-        query GetVideoByURLQuery($contentId: uuid!) {
-            content(where: {id: {_eq: $contentId}}) {
-                id
-                date_last_modified
-                date_added
-                is_parsed
-                source_url
-                error_message
-                canonicalUrl
+            query GetVideoByURLQuery($contentId: uuid!) {
+                content(where: {id: {_eq: $contentId}}) {
+                    id
+                    dateLastModified
+                    dateAdded
+                    isParsed
+                    sourceUrl
+                    errorMessage
+                    canonicalUrl
+                    videoTranscript
+                    videoDescription
+                    influencer_contents{
+                        influencer{
+                            id
+                        }
+                    }
+                }
             }
-        }
         """,
     }
     try:
-        result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-        exists = len(result["data"]["content"]) > 0
-        content = result["data"]["content"][0] if exists else None
-        is_exists_and_content = exists and content
-        return {
-            "exists": exists,
-            "source_url": content["source_url"] if is_exists_and_content else "",
-            "is_parsed": content["is_parsed"] if is_exists_and_content else False,
-            "error_message": content["error_message"] if is_exists_and_content else "",
-            "content_id": (
-                result["data"]["content"][0]["id"] if is_exists_and_content else None
-            ),
-            "date_last_modified": (
-                result["data"]["content"][0]["date_last_modified"]
-                if is_exists_and_content
-                else None
-            ),
-            "date_added": (
-                result["data"]["content"][0]["date_added"]
-                if is_exists_and_content
-                else None
-            ),
-        }
+        result = make_graphql_call(query)
+        return result["data"]["content"][0]
+
     except Exception as e:
         logger.error("video_exists_in_db Error making graphql call: %s", e)
         return False

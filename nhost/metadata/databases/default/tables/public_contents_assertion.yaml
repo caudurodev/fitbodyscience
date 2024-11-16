@@ -1,6 +1,37 @@
 table:
   name: contents_assertion
   schema: public
+configuration:
+  column_config:
+    assertion_id:
+      custom_name: assertionId
+    content_id:
+      custom_name: contentId
+    date_created:
+      custom_name: dateCreated
+    date_last_modified:
+      custom_name: dateLastModified
+    is_citation_from_original_content:
+      custom_name: isCitationFromOriginalContent
+    is_pro_assertion:
+      custom_name: isProAssertion
+    weight_conclusion:
+      custom_name: weightConclusion
+    why_not_relevant:
+      custom_name: whyNotRelevant
+    why_relevant:
+      custom_name: whyRelevant
+  custom_column_names:
+    assertion_id: assertionId
+    content_id: contentId
+    date_created: dateCreated
+    date_last_modified: dateLastModified
+    is_citation_from_original_content: isCitationFromOriginalContent
+    is_pro_assertion: isProAssertion
+    weight_conclusion: weightConclusion
+    why_not_relevant: whyNotRelevant
+    why_relevant: whyRelevant
+  custom_root_fields: {}
 object_relationships:
   - name: assertion
     using:

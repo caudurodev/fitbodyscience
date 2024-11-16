@@ -22,3 +22,5 @@ PyMuPDF
 py2neo
 
 crewai[tools]
+
+# openai-whisper

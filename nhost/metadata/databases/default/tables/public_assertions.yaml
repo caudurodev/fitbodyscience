@@ -1,6 +1,46 @@
 table:
   name: assertions
   schema: public
+configuration:
+  column_config:
+    against_evidence_aggregate_score:
+      custom_name: againstEvidenceAggregateScore
+    assertion_search_verify:
+      custom_name: assertionSearchVerify
+    citation_content_id:
+      custom_name: citationContentId
+    content_context:
+      custom_name: contentContext
+    content_id:
+      custom_name: contentId
+    date_created:
+      custom_name: dateCreated
+    date_last_modified:
+      custom_name: dateLastModified
+    evidence_type:
+      custom_name: evidenceType
+    is_fallacy:
+      custom_name: isFallacy
+    original_sentence:
+      custom_name: originalSentence
+    pro_evidence_aggregate_score:
+      custom_name: proEvidenceAggregateScore
+    standalone_assertion_reliability:
+      custom_name: standaloneAssertionReliability
+  custom_column_names:
+    against_evidence_aggregate_score: againstEvidenceAggregateScore
+    assertion_search_verify: assertionSearchVerify
+    citation_content_id: citationContentId
+    content_context: contentContext
+    content_id: contentId
+    date_created: dateCreated
+    date_last_modified: dateLastModified
+    evidence_type: evidenceType
+    is_fallacy: isFallacy
+    original_sentence: originalSentence
+    pro_evidence_aggregate_score: proEvidenceAggregateScore
+    standalone_assertion_reliability: standaloneAssertionReliability
+  custom_root_fields: {}
 object_relationships:
   - name: content
     using:

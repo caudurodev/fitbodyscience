@@ -25,8 +25,8 @@ def add_fulltext_to_content(content_id, full_text):
                         id: {_eq: $contentId}
                     },
                     _set: {
-                        full_text: $fullText,
-                        date_last_modified: $dateLastModified
+                        fullText: $fullText,
+                        dateLastModified: $dateLastModified
                     }
                 ) {
                     affected_rows

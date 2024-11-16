@@ -11,16 +11,16 @@ def get_user_by_id(user_id: str):
             "userId": user_id,
         },
         "query": """
-            query GetUserByIdQuery($userId: uuid!) {
-                    users(where: {id: {_eq: $userId}}) {
-                        displayName
-                        email
-                        id
-                        emailVerified
-                        avatarUrl
-                        
-                    }
+           query GetUserByIdQuery($userId: uuid!) {
+                users(where: {id: {_eq: $userId}}) {
+                    displayName
+                    email
+                    id
+                    emailVerified
+                    avatarUrl
                 }
+            }
+
         """,
     }
     try:

@@ -13,10 +13,19 @@ actions:
     permissions:
       - role: user
     comment: userAddContent
+  - name: userAnalyseContent
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/action_user_analyse_content
+      timeout: 120
+    permissions:
+      - role: user
+    comment: userAnalyseContent
 custom_types:
   enums: []
   input_objects: []
   objects:
     - name: RecalculateAggregateScoreOutput
     - name: UserAddContentOutput
+    - name: UserAnalyseContentOutput
   scalars: []

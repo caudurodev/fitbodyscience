@@ -12,14 +12,14 @@ def save_content_score(content_id, score):
             "score": score,
         },
         "query": """
-        mutation UpdateContentScoreMutation($score: numeric!, $contentId: uuid!) {
-            update_content(where: {id: {_eq: $contentId}}, _set: {content_score: $score}) {
-                affected_rows
-                returning {
-                    id
+            mutation UpdateContentScoreMutation($score: numeric!, $contentId: uuid!) {
+                update_content(where: {id: {_eq: $contentId}}, _set: {contentScore: $score}) {
+                    affected_rows
+                    returning {
+                        id
+                    }
                 }
             }
-        }
         """,
     }
     try:
@@ -51,23 +51,23 @@ def save_aggregate_content_score(content_id, score_pro, score_against):
             "scoreAgainst": score_against,
         },
         "query": """
-        mutation UpdateAggregateContentScoreMutation(
-            $scorePro: numeric!,
-            $scoreAgainst: numeric!,
-            $contentId: uuid!
-        ) {
-              update_content(
-                where: {id: {_eq: $contentId}},
-                _set: {
-                    against_aggregate_content_score: $scoreAgainst
-                    pro_aggregate_content_score: $scorePro
-                }) {
-                    affected_rows
-                    returning {
-                        id
+            mutation UpdateAggregateContentScoreMutation(
+                $scorePro: numeric!,
+                $scoreAgainst: numeric!,
+                $contentId: uuid!
+            ) {
+                update_content(
+                    where: {id: {_eq: $contentId}},
+                    _set: {
+                        againstAggregateContentScore: $scoreAgainst
+                        proAggregateContentScore: $scorePro
+                    }) {
+                        affected_rows
+                        returning {
+                            id
+                        }
                     }
                 }
-            }
         """,
     }
     try:
@@ -88,26 +88,26 @@ def save_aggregate_assertion_score(assertion_id, score_pro, score_against):
             "scoreAgainst": score_against,
         },
         "query": """
-        mutation UpdateAggregateAssertionScore(
-            $contentId: uuid!, 
-            $scoreAgainst: numeric!, 
-            $scorePro: numeric!
-        ) {
-            update_assertions(
-                where: {
-                    id: {_eq: $contentId}
-                },
-                _set: {
-                against_evidence_aggregate_score: $scoreAgainst, 
-                pro_evidence_aggregate_score: $scorePro
-                }
+            mutation UpdateAggregateAssertionScore(
+                $contentId: uuid!, 
+                $scoreAgainst: numeric!, 
+                $scorePro: numeric!
             ) {
-                affected_rows
-                returning {
-                    id
+                update_assertions(
+                    where: {
+                        id: {_eq: $contentId}
+                    },
+                    _set: {
+                        againstEvidenceAggregateScore: $scoreAgainst, 
+                        proEvidenceAggregateScore: $scorePro
+                    }
+                ) {
+                    affected_rows
+                    returning {
+                        id
+                    }
                 }
             }
-        }
         """,
     }
     try:

@@ -2,19 +2,24 @@
 import { gql } from '@apollo/client'
 
 export const GET_INFLUENCERS_QUERY = gql`
-query GetInfluencersQuery {
-  influencers {
-    name
-    profileImg
-    ytChannelInfoJsonb
-    ytDescription
-    ytLastUpdated
-    ytUrl
-  }
-  influencers_aggregate {
-    aggregate {
-      count
+  query GetInfluencersQuery {
+    influencers {
+      name
+      profileImg
+      ytChannelInfoJsonb
+      ytDescription
+      ytLastUpdated
+      ytUrl
+      influencer_contents_aggregate{
+        aggregate{
+          count
+        }
+      }
+    }
+    influencers_aggregate {
+      aggregate {
+        count
+      }
     }
   }
-}
 `

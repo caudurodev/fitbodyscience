@@ -32,6 +32,7 @@ export const CardFullImageItem = ({ item }: { item: any }) => {
 
 export const CardBottomCaptionItem = ({ item }: { item: any }) => {
     const router = useRouter()
+    const videoSlug = item?.influencer_contents?.[0]?.influencer?.slug + '/' + item?.slug
     return (
         <Card className=" min-h-[300px]">
             {/* <CardHeader className="absolute z-10 top-1 flex-col items-start"> */}
@@ -39,24 +40,24 @@ export const CardBottomCaptionItem = ({ item }: { item: any }) => {
             {/* <h4 className="text-black font-medium text-2xl">Acme camera</h4> */}
             {/* </CardHeader> */}
             <YouTubePlayer
-                videoId={item?.video_id}
+                videoId={item?.videoId}
                 className="z-0 w-full h-full"
             />
             <CardFooter className="absolute bg-white bottom-0 border-t-1 border-zinc-100/50 z-10 justify-between">
                 <div>
                     <Chip className="mr-2 text-white font-bold" color="primary" >
                         <Icon icon="mdi:approve" className="inline mr-2" />
-                        {item.pro_aggregate_content_score || 0}
+                        {item.proAggregateContentScore || 0}
                     </Chip>
                     <Chip color="secondary" className="mr-2 text-white font-bold">
                         <Icon icon="ci:stop-sign" className="inline mr-2" />
-                        {item.against_aggregate_content_score || 0}
+                        {item.againstAggregateContentScore || 0}
                     </Chip>
                     {/* <p className="text-black text-tiny">{item.category}</p> */}
                     <p className="mt-2 text-md font-bold">{item.title}</p>
                 </div>
                 <Button
-                    onPress={() => { router.push(`/video/${item.id}`) }}
+                    onPress={() => { router.push(`/video/${videoSlug}`) }}
                     className="text-tiny"
                     color="primary"
                     size="sm"

@@ -24,8 +24,8 @@ def content_parse_error(content_id, error_message):
                 update_content(
                     where: {id: {_eq: $contentId}}, 
                     _set: {
-                        error_message: $errorMessage
-                        date_last_modified: $dateLastModified, 
+                        errorMessage: $errorMessage
+                        dateLastModified: $dateLastModified, 
                     }) {
                         affected_rows
                         returning {
@@ -33,7 +33,6 @@ def content_parse_error(content_id, error_message):
                         }
                 }
             }
-
         """,
     }
     try:

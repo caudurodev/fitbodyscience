@@ -114,6 +114,7 @@ def user_add_content_endpoint(content_url, content_type):
             transcript=video_data["transcript"],
             video_description=video_data["video_info"]["description"],
             full_text_transcript=video_data["full_text_transcript"],
+            is_parsed=False,
             slug=slug,
         )
 
