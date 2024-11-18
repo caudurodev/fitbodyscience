@@ -86,4 +86,6 @@ def action_user_classify_evidence_endpoint(content_id):
 
     logger.info(f"Content {content_id} classified")
 
+    # update score
+
     return jsonify({"message": "Content classified", "success": True}), 200

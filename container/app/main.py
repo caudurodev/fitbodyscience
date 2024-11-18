@@ -19,9 +19,9 @@ from .endpoints.actions.user_add_content import user_add_content_endpoint
 from .endpoints.actions.action_user_classify_evidence_endpoint import (
     action_user_classify_evidence_endpoint,
 )
-
-# from .graphdb.main import create_dummy_data, read_data
-
+from .endpoints.actions.action_update_evidence_score_endpoint import (
+    action_update_evidence_score_endpoint,
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -76,6 +76,24 @@ def action_user_classify_evidence_method(input_data):
         return action_user_classify_evidence_endpoint(
             content_id=input_data["contentId"]
         )
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
+
+
+@app.route("/action_update_evidence_score", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["contentId"],
+    payload_key="input",
+)
+def action_update_evidence_score_method(input_data):
+    """Action to add user content"""
+    try:
+        return action_update_evidence_score_endpoint(content_id=input_data["contentId"])
     except Exception as e:
         logger.error("Error adding content %s", e)
         return (
@@ -158,8 +176,8 @@ def on_update_content_endpoint():
 
     # Extract values with defaulting to None if they do not exist
     content_id = new_data.get("id") if new_data else None
-    new_score = new_data.get("content_score") if new_data else None
-    old_score = old_data.get("content_score") if old_data else None
+    new_score = new_data.get("contentScore") if new_data else None
+    old_score = old_data.get("contentScore") if old_data else None
 
     logger.info("content_id: %s", content_id)
     logger.info("new_score: %s", new_score)

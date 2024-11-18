@@ -5,7 +5,13 @@ import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
 import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY } from '@/store/content/query'
-import { RECALCULATE_AGGREGATE_SCORES_MUTATION, USER_ANALYSE_CONTENT_MUTATION, DELETE_CONTENT_MUTATION,CLASSIFY_CONTENT_MUTATION } from '@/store/content/mutation'
+import {
+    RECALCULATE_AGGREGATE_SCORES_MUTATION,
+    USER_ANALYSE_CONTENT_MUTATION,
+    DELETE_CONTENT_MUTATION,
+    CLASSIFY_CONTENT_MUTATION,
+    USER_UPDATE_EVIDENCE_SCORE_MUTATION
+} from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
 import StudyClassification from "@/components/StudyClassification";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
@@ -38,6 +44,8 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
     const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
+    const [updateEvidenceScore, { loading: isUpdatingEvidenceScore }] = useMutation(USER_UPDATE_EVIDENCE_SCORE_MUTATION)
+
     const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
     const assertions_contents = mainContent?.assertions_contents
     const isHydrated = useHydration()
@@ -292,7 +300,26 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                             <Chip color="warning" className="text-white">{o?.content?.contentType}</Chip>
                                                                         </div>
                                                                         {o?.content?.sciencePaperClassification ?
-                                                                            <StudyClassification paperClassification={o?.content?.sciencePaperClassification} /> :
+                                                                            <>
+                                                                                <StudyClassification paperClassification={o?.content?.sciencePaperClassification} />
+                                                                                <Button
+                                                                                    className="mt-2"
+                                                                                    color="primary"
+                                                                                    isLoading={isUpdatingEvidenceScore}
+                                                                                    isDisabled={isUpdatingEvidenceScore}
+                                                                                    onPress={async () => {
+                                                                                        try {
+                                                                                            await updateEvidenceScore({ variables: { contentId: o?.content?.id } })
+                                                                                            await refetch()
+                                                                                        } catch (e) {
+                                                                                            toast.error('Error updating evidence score')
+                                                                                            console.error(e)
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    Update Score
+                                                                                </Button>
+                                                                            </> :
                                                                             <div>
                                                                                 <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
                                                                                 <Button
@@ -300,10 +327,10 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                                     isLoading={isClassifyingContent}
                                                                                     isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
                                                                                     onPress={async () => {
-                                                                                        try{
+                                                                                        try {
                                                                                             await classifyContent({ variables: { contentId: o?.content?.id } })
-                                                                                            refetch()
-                                                                                        }catch(e){
+                                                                                            await refetch()
+                                                                                        } catch (e) {
                                                                                             toast.error('Error classifying content')
                                                                                             console.error(e)
                                                                                         }
@@ -311,16 +338,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                                 >
                                                                                     Classify Now
                                                                                 </Button>
-                                                                                <Button
-                                                                                    className="mt-2"
-                                                                                    isLoading={isClassifyingContent}
-                                                                                    isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
-                                                                                    onPress={async () => {
-                                                                                            toast.success('hi')
-                                                                                    }}
-                                                                                >
-                                                                                   hi
-                                                                                </Button>
+
                                                                                 {/* <h6 className="">{o?.content?.sourceUrl}</h6> */}
                                                                             </div>
                                                                         }

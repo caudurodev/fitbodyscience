@@ -54,10 +54,19 @@ mutation DeleteContentMutation($contentId: uuid!) {
 `
 
 export const CLASSIFY_CONTENT_MUTATION = gql`
-  mutation ClassifyContentMutation($contentId: String!) {
-    classifyContent(contentId: $contentId) {
+  mutation UserClassifyEvidenceMutation($contentId: String!) {
+    userClassifyEvidence(contentId: $contentId) {
       message
       success
     }
   }
+`
+
+export const USER_UPDATE_EVIDENCE_SCORE_MUTATION = gql`
+mutation UserUpdateEvidenceScoreMutation($contentId: String!) {
+  userUpdateEvidenceScore(contentId: $contentId) {
+    message
+    success
+  }
+}
 `

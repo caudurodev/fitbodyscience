@@ -8,12 +8,12 @@ from ..content_store.get_content import get_content_property_by_id
 def evidence_score(content_id):
     """Calculate the evidence score for a given content_id"""
     science_paper_classification = get_content_property_by_id(
-        content_id, "science_paper_classification"
+        content_id, "sciencePaperClassification"
     )
     # #logger.info("science_paper_classification: %s", science_paper_classification)
     if not science_paper_classification:
         logger.error(
-            "No science_paper_classification found for content_id: %s", content_id
+            "No sciencePaperClassification found for content_id: %s", content_id
         )
         return {"totalScore": 0, "normalizedScore": 0}
 

@@ -135,6 +135,7 @@ def get_content_by_id(content_id: str):
                 isParsed
                 doiNumber
                 canonicalUrl
+                sciencePaperClassification
                 influencer_contents {
                     influencer {
                         slug
@@ -245,14 +246,14 @@ def _infer_graphql_type(value):
 
 def update_content(content_id: str, updates: dict):
     """Generic method to update content properties
-    
+
     Args:
         content_id (str): The content ID to update
         updates (dict): Dictionary of field names and values to update
-        
+
     Returns:
         bool: True if successful, False otherwise
-        
+
     Example:
         update_content(content_id, {
             "full_text": text,
@@ -262,23 +263,24 @@ def update_content(content_id: str, updates: dict):
     """
     # Convert Python snake_case to GraphQL camelCase
     graphql_updates = {
-        ''.join(word.capitalize() if i > 0 else word for i, word in enumerate(k.split('_'))): v 
+        "".join(
+            word.capitalize() if i > 0 else word for i, word in enumerate(k.split("_"))
+        ): v
         for k, v in updates.items()
     }
-    
+
     # Build dynamic GraphQL variables
     variables = {"contentId": content_id}
     variables.update(graphql_updates)
-    
+
     # Build dynamic GraphQL input fields
     set_fields = ", ".join(f"{k}: ${k}" for k in graphql_updates.keys())
-    
+
     # Build dynamic variable definitions
     var_defs = ", ".join(
-        f"${k}: {_infer_graphql_type(v)}" 
-        for k, v in graphql_updates.items()
+        f"${k}: {_infer_graphql_type(v)}" for k, v in graphql_updates.items()
     )
-    
+
     query = {
         "variables": variables,
         "query": f"""
@@ -290,7 +292,39 @@ def update_content(content_id: str, updates: dict):
                     id
                 }}
             }}
-        """
+        """,
+    }
+
+    try:
+        response = make_graphql_call(query)
+        if response.get("errors"):
+            logger.error("GraphQL Error: %s", response["errors"])
+            logger.info("Response: %s", response)
+            logger.info("query: %s", query)
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Error updating content: {e}")
+        return False
+
+
+def update_content_score(content_id: str, score: float):
+    """Update content score"""
+    query = {
+        "variables": {
+            "contentId": content_id,
+            "contentScore": score,
+        },
+        "query": """
+            mutation UpdateContentMutation($contentId: uuid!, $contentScore: numeric!) {
+                update_content_by_pk(
+                    pk_columns: {id: $contentId}, 
+                    _set: {contentScore: $contentScore}
+                ) {
+                    id
+                }
+            }
+        """,
     }
 
     try:
@@ -300,5 +334,5 @@ def update_content(content_id: str, updates: dict):
             return False
         return True
     except Exception as e:
-        logger.error(f"Error updating content: {e}")
+        logger.error(f"Error updating content score: {e}")
         return False
