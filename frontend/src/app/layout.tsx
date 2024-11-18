@@ -7,6 +7,7 @@ import { NhostApolloProvider } from '@nhost/react-apollo'
 import { Header } from "@/components/Navigation/Header";
 import { useHydration } from '@/hooks/useHydration'
 import { ThemeProvider as NextThemeProvider, type ThemeProviderProps } from "next-themes";
+import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 import { nhost } from '@/utils/nhost';
 
@@ -37,6 +38,7 @@ export default function RootLayout({
                   <Header />
                   {children}
                 </main>
+                <Toaster position="bottom-right" />
               </ThemeProvider>
             </NextUIProvider>
           </NhostApolloProvider>

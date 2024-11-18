@@ -16,7 +16,7 @@ import YouTubePlayer from '@/components/YouTubePlayer';
 
 const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
     const router = useRouter()
-    const { data: contentData } = useQuery(GET_CONTENT_QUERY, {
+    const { data: contentData, refetch } = useQuery(GET_CONTENT_QUERY, {
         variables: {
             contentSlug: params?.content_slug,
             influencerSlug: params?.influencer_slug
@@ -67,7 +67,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     return (
         <>
 
-            <h6>{isParsed === true ? 'is Parsed' : 'is not parsed'} {mainContent?.id}</h6>
+            <h6>{isParsed === true ? 'is Parsed true' : 'is not parsed'} {mainContent?.id}</h6>
             <Button
                 className="my-2"
                 color="primary"
@@ -302,6 +302,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                                     onPress={async () => {
                                                                                         try{
                                                                                             await classifyContent({ variables: { contentId: o?.content?.id } })
+                                                                                            refetch()
                                                                                         }catch(e){
                                                                                             toast.error('Error classifying content')
                                                                                             console.error(e)
@@ -309,6 +310,16 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                                     }}
                                                                                 >
                                                                                     Classify Now
+                                                                                </Button>
+                                                                                <Button
+                                                                                    className="mt-2"
+                                                                                    isLoading={isClassifyingContent}
+                                                                                    isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
+                                                                                    onPress={async () => {
+                                                                                            toast.success('hi')
+                                                                                    }}
+                                                                                >
+                                                                                   hi
                                                                                 </Button>
                                                                                 {/* <h6 className="">{o?.content?.sourceUrl}</h6> */}
                                                                             </div>

@@ -81,7 +81,6 @@ def action_user_classify_evidence_endpoint(content_id):
         update_science_paper_classification_content(
             content_id=content_id, classification_jsonb=classify
         )
-        
     except Exception as e:
         logger.error("Error updating science paper classification: %s", e)
 
