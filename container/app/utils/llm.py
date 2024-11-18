@@ -24,7 +24,7 @@ next_request_time = {
 }
 
 
-def get_llm_completion(prompt, model=None, response_format="json"):
+def get_response(prompt, model=None, response_format="json"):
     """Get a response from LLM, using Together for shorter prompts and OpenAI for longer prompts."""
     if not prompt:
         logger.error("Error: Invalid empty prompt")

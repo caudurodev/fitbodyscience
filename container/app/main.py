@@ -7,15 +7,18 @@ from .endpoints.get_channel_data import upsert_influencer_endpoint
 from .content_store.assertion_store import get_assertion_parent_content_ids
 from .scoring.update import update_assertion_score, update_content_aggregate_score
 from .endpoints.assertions import insert_assertions_opposing
+from .endpoints.events.on_insert_content import on_insert_content_endpoint
 from .utils.auth.user import require_auth
 from .utils.validators import validate_input
 from .content_store.assertion_store import (
     get_content_assertion_ids,
     get_assertion_content_ids,
 )
-
 from .endpoints.actions.user_analyse_content import user_analyse_content_endpoint
 from .endpoints.actions.user_add_content import user_add_content_endpoint
+from .endpoints.actions.action_user_classify_evidence_endpoint import (
+    action_user_classify_evidence_endpoint,
+)
 
 # from .graphdb.main import create_dummy_data, read_data
 
@@ -61,118 +64,45 @@ def action_analyse_content_method(input_data):
         )
 
 
-# @app.route("/on_insert_content", methods=["POST"])
-# def on_insert_content_endpoint():
-#     """When content is added, get extra information and classify when possible"""
-#     data = request.get_json()
-#     # #logger.info("on_insert_content data %s", data)
-#     if data is None:
-#         logger.error("No data provided")
-#         return (
-#             jsonify(
-#                 {
-#                     "message": "Error: no data provided",
-#                 }
-#             ),
-#             400,
-#         )
-#     else:
-#         new_data = data["event"]["data"]["new"]
-#         content_id = new_data["id"]
-#         media_type = new_data["media_type"]
-#         content_type = new_data["content_type"]
-#         is_parsed = new_data["is_parsed"]
-#         if is_parsed:
-#             # #logger.info("Content already parsed, skipping...")
-#             return (
-#                 jsonify(
-#                     {
-#                         "message": "Content already parsed, skipping...",
-#                     }
-#                 ),
-#                 200,
-#             )
-#         # #logger.info("Content not parsed, processing...")
+@app.route("/action_user_classify_evidence", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["contentId"],
+    payload_key="input",
+)
+def action_user_classify_evidence_method(input_data):
+    """Action to add user content"""
+    try:
+        return action_user_classify_evidence_endpoint(
+            content_id=input_data["contentId"]
+        )
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
 
-#         if content_type == "youtube_video":
-#             # #logger.info("media_type: youtube_video")
-#             logger.info("new_data.get('source_url'): %s", new_data.get("source_url"))
-#             cleaned_url = get_clean_youtube_url(new_data.get("source_url"))
-#             logger.info("cleaned_url: %s", cleaned_url)
 
-#             if cleaned_url is None:
-#                 logger.error("Error cleaning YouTube URL")
-#                 return (
-#                     jsonify(
-#                         {
-#                             "message": "Error cleaning YouTube URL",
-#                         }
-#                     ),
-#                     500,
-#                 )
-#             if cleaned_url != new_data.get("source_url"):
-#                 update_content_source_url(content_id, cleaned_url)
-#             # add influencer if not in db
-#             influencer_id = None
-#             channel_url = get_channel_url_from_video(cleaned_url)
-#             if channel_url:
-#                 influencer_id = upsert_influencer_endpoint(channel_url)
-
-#             if influencer_id is None:
-#                 logger.error("Error upserting influencer")
-#                 return (
-#                     jsonify(
-#                         {
-#                             "message": "Error getting influencer id",
-#                         }
-#                     ),
-#                     500,
-#                 )
-#             result = analyze_youtube_video(content_id, influencer_id)
-#             if result["server_response"] != 200:
-#                 content_parse_error(content_id, result["message"])
-#             return (
-#                 jsonify(
-#                     {
-#                         "message": str(result["message"]),
-#                     }
-#                 ),
-#                 result["server_response"],
-#             )
-#         if new_data.get("doi_number") is not None:
-#             content_id = analyse_science_paper(content_id)
-#             update_evidence_score(content_id)
-#             if content_id is None:
-#                 content_parse_error(content_id, "Error parsing content")
-#                 return (
-#                     jsonify(
-#                         {
-#                             "message": "Error parsing content",
-#                         }
-#                     ),
-#                     500,
-#                 )
-#         if new_data.get("source_url") is not None:
-#             if media_type == "text":
-#                 # logger.info("media_type: text")
-#                 analyse_website_page(content_id)
-#                 return (
-#                     jsonify(
-#                         {
-#                             "message": "Content Parsed.",
-#                             "content_id": content_id,
-#                         }
-#                     ),
-#                     200,
-#                 )
-#         return (
-#             jsonify(
-#                 {
-#                     "message": "Unknown media type",
-#                 }
-#             ),
-#             400,
-#         )
+@app.route("/on_insert_content", methods=["POST"])
+def on_insert_content_method():
+    """When content is added, get extra information and classify when possible"""
+    data = request.get_json()
+    new_data = data["event"]["data"]["new"]
+    content_id = new_data["id"]
+    try:
+        return on_insert_content_endpoint(content_id=content_id)
+    except Exception as e:
+        logger.error("Error on_insert_content_method: %s", e)
+        return (
+            jsonify(
+                {
+                    "message": f"Error on_insert_content_method {str(e)}",
+                    "success": False,
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/on_insert_assertion", methods=["POST"])
@@ -247,7 +177,7 @@ def on_update_content_endpoint():
     if old_score is None:
         logger.warning("old_score is missing")
 
-    if content_id is None or new_score is None:
+    if content_id is None:
         return (
             jsonify(
                 {
@@ -256,6 +186,10 @@ def on_update_content_endpoint():
             ),
             400,
         )
+
+    if new_score is None:
+        logger.warning("new_score is missing")
+        return jsonify({"message": "No score update needed"}), 200
 
     if new_score == old_score:
         return (
@@ -314,7 +248,7 @@ def on_update_content_endpoint():
 
 @app.route("/on_update_assertion", methods=["POST"])
 def on_update_assertion_endpoint():
-    """Test method for extract_content_data_endpoint"""
+    """When assertion is updated, update the content aggregate score"""
     # logger.info("on_update_assertion")
     data = request.get_json()
     try:

@@ -1,7 +1,7 @@
 """ This module extracts assertions from long text and adds them to the content store """
 
 import json
-from ..utils.llm import get_llm_completion
+from ..vendors.llm.get_response import get_response
 from ..utils.config import logger
 
 
@@ -10,7 +10,7 @@ def extract_assertions_from_long_text(
 ):
     """extract assertions from long text"""
     try:
-        assertions = get_llm_completion(
+        assertions = get_response(
             f"""
             Given this long text: 
             

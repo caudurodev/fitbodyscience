@@ -1,7 +1,7 @@
 """Summarize text using llm"""
 
 import json
-from ..utils.llm import get_llm_completion
+from ..vendors.llm.get_response import get_response
 from ..utils.config import logger
 from ..content_store.summary_store import add_summary_to_content
 
@@ -32,7 +32,7 @@ def conclusion_content_tree(content_id):
 def create_conclusion(long_text, summary, main_assertion, assertions_with_evidence):
     """summarise text"""
     try:
-        conclusion = get_llm_completion(
+        conclusion = get_response(
             f"""
             An author stated:
             

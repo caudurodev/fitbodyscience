@@ -1,4 +1,3 @@
-
 import { gql } from '@apollo/client'
 
 export const ADD_VIDEO_MUTATION = gql`
@@ -35,36 +34,30 @@ export const DELETE_CONTENT_MUTATION = gql`
 mutation DeleteContentMutation($contentId: uuid!) {
   delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
     affected_rows
-    returning {
-      id
-    }
-  }
-  delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
-    affected_rows
-    returning {
-      id
-    }
-  }
-  delete_assertions(where: {contentId: {_eq: $contentId}}) {
-    affected_rows
-    returning {
-      id
-    }
   }
   delete_content_relationship(where: {_or: [{childContentId: {_eq: $contentId}}, {parentContentId: {_eq: $contentId}}]}) {
     affected_rows
-    returning {
-      id
-    }
+  }
+  delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
+    affected_rows
+  }
+  delete_contents_assertion(where: {_or: [{contentId: {_eq: $contentId}}, {assertion: {contentId: {_eq: $contentId}}}]}) {
+    affected_rows
+  }
+  delete_assertions(where: {_or: [{contentId: {_eq: $contentId}}, {citationContentId: {_eq: $contentId}}]}) {
+    affected_rows
   }
   delete_content(where: {id: {_eq: $contentId}}) {
     affected_rows
-    returning {
-      id
-    }
   }
 }
-
 `
 
-
+export const CLASSIFY_CONTENT_MUTATION = gql`
+  mutation ClassifyContentMutation($contentId: String!) {
+    classifyContent(contentId: $contentId) {
+      message
+      success
+    }
+  }
+`

@@ -1,5 +1,5 @@
 import requests
-from .config import settings, logger
+from ..config.constants import HASURA_ADMIN_SECRET, GRAPHQL_URL, VERIFY_SSL_LOCAL_DEV
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,24 +19,16 @@ def make_graphql_call(query, user_id=None, user_role=None, is_admin=False):
         if user_role is not None:
             headers["x-hasura-role"] = user_role
         # elif is_admin:
-        headers["X-Hasura-Admin-Secret"] = settings.HASURA_ADMIN_SECRET
+        headers["X-Hasura-Admin-Secret"] = HASURA_ADMIN_SECRET
 
-        graphql_url = f"{settings.GRAPHQL_URL}"
-        # TODO find a url that works both local and in production..
-        # graphql_url = 'http://languagebuddyio-graphql-1:8080/v1/graphql'
-
-        # ##logger.info(f"graphql_url: {graphql_url}")
-        # ##logger.info(f"headers: {headers}")
-        # ##logger.info(f"verifySSLCert: {settings.VERIFY_SSL_LOCAL_DEV}")
-        # ##logger.info(f"graphql_url: {graphql_url}")
-        # ##logger.info(f"query: {query}")
+        graphql_url = f"{GRAPHQL_URL}"
 
         response = requests.post(
             graphql_url,
             headers=headers,
             json=query,
             timeout=10,
-            verify=settings.VERIFY_SSL_LOCAL_DEV,
+            verify=VERIFY_SSL_LOCAL_DEV,
         )
 
         if response.status_code != 200:

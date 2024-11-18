@@ -22,17 +22,17 @@ def analyse_science_paper(content_id):
         content = result
 
     # #logger.info("analyse_science_paper content %s", content)
-    content_doi_number = content["doi_number"]
-    source_url = content["source_url"]
+    content_doi_number = content["doiNumber"]
+    canonical_url = content["canonicalUrl"]
 
-    if not source_url:
+    if not canonical_url:
         logger.error("Error analyze_science_paper No source URL provided")
         return None
     if content_doi_number is None:
         logger.error("No DOI provided is article?")
 
         try:
-            text = download_website(url_to_scrape=source_url, return_format="text")
+            text = download_website(url_to_scrape=canonical_url, return_format="text")
             if text is None:
                 logger.error("Error download_website No text found")
                 return None
@@ -44,18 +44,18 @@ def analyse_science_paper(content_id):
             return None
 
     try:
-        # logger.info("analyze_science_paper Getting paper data... %s", source_url)
-        scrape_success = get_paper_main(content_doi_number, source_url)
+        # logger.info("analyze_science_paper Getting paper data... %s", canonical_url)
+        scrape_success = get_paper_main(content_doi_number, canonical_url)
         if scrape_success:
-            # logger.info("analyze_science_paper Paper data gotten %s", source_url)
+            # logger.info("analyze_science_paper Paper data gotten %s", canonical_url)
             try:
                 # logger.info(
                 # "analyze_science_paper Classifying evidence content... %s",
-                # source_url,
+                # canonical_url,
                 # )
                 classify = classify_evidence_content(content_id)
                 # logger.info(
-                # "analyze_science_paper Classified evidence content %s", source_url
+                # "analyze_science_paper Classified evidence content %s", canonical_url
                 # )
                 try:
                     update_science_paper_classification_content(
@@ -63,7 +63,7 @@ def analyse_science_paper(content_id):
                     )
                     # logger.info(
                     # "-------------------------------------analyze_science_paper DONE media_type: scientific paper %s",
-                    # source_url,
+                    # canonical_url,
                     # )
                     return content_id
                 except Exception as e:

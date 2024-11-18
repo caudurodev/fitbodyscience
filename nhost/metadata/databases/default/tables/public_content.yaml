@@ -25,6 +25,8 @@ configuration:
       custom_name: errorMessage
     full_text:
       custom_name: fullText
+    html_jsonb:
+      custom_name: htmlJsonb
     is_parsed:
       custom_name: isParsed
     media_type:
@@ -53,6 +55,7 @@ configuration:
     doi_number: doiNumber
     error_message: errorMessage
     full_text: fullText
+    html_jsonb: htmlJsonb
     is_parsed: isParsed
     media_type: mediaType
     pro_aggregate_content_score: proAggregateContentScore
@@ -184,6 +187,7 @@ select_permissions:
       columns:
         - is_parsed
         - crossref_info
+        - html_jsonb
         - science_paper_classification
         - video_transcript
         - against_aggregate_content_score
@@ -215,6 +219,7 @@ select_permissions:
       columns:
         - is_parsed
         - crossref_info
+        - html_jsonb
         - science_paper_classification
         - video_transcript
         - against_aggregate_content_score
@@ -245,62 +250,62 @@ update_permissions:
   - role: public
     permission:
       columns:
-        - is_parsed
-        - crossref_info
-        - science_paper_classification
-        - video_transcript
-        - against_aggregate_content_score
-        - content_score
-        - pro_aggregate_content_score
         - abstract
+        - against_aggregate_content_score
         - canonical_url
         - conclusion
+        - content_score
         - content_type
+        - crossref_info
+        - date_added
+        - date_last_modified
         - direct_download_url
         - doi_number
         - error_message
         - full_text
+        - id
+        - is_parsed
         - media_type
+        - pro_aggregate_content_score
+        - science_paper_classification
         - slug
         - source_url
         - summary
         - title
         - video_description
         - video_id
-        - date_added
-        - date_last_modified
-        - id
+        - video_transcript
       filter: {}
       check: {}
     comment: ""
   - role: user
     permission:
       columns:
-        - is_parsed
-        - crossref_info
-        - science_paper_classification
-        - video_transcript
-        - against_aggregate_content_score
-        - content_score
-        - pro_aggregate_content_score
         - abstract
+        - against_aggregate_content_score
         - canonical_url
         - conclusion
+        - content_score
         - content_type
+        - crossref_info
+        - date_added
+        - date_last_modified
         - direct_download_url
         - doi_number
         - error_message
         - full_text
+        - id
+        - is_parsed
         - media_type
+        - pro_aggregate_content_score
+        - science_paper_classification
         - slug
         - source_url
         - summary
         - title
         - video_description
         - video_id
-        - date_added
-        - date_last_modified
-        - id
+        - video_transcript
       filter: {}
       check: {}
     comment: ""

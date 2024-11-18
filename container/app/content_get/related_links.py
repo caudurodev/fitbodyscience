@@ -2,7 +2,7 @@
 
 import re
 import json
-from ..utils.llm import get_llm_completion
+from ..vendors.llm.get_response import get_response
 from ..content_store.reference_store import save_related_link
 from ..content_store.content_relation_store import create_content_relation
 from ..utils.config import logger
@@ -25,50 +25,68 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
 
     evidence_links_json = []
     try:
-        evidence_links = get_llm_completion(
+        evidence_links = get_response(
             f"""
-            Given this youtube video description: 
-            
-            {video_description}
+                Given the following YouTube video description:
 
-            Return a JSON with all of the links mentioned and categorize them as likely evidence links such as
-            links to scientific papers, news articles, or blog posts, or likely non-evidence links such as
-            links to social media, entertainment websites, or shopping websites.
+                {video_description}
 
-            in the "media_type" json property: add the most likely type of media the link points to, such as text, video, or image.
-            in the "content_type" json property: add the type of content the link points to, such as scientific paper, news article, 
-            blog post, social media, video, audio, podcast etc.
-            If the extracted link URL seems like it is a direct link to a scientific paper, try to extract the DOI number
-            from the URL and add it to the JSON response.
+                Perform the following tasks:
 
-            Return valid JSON response like this:
-            {{
-                "evidence_links": [
-                    {{
-                        "full_url":"https://www.scientificpaper.com/full/path/",
-                        "content_type": "scientific paper",
-                        "doi":"10.1186/1550-2783-10-39",
-                        "media_type": "text"
-                    }}
-                ]
-            }}
-        """
+                1. **Extract all URLs** mentioned in the video description.
+
+                2. **For each URL**, determine:
+                - **Evidence Type**: Categorize the link as either an "evidence" link or a "non-evidence" link.
+                    - *Evidence links* include those to scientific papers, science news articles, or blog posts.
+                    - *Non_evidence links* include those to social media, generic blog posts, entertainment websites, or shopping websites.
+                - **Media Type**: Identify the most likely type of media the link points to (e.g., text, video, image).
+                - **Content Type**: Specify the type of content the link points to (e.g., scientific_paper, news_article, blog_post, social_media, video, audio, podcast, etc).
+                - **DOI**: If the URL is a direct link to a scientific paper and contains a DOI number, extract it and include it. If not, set this field to an empty string.
+                    - *Note*: Do not include identifiers like PubMed IDs in the "doi" field. Identifiers from urls like pubmed.ncbi.nlm.nih.gov and pubmed.ncbi.nlm.nih.gov are not valid DOIs.
+
+
+                3. **Return a valid JSON** object containing an array of all the links with their associated properties.
+
+                4. **Source** specify where to find more information about the sciencetific evicence.
+                Source examples are: "doi", "pubmed",  "arxiv", list sources that typically provide an API that can be used to lookup the identifier in more details
+
+                The JSON should be structured as follows:
+
+                {{
+                    "links": [
+                        {{
+                            "full_url": "https://www.example.com/full/path/",
+                            "evidence_type": "evidence",
+                            "source":"pubmed",
+                            "media_type": "text",
+                            "content_type": "scientific_paper",
+                            "doi": "10.1186/1550-2783-10-39"
+                        }},
+                    ]
+                }}
+            """
         )
-        # #logger.info("parent_content_id %s", parent_content_id)
-        # #logger.info("video_description %s", video_description)
-        # #logger.info("Evidence links found: %s", evidence_links)
+        # logger.info("parent_content_id %s", parent_content_id)
+        logger.info("video_description %s", video_description)
+        logger.info("Evidence links found: %s", evidence_links)
         evidence_links_json = json.loads(evidence_links)
         new_links_saved = []
-        if len(evidence_links_json.get("evidence_links")) > 0:
-            for link in evidence_links_json.get("evidence_links"):
-                # #logger.info("Evidence link found: %s", link)
+
+        if len(evidence_links_json.get("links", [])) > 0:
+            for link in evidence_links_json.get("links"):
+                # Only process evidence links
+                if link.get("evidence_type") != "evidence":
+                    continue
+
                 full_url = link.get("full_url")
+                canonical_url = full_url
                 content_type = link.get("content_type")
                 media_type = link.get("media_type")
                 doi_number = link.get("doi")
+
                 try:
                     link_content_id = save_related_link(
-                        full_url, content_type, media_type, doi_number
+                        full_url, canonical_url, content_type, media_type, doi_number
                     )
                     if link_content_id is None or parent_content_id is None:
                         logger.error("Error saving related link: %s", link)

@@ -12,7 +12,6 @@ export const StudyClassification = ({ paperClassification }: { paperClassificati
     }, [paperClassification])
     const paperDetails = paperClassification?.paperDetails
     const studyType = paperClassification?.studyClassification?.type
-    console.log({ paperClassification })
     return (
         <div>
             {/* {!!scores && <>

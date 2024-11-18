@@ -43,12 +43,13 @@ def insert_assertions_opposing(assertion_id):
                 evidence.get("source_url")
             )
             if new_content_id is None:
+
                 new_content_id = save_related_link(
-                    full_url=evidence.get("source_url"),
+                    source_url=evidence.get("source_url"),
+                    canonical_url=evidence.get("canonical_url"),
                     content_type=evidence.get("evidence_type"),
                     media_type="text",
                     doi_number=evidence.get("doi_number"),
-                    title=evidence.get("title"),
                 )
             if new_content_id is not None:
                 create_content_relation(
@@ -71,11 +72,11 @@ def insert_assertions_opposing(assertion_id):
         for evidence in evidence_disprove:
             # 1. add content from evidence
             new_content_id = save_related_link(
-                full_url=evidence.get("source_url"),
+                source_url=evidence.get("source_url"),
+                canonical_url=evidence.get("canonical_url"),
                 content_type=evidence.get("evidence_type"),
                 media_type="text",
                 doi_number=evidence.get("doi_number"),
-                title=evidence.get("title"),
             )
             if new_content_id is not None:
                 # 2. connect content to assertion

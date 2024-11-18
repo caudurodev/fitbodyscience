@@ -18,6 +18,12 @@ type Mutation {
   ): UserAnalyseContentOutput
 }
 
+type Mutation {
+  userClassifyEvidence(
+    contentId: String!
+  ): classifyEvidenceOutput
+}
+
 type RecalculateAggregateScoreOutput {
   success: Boolean!
 }
@@ -29,6 +35,11 @@ type UserAddContentOutput {
 }
 
 type UserAnalyseContentOutput {
+  message: String
+  success: Boolean
+}
+
+type classifyEvidenceOutput {
   message: String
   success: Boolean
 }

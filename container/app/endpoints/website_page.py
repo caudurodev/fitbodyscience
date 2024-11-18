@@ -20,14 +20,14 @@ def analyse_website_page(content_id):
         content = result
 
     # #logger.info("analyse_science_paper content %s", content)
-    source_url = content["source_url"]
+    canonical_url = content["canonicalUrl"]
 
-    if not source_url:
-        logger.error("Error analyse_website_page No source URL provided")
+    if not canonical_url:
+        logger.error("Error analyse_website_page No canonical_url provided")
         return None
 
     try:
-        text = download_website(url_to_scrape=source_url, return_format="text")
+        text = download_website(url_to_scrape=canonical_url, return_format="text")
         if text is None:
             logger.error("Error analyse_website_page No text found")
             return None

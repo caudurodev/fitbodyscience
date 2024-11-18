@@ -1,7 +1,7 @@
 """ This module extracts assertions from long text and adds them to the content store """
 
 import json
-from ..utils.llm import get_llm_completion
+from ..vendors.llm.get_response import get_response
 from ..utils.config import logger
 from ..content_store.get_content import get_content_by_id
 
@@ -14,16 +14,16 @@ def classify_evidence_content(content_id):
 
         content = result[0]
         # #logger.info("content: %s", content)
-        crossref_data = content["crossref_info"]
+        crossref_data = content["crossrefInfo"]
         # #logger.info("crossref_data: %s", crossref_data)
-        study_fulltext = content["full_text"]
+        study_fulltext = content["fullText"]
         # #logger.info("study_fulltext: %s", study_fulltext)
     except Exception as e:
         logger.error("Error getting content: %s", e)
         return None
 
     try:
-        classify = get_llm_completion(
+        classify = get_response(
             f"""
             Given a science paper with crossref json data like this:
             

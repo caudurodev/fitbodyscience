@@ -19,7 +19,7 @@ def add_influencer_content_relationship(
                 insert_influencer_contents(objects: {contentId: $contentId, influencerId: $influencerId}) {
                     affected_rows
                     returning {
-                    id
+                        id
                     }
                 }
             }

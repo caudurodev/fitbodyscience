@@ -85,7 +85,7 @@ def download_url_with_oxylabs(url_to_scrape, return_format="text"):
             #     "download_url_with_oxylabs vError Oxylabs downloaded: %s", downloaded
             # )
 
-        # #logger.info(
+        # logger.info(
         #     "download_url_with_oxylabs success Oxylabs downloaded: %s", downloaded
         # )
 

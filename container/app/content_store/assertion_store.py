@@ -27,6 +27,14 @@ def parse_assertions_long_text(content_id, long_text, additional_information="")
         logger.error("links already extracted")
 
     # logger.info(f"parse_assertions_long_text long_text: {long_text}")
+    # TODO: check if assertions already exist for content
+
+    assertions = get_assertion_content_ids(content_id)
+    if assertions and len(assertions) > 0:
+        logger.info("assertions already exist for content")
+        return None
+
+    # extract
     extraction = extract_assertions_from_long_text(
         long_text=long_text,
         additional_information=additional_information,
@@ -98,10 +106,32 @@ def add_assertion_to_content(content_id, assertion):
     """add assertions to content"""
     now = datetime.datetime.now()
     citations = assertion.get("citations", [])
+    assertion_text = assertion.get("assertion", "")
 
-    logger.info(
-        f"content_id: {content_id} add_assertion_to_content citations: {citations}"
-    )
+    # First check if assertion already exists
+    check_query = {
+        "variables": {
+            "contentId": content_id,
+            "text": assertion_text
+        },
+        "query": """
+            query CheckExistingAssertion($contentId: uuid!, $text: String!) {
+                assertions(where: {contentId: {_eq: $contentId}, text: {_eq: $text}}) {
+                    id
+                }
+            }
+        """
+    }
+    
+    result = make_graphql_call(check_query, user_id=None, user_role=None, is_admin=True)
+    existing_assertions = result.get("data", {}).get("assertions", [])
+    
+    if existing_assertions:
+        # Assertion already exists, return its ID
+        logger.info(f"Assertion already exists for content_id {content_id}")
+        return existing_assertions[0].get("id")
+
+    logger.info(f"content_id: {content_id} add_assertion_to_content citations: {citations}")
     logger.info(f"assertion: {assertion}")
 
     citation_content_id = ""

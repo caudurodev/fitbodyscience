@@ -48,3 +48,23 @@ def add_summary_to_content(content_id, summary, conclusion):
     except Exception as e:
         logger.error("add_summary_to_content Error making graphql call: %s", e)
         return None
+
+
+def get_content_summary_by_id(content_id):
+    """get the summary for a content"""
+    query = {
+        "variables": {"contentId": content_id},
+        "query": """
+            query GetContentSummary($contentId: uuid!) {
+                content(where: {id: {_eq: $contentId}}) {
+                    summary
+                }
+            }
+        """,
+    }
+    try:
+        result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
+        return result["data"]["content"][0]["summary"]
+    except Exception as e:
+        logger.error("get_summary_for_content Error making graphql call: %s", e)
+        return None

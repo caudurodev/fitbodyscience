@@ -3,12 +3,12 @@
 from ...config.logging import logger
 from ...endpoints.get_channel_data import upsert_influencer_endpoint
 from ...video.get_yt_channel_data import get_channel_url_from_video
+from ...video.youtube import get_clean_youtube_url
 from ...store.content import upsert_content
-from ...content_get.youtube_video import get_youtube_video_data
 from ...store.slug import generate_slug
 from ...store.influencer_contents import add_influencer_content_relationship
-from ...video.youtube import get_clean_youtube_url
 from ...store.content import get_content_by_url
+from ...content_get.youtube_video import get_youtube_video_data
 
 
 def user_add_content_endpoint(content_url, content_type):
@@ -84,6 +84,7 @@ def user_add_content_endpoint(content_url, content_type):
         influencer_slug = influencer_info["slug"]
         logger.info("influencer_slug: %s", influencer_slug)
 
+
         video_data = get_youtube_video_data(cleaned_url)
         if video_data is None:
             return {
@@ -92,9 +93,15 @@ def user_add_content_endpoint(content_url, content_type):
             }
 
         try:
-            video_title = video_data["video_info"]["title"]
+            video_info = video_data.get("video_info", {})
+            video_title = video_info.get("title")
             logger.info("video_title: %s", video_title)
-        except (KeyError, TypeError) as e:
+            
+            if not video_title:
+                logger.error("No video title found in data: %s", video_data)
+                return {"message": "Error: Could not get video title", "success": False}
+                
+        except Exception as e:
             logger.error(
                 "Error accessing video data structure: %s. Video data: %s",
                 str(e),
@@ -106,14 +113,14 @@ def user_add_content_endpoint(content_url, content_type):
         logger.info("slug: %s", slug)
 
         content_id = upsert_content(
-            video_title=video_data["video_info"]["title"],
-            video_id=video_data["video_info"]["display_id"],
+            video_title=video_title,
+            video_id=video_info.get("display_id", ""),
             video_url=content_url,
             content_type=content_type,
             canonical_url=cleaned_url,
-            transcript=video_data["transcript"],
-            video_description=video_data["video_info"]["description"],
-            full_text_transcript=video_data["full_text_transcript"],
+            transcript=video_data.get("transcript", ""),  
+            video_description=video_info.get("description", ""),
+            full_text_transcript=video_data.get("full_text_transcript", ""),  
             is_parsed=False,
             slug=slug,
         )

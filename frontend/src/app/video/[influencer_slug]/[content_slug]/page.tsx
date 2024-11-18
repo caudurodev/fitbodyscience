@@ -5,15 +5,17 @@ import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
 import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY } from '@/store/content/query'
-import { RECALCULATE_AGGREGATE_SCORES_MUTATION, USER_ANALYSE_CONTENT_MUTATION, DELETE_CONTENT_MUTATION } from '@/store/content/mutation'
+import { RECALCULATE_AGGREGATE_SCORES_MUTATION, USER_ANALYSE_CONTENT_MUTATION, DELETE_CONTENT_MUTATION,CLASSIFY_CONTENT_MUTATION } from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
 import StudyClassification from "@/components/StudyClassification";
 import { AnimatedNumber } from "@/components/AnimatedNumber";
 import { useState } from 'react'
+import toast from "react-hot-toast";
+import { useRouter } from 'next/navigation';
 import YouTubePlayer from '@/components/YouTubePlayer';
 
 const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
-
+    const router = useRouter()
     const { data: contentData } = useQuery(GET_CONTENT_QUERY, {
         variables: {
             contentSlug: params?.content_slug,
@@ -35,8 +37,9 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const [recalculateAggregateScores] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
+    const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
     const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
-    const assertions_contents = mainContent?.assertionsContents
+    const assertions_contents = mainContent?.assertions_contents
     const isHydrated = useHydration()
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
     const [player, setPlayer] = useState<any>(null);
@@ -81,6 +84,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                 isLoading={isDeletingContent}
                 onPress={async () => {
                     deleteContent({ variables: { contentId: mainContent?.id } })
+                    router.push(`/`)
                 }}
             >
                 Delete content
@@ -180,7 +184,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                 </div>
                                                 <div className="block mt-3">
                                                     {
-                                                        assertions_content?.assertion?.contentsAssertions.map((o: any, i: number) => (
+                                                        assertions_content?.assertion?.contents_assertions.map((o: any, i: number) => (
                                                             <Chip
                                                                 key={i}
                                                                 color={o?.isProAssertion === true ? 'success' : 'danger'}
@@ -222,6 +226,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             <Spinner />
                         }
                         <ul className="my-4">
+
                             {assertions_contents?.length > 0 && assertions_contents.map((assertions_content: any, index: number) => {
                                 return (
                                     <li key={index} className="mb-16">
@@ -256,13 +261,13 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                             {/* <h5 className="font-bold uppercase text-sm my-4">What author cites as evidence</h5> */}
                                             {/* <p>{assertions_content.assertion.evidenceType}</p> */}
                                             <h5 className="uppercase font-bold text-sm my-4">Evidence related to assertion</h5>
-                                            {!assertions_content?.assertion?.contentsAssertions?.length || assertions_content?.assertion?.contentsAssertions?.length === 0 &&
+                                            {!assertions_content?.assertion?.contents_assertions?.length || assertions_content?.assertion?.contents_assertions?.length === 0 &&
                                                 <Spinner />
                                             }
-                                            {assertions_content?.assertion?.contentsAssertions?.length > 0 ?
+                                            {assertions_content?.assertion?.contents_assertions?.length > 0 ?
                                                 <>
                                                     {
-                                                        assertions_content?.assertion?.contentsAssertions.map(
+                                                        assertions_content?.assertion?.contents_assertions.map(
                                                             (o: any, i: number) => (
                                                                 <div key={i} id={`assertion_${i}`} className="my-4">
                                                                     <div className="my-3">
@@ -277,20 +282,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                     </div>
 
                                                                     <div className="ml-8 my-2">
-                                                                        <h6 className="text-tiny mb-4 uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
-                                                                        {/* {o?.content?.contentScore === 0 ?
-                                                                            <Chip color="default">0</Chip> :
-                                                                            <Chip
-                                                                                color={o?.content?.contentScore > 0 ? "success" : "danger"}
-                                                                                className="mr-2 text-white"
-                                                                            >
-                                                                                <Icon
-                                                                                    icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"}
-                                                                                    className="inline"
-                                                                                />
-                                                                                {Math.round(o?.content?.contentScore || 0)}
-                                                                            </Chip>
-                                                                        } */}
+                                                                        <h6 className="text-tiny  uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
                                                                         <Link href={o?.content?.sourceUrl}>{o?.content?.title}</Link>
                                                                         <h6 className="text-tiny my-3">DOI: {o?.content?.doiNumber}</h6>
 
@@ -303,6 +295,21 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                             <StudyClassification paperClassification={o?.content?.sciencePaperClassification} /> :
                                                                             <div>
                                                                                 <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
+                                                                                <Button
+                                                                                    className="mt-2"
+                                                                                    isLoading={isClassifyingContent}
+                                                                                    isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
+                                                                                    onPress={async () => {
+                                                                                        try{
+                                                                                            await classifyContent({ variables: { contentId: o?.content?.id } })
+                                                                                        }catch(e){
+                                                                                            toast.error('Error classifying content')
+                                                                                            console.error(e)
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    Classify Now
+                                                                                </Button>
                                                                                 {/* <h6 className="">{o?.content?.sourceUrl}</h6> */}
                                                                             </div>
                                                                         }

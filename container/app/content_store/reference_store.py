@@ -33,12 +33,15 @@ def check_if_related_link_content_exists(source_url):
         return None
 
 
-def save_related_link(source_url, content_type, media_type, doi_number=None):
+def save_related_link(
+    source_url, canonical_url, content_type, media_type, doi_number=None
+):
     """save related link content to database"""
     now = datetime.datetime.now()
     query = {
         "variables": {
             "sourceURL": source_url,
+            "canonicalUrl": canonical_url,
             "contentType": content_type,
             "mediaType": media_type,
             "doiNumber": doi_number,
@@ -48,6 +51,7 @@ def save_related_link(source_url, content_type, media_type, doi_number=None):
         "query": """
             mutation InsertRelatedLinkMutation(
                 $sourceURL: String!,
+                $canonicalUrl: String = "",
                 $contentType: String = "",
                 $mediaType: String = "",
                 $doiNumber: String = "",
@@ -57,6 +61,7 @@ def save_related_link(source_url, content_type, media_type, doi_number=None):
                 insert_content_one(
                     object: {
                         sourceUrl: $sourceURL,
+                        canonicalUrl: $canonicalUrl,
                         contentType: $contentType,
                         mediaType: $mediaType,
                         doiNumber: $doiNumber,
@@ -65,7 +70,7 @@ def save_related_link(source_url, content_type, media_type, doi_number=None):
                     },
                     on_conflict: {
                         constraint: content_source_url_key,
-                        update_columns: [contentType, mediaType, doiNumber, dateLastModified]
+                        update_columns: [contentType, mediaType, doiNumber, canonicalUrl, dateLastModified]
                     }
                 ) {
                     id
@@ -79,7 +84,7 @@ def save_related_link(source_url, content_type, media_type, doi_number=None):
 
     except Exception as e:
         logger.error(f"Error saving related link: {str(e)}")
-        logger.error(f"Failed result: {result}")
+        logger.info(f"Failed result: {result}")
         return None
 
     # connect to original content.

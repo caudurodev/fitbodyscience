@@ -10,6 +10,8 @@ together
 
 colorlog
 unidecode
+json5
+trafilatura
 
 yt_dlp
 youtube-transcript-api

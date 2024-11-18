@@ -15,6 +15,7 @@ from ...content_store.youtube_store import video_exists_in_db
 from ...meaning.summarize import summarise_text_and_add_to_content
 
 from ...content_store.assertion_store import parse_assertions_long_text
+from ...store.content import update_content_is_parsed
 
 # from ...utils.run_async import run_method_async
 
@@ -42,6 +43,8 @@ def user_analyse_content_endpoint(content_id):
         long_text=video_transcript,
         additional_information=video_description,
     )
+
+    update_content_is_parsed(content_id=content_id, is_parsed=True)
 
     logger.info(f"Started analyzing content {content_id}")
     return jsonify({"message": "Analysis started", "success": True}), 200

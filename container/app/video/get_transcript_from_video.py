@@ -72,6 +72,7 @@ def get_youtube_transcript(video_url: str) -> str:
     video_id = video_url.split("youtube.com/watch?v=")[-1]
     transcript = None
     temp_audio_path = None
+    result = "No transcript available through any method."
 
     try:
         # Try getting transcript through YouTube API first
@@ -82,7 +83,8 @@ def get_youtube_transcript(video_url: str) -> str:
                 logger.info(
                     f"Successfully retrieved English transcript from YouTube API for video: {video_id}"
                 )
-                return " ".join([segment["text"] for segment in transcript])
+                result = " ".join([segment["text"] for segment in transcript])
+                return result
         except NoTranscriptFound:
             logger.info(
                 f"No English transcript found for video: {video_id}. Trying other languages."
@@ -96,12 +98,17 @@ def get_youtube_transcript(video_url: str) -> str:
                             logger.info(
                                 f"Successfully retrieved {transcript_obj.language_code} transcript from YouTube API for video: {video_id}"
                             )
-                            return " ".join([segment["text"] for segment in transcript])
+                            result = " ".join([segment["text"] for segment in transcript])
+                            return result
                         break
             except Exception as e:
-                logger.info(f"Error retrieving transcript: {e}")
+                logger.info(f"Error retrieving transcript from YouTube API: {e}")
+                # Continue to Whisper fallback
+        except Exception as e:
+            logger.info(f"Error retrieving transcript from YouTube API: {e}")
+            # Continue to Whisper fallback
 
-        # If no transcript found or processing failed, try Whisper
+        # If we get here, no transcript was found through YouTube API, try Whisper
         logger.info(
             "No transcript available from YouTube API. Falling back to Together.ai Whisper transcription."
         )
@@ -114,13 +121,16 @@ def get_youtube_transcript(video_url: str) -> str:
                 logger.info(
                     f"Successfully generated transcript using Together.ai Whisper for video: {video_id}"
                 )
-                return whisper_transcript
+                result = whisper_transcript
+                return result
 
         logger.warning(
             f"Failed to obtain transcript through any method for video: {video_id}"
         )
-        return "No transcript available through any method."
-
+        
+    except Exception as e:
+        logger.error(f"Error in transcript generation process: {e}")
+        
     finally:
         # Additional cleanup in case the audio file wasn't cleaned up
         try:
@@ -131,6 +141,8 @@ def get_youtube_transcript(video_url: str) -> str:
                 )
         except Exception as e:
             logger.error(f"Error in final cleanup of audio file {temp_audio_path}: {e}")
+    
+    return result
 
 
 def store_segments(segments):

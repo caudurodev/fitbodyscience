@@ -1,13 +1,24 @@
 """Summarize text using llm"""
 
 import json
-from ..utils.llm import get_llm_completion
+from ..vendors.llm.get_response import get_response
 from ..utils.config import logger
-from ..content_store.summary_store import add_summary_to_content
+from ..content_store.summary_store import (
+    add_summary_to_content,
+    get_content_summary_by_id,
+)
 
 
 def summarise_text_and_add_to_content(video_content_id, long_text, video_description):
     """extract assertions from long text"""
+
+    try:
+        existing_summary = get_content_summary_by_id(video_content_id)
+        if existing_summary:
+            return existing_summary
+    except Exception as e:
+        logger.error("Error getting existing summary: %s", e)
+
     try:
         result = summarise_text(
             long_text=long_text, additional_information=video_description
@@ -31,7 +42,7 @@ def summarise_text_and_add_to_content(video_content_id, long_text, video_descrip
 def summarise_text(long_text, additional_information):
     """summarise text"""
     try:
-        summary = get_llm_completion(
+        summary = get_response(
             f"""
             Given this long text: 
             
