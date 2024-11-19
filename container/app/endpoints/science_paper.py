@@ -22,26 +22,34 @@ def analyse_science_paper(content_id):
         content = result
 
     # #logger.info("analyse_science_paper content %s", content)
-    content_doi_number = content["doiNumber"]
-    canonical_url = content["canonicalUrl"]
+    content_doi_number = content.get("doiNumber")
+    canonical_url = content.get("canonicalUrl")
 
-    if not canonical_url:
-        logger.error("Error analyze_science_paper No source URL provided")
-        return None
-    if content_doi_number is None:
-        logger.error("No DOI provided is article?")
-
+    # If we have a DOI number but no canonical URL, we can still proceed
+    if content_doi_number and not canonical_url:
         try:
-            text = download_website(url_to_scrape=canonical_url, return_format="text")
-            if text is None:
-                logger.error("Error download_website No text found")
-                return None
-            add_fulltext_to_content(content_id, text)
-            # classify_evidence_content(content_id)
-
-        except Exception as e:
-            logger.error("Error download_website: %s", e)
+            # Use DOI to get paper data
+            paper_data = get_paper_main(
+                content_doi_number=content_doi_number, content_url=canonical_url
+            )
+            if paper_data and paper_data.get("text"):
+                add_fulltext_to_content(content_id, paper_data["text"])
+                classification = classify_evidence_content(content_id)
+                if classification:
+                    update_science_paper_classification_content(
+                        content_id, classification
+                    )
+                    return content_id
             return None
+        except Exception as e:
+            logger.error(
+                "Error processing paper with DOI: %s - %s", content_doi_number, str(e)
+            )
+            return None
+
+    if not canonical_url and not content_doi_number:
+        logger.error("Error analyze_science_paper No canonicalUrl or DOI provided")
+        return None
 
     try:
         # logger.info("analyze_science_paper Getting paper data... %s", canonical_url)

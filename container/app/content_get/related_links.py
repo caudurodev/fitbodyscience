@@ -67,8 +67,8 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
             """
         )
         # logger.info("parent_content_id %s", parent_content_id)
-        logger.info("video_description %s", video_description)
-        logger.info("Evidence links found: %s", evidence_links)
+        # logger.info("video_description %s", video_description)
+        # logger.info("Evidence links found: %s", evidence_links)
         evidence_links_json = json.loads(evidence_links)
         new_links_saved = []
 

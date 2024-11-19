@@ -1,50 +1,71 @@
 """ User add content endpoint """
 
-from flask import jsonify
 from ...config.logging import logger
-
-# from ..get_channel_data import upsert_influencer_endpoint
-# from ...video.get_yt_channel_data import get_channel_url_from_video
-# from ...store.content import upsert_content
-# from ...content_get.youtube_video import get_youtube_video_data
-# from ...store.slug import generate_slug
-# from ...store.influencer_contents import add_influencer_content_relationship
-# from ...video.youtube import get_clean_youtube_url
-# from ...store.content import get_content_by_url
 from ...content_store.youtube_store import video_exists_in_db
 from ...meaning.summarize import summarise_text_and_add_to_content
-
 from ...content_store.assertion_store import parse_assertions_long_text
 from ...store.content import update_content_is_parsed
-
-# from ...utils.run_async import run_method_async
+from ...store.content_relationship import get_content_relationship
+from ...store.assertions_content import get_content_assertions
+from ...endpoints.actions.action_user_classify_evidence_endpoint import (
+    classify_evidence,
+)
+from ...scoring.update import update_content_aggregate_score
+from ...endpoints.actions.action_update_assertion_score_endpoint import (
+    update_assertion_score_by_id,
+)
 
 
 def user_analyse_content_endpoint(content_id):
     """Analyze a scientific paper and save the data to the database"""
-    content = video_exists_in_db(content_id)
-    if not content:
-        return jsonify({"message": "Content not found", "success": False}), 404
+    try:
+        content = video_exists_in_db(content_id)
+        if not content:
+            logger.error(f"Content not found for id {content_id}")
+            return
 
-    video_transcript = content.get("videoTranscript")
-    video_description = content.get("videoDescription")
+        video_transcript = content.get("videoTranscript")
+        video_description = content.get("videoDescription")
 
-    if not video_transcript:
-        logger.error(f"No video transcript found for content {content_id}")
-        return jsonify({"message": "No video transcript found", "success": False}), 400
+        if not video_transcript:
+            logger.error(f"No video transcript found for content {content_id}")
+            return
 
-    summarise_text_and_add_to_content(
-        video_content_id=content_id,
-        long_text=video_transcript,
-        video_description=video_description,
-    )
-    parse_assertions_long_text(
-        content_id=content_id,
-        long_text=video_transcript,
-        additional_information=video_description,
-    )
+        update_content_is_parsed(content_id=content_id, is_parsed=False)
 
-    update_content_is_parsed(content_id=content_id, is_parsed=True)
+        summarise_text_and_add_to_content(
+            video_content_id=content_id,
+            long_text=video_transcript,
+            video_description=video_description,
+        )
+        parse_assertions_long_text(
+            content_id=content_id,
+            long_text=video_transcript,
+            additional_information=video_description,
+        )
 
-    logger.info(f"Started analyzing content {content_id}")
-    return jsonify({"message": "Analysis started", "success": True}), 200
+        # evaluate evidence
+        # get all related content
+        related_contents = get_content_relationship(parent_content_id=content_id)
+        logger.info(f"related_contents: {related_contents}")
+        for related_content in related_contents:
+            child_content_id = related_content["childContentId"]
+            logger.info(f"classify_evidence for related content {child_content_id}")
+            classify_evidence(content_id=child_content_id)
+
+        content_assertions = get_content_assertions(content_id=content_id)
+        for content_assertion in content_assertions:
+            content_assertion_id = content_assertion["id"]
+            logger.info(f"content_assertion_id {content_assertion_id}")
+            # update_assertion_score(assertion_id=content_assertion_id)
+            update_assertion_score_by_id(content_assertion_id)
+
+        update_content_aggregate_score(content_id)
+
+        # get opposing viewpoints
+
+        update_content_is_parsed(content_id=content_id, is_parsed=True)
+
+        logger.info(f"Finished analyzing content {content_id}")
+    except Exception as e:
+        logger.error(f"Error analyzing content {content_id}: {str(e)}")

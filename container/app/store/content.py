@@ -233,9 +233,7 @@ def _infer_graphql_type(value):
     elif isinstance(value, int):
         return "Int!"
     elif isinstance(value, float):
-        return "Float!"
-    elif isinstance(value, str):
-        return "String!"
+        return "numeric!"
     elif isinstance(value, dict):
         return "jsonb!"
     elif value is None:

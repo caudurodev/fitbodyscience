@@ -26,6 +26,7 @@ def get_content_by_id(content_id):
                     videoTranscript
                     doiNumber
                     crossrefInfo
+                    canonicalUrl
                     sciencePaperClassification
                     id
                 }
@@ -86,22 +87,24 @@ def get_content_assertion_tree(content_id):
             "query": """
                 query GetAssertionEvidenceScoresQuery($contentId: uuid!) {
                     content(where: {id: {_eq: $contentId}}) {
-                        assertions {
-                        id
-                        againstEvidenceAggregateScore
-                        proEvidenceAggregateScore
+                        assertions_contents {
+                        assertion {
+                            id
+                            againstEvidenceAggregateScore
+                            proEvidenceAggregateScore
                             assertions_contents {
-                                weightConclusion
+                            weightConclusion
                             }
+                        }
                         }
                     }
                 }
+
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
 
-        assertion = result.get("data", {}).get("content", [{}])[0]
-        return assertion
+        return result["data"]["content"][0]["assertions_contents"]
 
     except Exception as e:
         logger.error("Error getting assertion content : %s", e)

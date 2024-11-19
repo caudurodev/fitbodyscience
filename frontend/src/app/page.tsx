@@ -5,11 +5,14 @@ import { useHydration } from '@/hooks/useHydration'
 import { CardMosaic } from '@/components/Cards/CardMosaic'
 import { useQuery } from '@apollo/client'
 import { GET_ALL_CONTENT_QUERY } from '@/store/content/query'
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter()
-  const { data, loading } = useQuery(GET_ALL_CONTENT_QUERY, { variables: { mediaType: 'youtube_video' }, fetchPolicy: 'cache-and-network' })
+  const { data, loading } = useQuery(
+    GET_ALL_CONTENT_QUERY,
+    { variables: { mediaType: 'youtube_video' }, fetchPolicy: 'network-only' }
+  )
   const contentItems = data?.content
   const isHydrated = useHydration()
   if (!isHydrated) { return null }
@@ -32,15 +35,17 @@ export default function Home() {
               size="lg"
               variant="bordered"
               color="secondary"
+              onPress={() => { router.push('/influencers') }}
             >
-              Browse Examples
+              Browse
             </Button>
             <Button
               size="lg"
               color="primary"
               variant="solid"
+              onPress={() => { router.push('/add') }}
             >
-              Get Started
+              Add
             </Button>
           </div>
         </div>
@@ -48,9 +53,10 @@ export default function Home() {
 
       <h2 className="text-gradient text-2xl font-bold uppercase py-2">Latest Videos</h2>
       <section className="mb-24">
-        {loading ?
-          <Spinner /> :
-          <CardMosaic items={contentItems} />
+        {
+          loading ?
+            <Spinner /> :
+            <CardMosaic items={contentItems} />
         }
       </section>
 

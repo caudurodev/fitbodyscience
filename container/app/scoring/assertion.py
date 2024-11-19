@@ -55,45 +55,26 @@ def calculate_assertion_score(assertion: Dict[str, Any]) -> Dict[str, int]:
     supporting_evidences = []
     contradicting_evidences = []
 
-    for content in assertion.get("contents_assertions", []):
-
-        is_pro = content.get("is_pro_assertion")
-        # #logger.info("Processing content: %s", content)
-        # #logger.info("is_pro_assertion value: %s", is_pro)
+    for content in assertion[0].get("contents_assertions", []):
+        is_pro = content.get("isProAssertion")
 
         if isinstance(content.get("content"), dict):
-            # #logger.info("Content is a dictionary.")
-            if content["content"].get("science_paper_classification") is not None:
-                classification = content["content"]["science_paper_classification"]
-                # #logger.info("Found science_paper_classification: %s", classification)
+            if content["content"].get("sciencePaperClassification") is not None:
+                classification = content["content"]["sciencePaperClassification"]
 
                 if is_pro is True:
                     supporting_evidences.append(classification)
-                    # #logger.info("Added to supporting evidences: %s", classification)
                 elif is_pro is False:
                     contradicting_evidences.append(classification)
-                    # #logger.info("Added to contradicting evidences: %s", classification)
                 else:
-                    logger.error(
-                        "is_pro_assertion is neither True nor False: %s", is_pro
-                    )
+                    logger.error("isProAssertion is neither True nor False: %s", is_pro)
             else:
-                logger.error("No science_paper_classification found in content.")
+                logger.error("No sciencePaperClassification found in content.")
         else:
             logger.error("Content is not a dictionary: %s", content.get("content"))
 
-    # Log the evidences for debugging
-    # #logger.info("Supporting evidences: %s", supporting_evidences)
-    # #logger.info("Contradicting evidences: %s", contradicting_evidences)
-
     supporting_score = calculate_from_evidences_score(supporting_evidences)
     contradicting_score = calculate_from_evidences_score(contradicting_evidences)
-
-    # #logger.info(
-    #     "Supporting score: %s, Contradicting score: %s",
-    #     supporting_score,
-    #     contradicting_score,
-    # )
 
     return {
         "pro": round(max(0, min(100, supporting_score))),

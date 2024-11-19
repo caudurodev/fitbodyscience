@@ -84,7 +84,6 @@ def user_add_content_endpoint(content_url, content_type):
         influencer_slug = influencer_info["slug"]
         logger.info("influencer_slug: %s", influencer_slug)
 
-
         video_data = get_youtube_video_data(cleaned_url)
         if video_data is None:
             return {
@@ -96,11 +95,11 @@ def user_add_content_endpoint(content_url, content_type):
             video_info = video_data.get("video_info", {})
             video_title = video_info.get("title")
             logger.info("video_title: %s", video_title)
-            
+
             if not video_title:
                 logger.error("No video title found in data: %s", video_data)
                 return {"message": "Error: Could not get video title", "success": False}
-                
+
         except Exception as e:
             logger.error(
                 "Error accessing video data structure: %s. Video data: %s",
@@ -118,9 +117,9 @@ def user_add_content_endpoint(content_url, content_type):
             video_url=content_url,
             content_type=content_type,
             canonical_url=cleaned_url,
-            transcript=video_data.get("transcript", ""),  
+            transcript=video_data.get("transcript", ""),
             video_description=video_info.get("description", ""),
-            full_text_transcript=video_data.get("full_text_transcript", ""),  
+            full_text_transcript=video_data.get("full_text_transcript", ""),
             is_parsed=False,
             slug=slug,
         )
@@ -133,6 +132,7 @@ def user_add_content_endpoint(content_url, content_type):
             "message": "success",
             "slug": full_slug,
             "success": True,
+            "content_id": content_id,
         }
     except Exception as e:
         logger.error("Error adding content: %s. Traceback: ", str(e), exc_info=True)

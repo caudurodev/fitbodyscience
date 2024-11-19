@@ -17,38 +17,46 @@ def on_insert_content_endpoint(content_id):
 
     logger.info(f"Content ID: {content_id}")
     logger.info(f"content: {content}")
-    
+
+    science_paper_classification = content.get("sciencePaperClassification", None)
     media_type = content.get("mediaType")
     content_type = content.get("contentType")
     is_parsed = content.get("isParsed", False)
     doi_number = content.get("doiNumber")
     canonical_url = content.get("canonicalUrl")
 
+    if science_paper_classification is not None and content_type == "scientific_paper":
+        return {"message": "Science paper already classified", "success": True}
     if content_type in ["youtube_video", "youtube_channel"]:
         return {"message": "YT video not added here", "success": True}
-
     if is_parsed:
         return {"message": "Content already parsed, skipping...", "success": True}
 
-    if doi_number:
+    # Handle scientific papers (with DOI)
+    if content_type == "scientific_paper" and doi_number:
         try:
-            content_id = analyse_science_paper(content_id)
-            if content_id:
-                update_evidence_score(content_id)
-                return {
-                    "message": "Science paper analyzed successfully",
-                    "content_id": content_id,
-                    "success": True,
-                }
-            else:
-                content_parse_error(content_id, "Error parsing science paper")
-                return {"message": "Error parsing science paper", "success": False}
+            analyse_science_paper(content_id)
+
         except Exception as e:
             logger.error("Error analyse_science_paper science paper: %s", str(e))
             content_parse_error(content_id, f"Error: {str(e)}")
             return {"message": f"Error: {str(e)}", "success": False}
 
-    if canonical_url and media_type == "text":
+        try:
+            update_evidence_score(content_id)
+            return {
+                "message": "Science paper analyzed successfully",
+                "content_id": content_id,
+                "success": True,
+            }
+        except Exception as e:
+            error_msg = f"Error updating evidence score: {str(e)}"
+            logger.error(error_msg)
+            content_parse_error(content_id, error_msg)
+            return {"message": error_msg, "success": False}
+
+    # Handle website pages
+    if media_type == "text" and canonical_url:
         try:
             analyse_website_page(content_id)
             return {
@@ -57,11 +65,15 @@ def on_insert_content_endpoint(content_id):
                 "success": True,
             }
         except Exception as e:
+            error_msg = f"Error analyzing website page: {str(e)}"
+            logger.error(error_msg)
+            content_parse_error(content_id, error_msg)
+            return {"message": error_msg, "success": False}
 
-            logger.error("Error analyse_website_page website page: %s", str(e))
-            return {"message": f"Error: {str(e)}", "success": False}
-
+    error_msg = f"Unsupported content: type={content_type}, media={media_type}, has_doi={bool(doi_number)}, has_url={bool(canonical_url)}"
+    logger.error(error_msg)
+    content_parse_error(content_id, error_msg)
     return {
-        "message": "Unknown media type or missing required fields",
+        "message": error_msg,
         "success": False,
     }

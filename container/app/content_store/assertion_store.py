@@ -1,6 +1,7 @@
 """This module contains functions to add assertions to content"""
 
 import datetime
+import uuid
 from ..utils.config import logger
 from ..utils.graphql import make_graphql_call
 from ..meaning.assertions import extract_assertions_from_long_text
@@ -84,12 +85,16 @@ def parse_assertions_long_text(content_id, long_text, additional_information="")
                     )
                 if len(assertion.get("citations", [])):
                     for citation in assertion.get("citations"):
+                        citation_content_id = citation.get("contentId", "")
+                        if not citation_content_id:  # Skip empty content IDs
+                            logger
+                            continue
                         logger.info("add_assertion_relation_to_content AGAINST")
                         # evidence that supports assertion extracted from long text, not original content id
                         logger.info(f"citation: {citation}")
                         add_content_relation_to_assertion(
                             assertion_id=assertion_id,
-                            content_id=citation.get("contentId"),
+                            content_id=citation_content_id,
                             content_weight_to_assertion=citation.get(
                                 "content_weight_to_assertion"
                             ),
@@ -106,45 +111,51 @@ def add_assertion_to_content(content_id, assertion):
     """add assertions to content"""
     now = datetime.datetime.now()
     citations = assertion.get("citations", [])
+
+    # Process citations and validate UUIDs
+    if isinstance(citations, list):
+        for citation in citations:
+            if citation.get("contentId") == "uuid" or not citation.get("contentId"):
+                # Generate a new UUID if none exists or if it's the placeholder
+                citation["contentId"] = str(uuid.uuid4())
+        citation_content_ids = [citation.get("contentId", "") for citation in citations]
+    else:
+        if citations.get("contentId") == "uuid" or not citations.get("contentId"):
+            citations["contentId"] = str(uuid.uuid4())
+        citation_content_ids = [citations.get("contentId", "")]
+
+    citation_content_id = citation_content_ids[0] if citation_content_ids else None
+
+    # Convert empty string UUID to None
+    if citation_content_id == "":
+        citation_content_id = None
+
+    # logger.info(
+    #     f"content_id: {content_id} add_assertion_to_content citations: {citations}"
+    # )
+    # logger.info(f"assertion: {assertion}")
+
     assertion_text = assertion.get("assertion", "")
 
     # First check if assertion already exists
     check_query = {
-        "variables": {
-            "contentId": content_id,
-            "text": assertion_text
-        },
+        "variables": {"contentId": content_id, "text": assertion_text},
         "query": """
             query CheckExistingAssertion($contentId: uuid!, $text: String!) {
                 assertions(where: {contentId: {_eq: $contentId}, text: {_eq: $text}}) {
                     id
                 }
             }
-        """
+        """,
     }
-    
+
     result = make_graphql_call(check_query, user_id=None, user_role=None, is_admin=True)
     existing_assertions = result.get("data", {}).get("assertions", [])
-    
+
     if existing_assertions:
         # Assertion already exists, return its ID
         logger.info(f"Assertion already exists for content_id {content_id}")
         return existing_assertions[0].get("id")
-
-    logger.info(f"content_id: {content_id} add_assertion_to_content citations: {citations}")
-    logger.info(f"assertion: {assertion}")
-
-    citation_content_id = ""
-    if isinstance(citations, list):
-        citation_content_ids = [citation.get("contentId", "") for citation in citations]
-    else:
-        citation_content_ids = [citations.get("contentId", "")]
-    if len(citation_content_ids) > 0:
-        citation_content_id = citation_content_ids[0]
-
-    # Convert empty UUID to None
-    if citation_content_id == "":
-        citation_content_id = None
 
     try:
         query = {
@@ -318,17 +329,17 @@ def add_assertion_relation_to_content(
 ):
     """add assertions to content"""
     # logger.info("add_assertion_relation_to_content called")
-    logger.info(
-        "params: 1 %s  2 %s 3 %s 4 %s 5 %s 6 %s 7 %s 8 %s",
-        assertion_id,
-        content_id,
-        assertion_weight,
-        why_relevant,
-        assertion_context,
-        is_pro_content,
-        original_sentence,
-        timestamp,
-    )
+    # logger.info(
+    #     "params: 1 %s  2 %s 3 %s 4 %s 5 %s 6 %s 7 %s 8 %s",
+    #     assertion_id,
+    #     content_id,
+    #     assertion_weight,
+    #     why_relevant,
+    #     assertion_context,
+    #     is_pro_content,
+    #     original_sentence,
+    #     timestamp,
+    # )
     if not assertion_id or not content_id or not assertion_weight:
         logger.error(
             "assertion_id or content_id is None %s %s %s",
@@ -547,9 +558,8 @@ def get_assertion_evidence_scores(assertion_id):
                 }
             """,
         }
-        result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-
-        assertion = result.get("data", {}).get("assertions", [{}])[0]
+        result = make_graphql_call(query)
+        return result["data"]["assertions"]
         return assertion
 
     except Exception as e:
