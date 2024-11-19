@@ -490,7 +490,7 @@ def get_assertion_content(assertion_id):
                 "assertionId": assertion_id,
             },
             "query": """
-                query GetAssertionContentQuery($assertionId: uuid = "") {
+                query GetAssertionContentQuery($assertionId: uuid!) {
                     assertions(where: {id: {_eq: $assertionId}}) {
                         assertionSearchVerify
                         citationContentId
@@ -519,19 +519,19 @@ def get_assertion_content(assertion_id):
                             title
                             summary
                             sourceUrl
+                            canonicalUrl
                             doiNumber
                         }
                     }
                 }
             """,
         }
-        result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-
-        assertion = result.get("data", {}).get("assertions", [{}])[0]
-        return assertion
+        result = make_graphql_call(query)
+        return result["data"]["assertions"][0]
 
     except Exception as e:
         logger.error("Error getting assertion content : %s", e)
+        logger.info(f"result: {result}")
         return None
 
 

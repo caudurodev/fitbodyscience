@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chip } from "@nextui-org/react";
+import { Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chip, CardHeader, Accordion, AccordionItem } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
@@ -11,6 +11,7 @@ import {
     DELETE_CONTENT_MUTATION,
     CLASSIFY_CONTENT_MUTATION,
     USER_UPDATE_EVIDENCE_SCORE_MUTATION,
+    USER_UPDATE_ASSERTIONS_SCORE_MUTATION
 } from '@/store/content/mutation'
 import { USER_UPDATE_ASSERTION_SCORE_MUTATION } from '@/store/assertion/mutation'
 import { useHydration } from '@/hooks/useHydration'
@@ -50,6 +51,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
     const [updateEvidenceScore, { loading: isUpdatingEvidenceScore }] = useMutation(USER_UPDATE_EVIDENCE_SCORE_MUTATION)
     const [updateAssertionScore, { loading: isUpdatingAssertionScore }] = useMutation(USER_UPDATE_ASSERTION_SCORE_MUTATION)
+    const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
 
     const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
     const assertions_contents = mainContent?.assertions_contents
@@ -212,158 +214,220 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                     </div>
                     <div className="sm:w-2/3">
 
-                        <h2 className="uppercase">Main point</h2>
+                        <h2 className="uppercase text-xs my-2">Main point</h2>
                         {!mainContent?.conclusion ? (
                             <SummarySkeleton />
                         ) : (
-                            <h2 className="text-3xl font-bold my-4">{mainContent?.conclusion}</h2>
+                            <h2 className="text-xl my-2">{mainContent?.conclusion}</h2>
                         )}
 
-                        <h2 className="uppercase mt-4">Summary</h2>
+                        <h2 className="uppercase text-xs my-4">Summary</h2>
                         {!mainContent?.summary ? (
                             <SummarySkeleton />
                         ) : (
-                            <h2 className="text-lg my-4">{mainContent?.summary}</h2>
+                            <h2 className="text-sm my-4">{mainContent?.summary}</h2>
                         )}
 
-                        <h2 className="uppercase mt-5">The main assertions from the author:</h2>
+                        <Button
+                            color="primary"
+                            size="sm"
+                            isLoading={isUpdatingAssertionsScore}
+                            onPress={async () => {
+                                await updateAssertionsScore({
+                                    variables: {
+                                        contentId: mainContent?.id
+                                    }
+                                })
+                            }}>
+                            update assertions score
+                        </Button>
                         {!assertions_contents?.length ? (
                             <AssertionsSkeleton />
                         ) : (
-                            <ul className="my-4">
-                                {assertions_contents.map((assertions_content: any, index: number) => {
-                                    return (
-                                        <li key={index} className="mb-16">
-                                            <div className="m-8">
-                                                <h4 className="text-2xl font-bold my-4">{index + 1}) {assertions_content.assertion.text}</h4>
-                                                <h4 className="text-sm my-2"> {assertions_content.assertionContext}</h4>
-                                                {assertions_content?.assertion &&
-                                                    <>
-                                                        <Chip color="success" size="lg" className="text-white mr-2"><Icon icon="mdi:approve" className="inline" /> {assertions_content?.assertion?.proEvidenceAggregateScore || 0} / 100</Chip>
-                                                        <Chip color="danger" size="lg" className=" text-white"> <Icon icon="ci:stop-sign" className="inline" /> {assertions_content?.assertion?.againstEvidenceAggregateScore || 0} / 100</Chip>
-                                                    </>
-                                                }
-                                                {assertions_content?.assertion?.id}
-                                                <Button
-                                                    className="my-2 mx-4"
-                                                    color="primary"
-                                                    isLoading={isUpdatingAssertionScore}
-                                                    onPress={async () => {
-                                                        updateAssertionScore({ variables: { assertionId: assertions_content?.assertion?.id } })
-                                                    }}
-                                                >
-                                                    Update assertion score
-                                                </Button>
-                                                {/* {JSON.stringify(assertions_content.assertion)} */}
-                                                <Slider
-                                                    step={1}
-                                                    isDisabled
-                                                    size="lg"
-                                                    hideThumb={true}
-                                                    hideValue={true}
-                                                    color="success"
-                                                    label={`Importance to conclusion ${assertions_content?.weightConclusion}/10`}
-                                                    showSteps={false}
-                                                    maxValue={10}
-                                                    minValue={0}
-                                                    defaultValue={Number(assertions_content?.weightConclusion)}
-                                                    className="max-w-md my-4"
-                                                />
-                                                {/* <h5 className=" text-sm my-4 font-bold">ass id: {assertions_content.assertion.id}</h5> */}
-                                                <h5 className="font-bold uppercase text-sm my-4">The author said (time: {assertions_content?.videoTimestamp}):</h5>
-                                                <p className="text-xl italic">&quot;{assertions_content?.assertion.originalSentence}&quot;</p>
-                                                {/* <h4 className="text-sm">SEARCH: {assertions_content?.assertion?.assertionSearchVerify}</h4> */}
-                                                {/* <h5 className="font-bold uppercase text-sm my-4">What author cites as evidence</h5> */}
-                                                {/* <p>{assertions_content.assertion.evidenceType}</p> */}
-                                                <h5 className="uppercase font-bold text-sm my-4">Evidence related to assertion</h5>
-                                                {!assertions_content?.assertion?.contents_assertions?.length || assertions_content?.assertion?.contents_assertions?.length === 0 &&
-                                                    <Spinner />
-                                                }
-                                                {assertions_content?.assertion?.contents_assertions?.length > 0 ?
-                                                    <>
-                                                        {
-                                                            assertions_content?.assertion?.contents_assertions.map(
-                                                                (o: any, i: number) => (
-                                                                    <div key={i} id={`assertion_${i}`} className="my-4">
-                                                                        <div className="my-3">
-                                                                            <Chip
-                                                                                color={o?.isProAssertion ? 'success' : 'danger'}
-                                                                                className="text-white"
-                                                                            >
-                                                                                <Icon className="inline text-lg" icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
-                                                                                {/* {o?.is_pro_assertion ? 'supports' : 'refutes'} */}
-                                                                                {' '}{Math.round(o?.content?.contentScore || 0)} / 100
-                                                                            </Chip>
-                                                                        </div>
-
-                                                                        <div className="ml-8 my-2">
-                                                                            <h6 className="text-tiny  uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
-                                                                            <Link href={o?.content?.sourceUrl}>{o?.content?.title}</Link>
-                                                                            <h6 className="text-tiny my-3">DOI: {o?.content?.doiNumber}</h6>
-
-                                                                            <h6>{o?.whyRelevant}</h6>
-                                                                            <h6>content id: {o?.content?.id}</h6>
-                                                                            <div className="my-3">
-                                                                                <Chip color="warning" className="text-white">{o?.content?.contentType}</Chip>
-                                                                            </div>
-                                                                            {o?.content?.sciencePaperClassification ?
-                                                                                <>
-                                                                                    <StudyClassification paperClassification={o?.content?.sciencePaperClassification} />
-                                                                                    <Button
-                                                                                        className="mt-2"
-                                                                                        color="primary"
-                                                                                        isLoading={isUpdatingEvidenceScore}
-                                                                                        isDisabled={isUpdatingEvidenceScore}
-                                                                                        onPress={async () => {
-                                                                                            try {
-                                                                                                await updateEvidenceScore({ variables: { contentId: o?.content?.id } })
-                                                                                                await refetch()
-                                                                                            } catch (e) {
-                                                                                                toast.error('Error updating evidence score')
-                                                                                                console.error(e)
-                                                                                            }
-                                                                                        }}
-                                                                                    >
-                                                                                        Update Score
-                                                                                    </Button>
-                                                                                </> :
-                                                                                <div>
-                                                                                    <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
-                                                                                    <Button
-                                                                                        className="mt-2"
-                                                                                        isLoading={isClassifyingContent}
-                                                                                        isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
-                                                                                        onPress={async () => {
-                                                                                            try {
-                                                                                                await classifyContent({ variables: { contentId: o?.content?.id } })
-                                                                                                await refetch()
-                                                                                            } catch (e) {
-                                                                                                toast.error('Error classifying content')
-                                                                                                console.error(e)
-                                                                                            }
-                                                                                        }}
-                                                                                    >
-                                                                                        Classify Now
-                                                                                    </Button>
-
-                                                                                    {/* <h6 className="">{o?.content?.sourceUrl}</h6> */}
-                                                                                </div>
-                                                                            }
-                                                                            {/* <h6 className="text-tiny">{o?.content?.whyRelevant}</h6> */}
-                                                                        </div>
-
-                                                                    </div>
-                                                                ))
+                            <>
+                                <h2 className="uppercase text-xs my-2">The main assertions from the author:</h2>
+                                <ul className="my-2">
+                                    {assertions_contents.map((assertions_content: any, index: number) => {
+                                        return (
+                                            <li key={index} className="mb-4">
+                                                <Card>
+                                                    <CardHeader className="flex-col items-start gap-2">
+                                                        <h4 className="text-xl">{index + 1}) {assertions_content.assertion.text}</h4>
+                                                        <h4 className="text-sm"> {assertions_content.assertionContext}</h4>
+                                                        {assertions_content?.assertion &&
+                                                            <div className="flex gap-2">
+                                                                <Chip color="success" size="lg" className="text-white"><Icon icon="mdi:approve" className="inline" /> {assertions_content?.assertion?.proEvidenceAggregateScore || 0} / 100</Chip>
+                                                                <Chip color="danger" size="lg" className=" text-white"> <Icon icon="ci:stop-sign" className="inline" /> {assertions_content?.assertion?.againstEvidenceAggregateScore || 0} / 100</Chip>
+                                                                <Button
+                                                                    color="primary"
+                                                                    size="sm"
+                                                                    isLoading={isUpdatingAssertionScore}
+                                                                    onPress={async () => {
+                                                                        updateAssertionScore({ variables: { assertionId: assertions_content?.assertion?.id } })
+                                                                    }}
+                                                                >
+                                                                    Update assertion score
+                                                                </Button>
+                                                            </div>
                                                         }
-                                                    </> :
-                                                    <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
-                                                }
+                                                        <Slider
+                                                            step={1}
+                                                            isDisabled
+                                                            size="sm"
+                                                            hideThumb={true}
+                                                            hideValue={true}
+                                                            color="success"
+                                                            label={`Importance to conclusion ${assertions_content?.weightConclusion}/10`}
+                                                            showSteps={false}
+                                                            maxValue={10}
+                                                            minValue={0}
+                                                            defaultValue={Number(assertions_content?.weightConclusion)}
+                                                            className="max-w-md"
+                                                        />
+                                                    </CardHeader>
+                                                    <CardBody className="flex gap-2">
+                                                        <h5 className="uppercase text-xs">The author said (time: {assertions_content?.videoTimestamp}):</h5>
+                                                        <p className="text-sm italic">&quot;{assertions_content?.assertion.originalSentence}&quot;</p>
+                                                        <Accordion>
+                                                            <AccordionItem
+                                                                key="evidence"
+                                                                aria-label="Evidence related to assertion"
+                                                                title={
+                                                                    <>
+                                                                        <h5 className="uppercase text-xs">
+                                                                            Evidence related to assertion
+                                                                            ({assertions_content?.assertion?.contents_assertions?.length})
+                                                                        </h5>
+                                                                        <div className="flex gap-2 mt-2">
+                                                                            {(() => {
+                                                                                const proEvidence = assertions_content?.assertion?.contents_assertions?.filter(e => e.isProAssertion) || [];
+                                                                                const conEvidence = assertions_content?.assertion?.contents_assertions?.filter(e => !e.isProAssertion) || [];
 
-                                            </div>
-                                        </li>
-                                    )
-                                })}
-                            </ul>
+                                                                                return (
+                                                                                    <>
+                                                                                        {proEvidence.length > 0 && (
+                                                                                            <Chip color="success" size="sm" className="text-white">
+                                                                                                <Icon icon="mdi:approve" className="inline" />{' '}
+                                                                                                {proEvidence.length} supporting ({
+                                                                                                    Math.round(
+                                                                                                        proEvidence.reduce((acc, e) => acc + (e.content?.contentScore || 0), 0) / proEvidence.length
+                                                                                                    )
+                                                                                                }/100)
+                                                                                            </Chip>
+                                                                                        )}
+                                                                                        {conEvidence.length > 0 && (
+                                                                                            <Chip color="danger" size="sm" className="text-white">
+                                                                                                <Icon icon="ci:stop-sign" className="inline" />{' '}
+                                                                                                {conEvidence.length} opposing ({
+                                                                                                    Math.round(
+                                                                                                        conEvidence.reduce((acc, e) => acc + (e.content?.contentScore || 0), 0) / conEvidence.length
+                                                                                                    )
+                                                                                                }/100)
+                                                                                            </Chip>
+                                                                                        )}
+                                                                                    </>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                    </>
+                                                                }
+                                                            >
+                                                                {!assertions_content?.assertion?.contents_assertions?.length || assertions_content?.assertion?.contents_assertions?.length === 0 &&
+                                                                    <Spinner />
+                                                                }
+                                                                {assertions_content?.assertion?.contents_assertions?.length > 0 ?
+                                                                    <>
+                                                                        {
+                                                                            assertions_content?.assertion?.contents_assertions.map(
+                                                                                (o: any, i: number) => (
+                                                                                    <Accordion key={i} id={`assertion_${i}`} className="mb-4">
+                                                                                        <AccordionItem
+                                                                                            key="evidence-details"
+                                                                                            aria-label={o?.content?.title || "Evidence details"}
+                                                                                            title={
+                                                                                                <div className="flex items-center gap-2">
+                                                                                                    <Chip
+                                                                                                        color={o?.isProAssertion ? 'success' : 'danger'}
+                                                                                                        className="text-white"
+                                                                                                    >
+                                                                                                        <Icon className="inline text-lg" icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
+                                                                                                        {Math.round(o?.content?.contentScore || 0)} / 100
+                                                                                                    </Chip>
+                                                                                                    <span className="text-sm">{o?.content?.title}</span>
+                                                                                                </div>
+                                                                                            }
+                                                                                        >
+                                                                                            <div className="ml-8 my-2">
+                                                                                                <h6 className="text-tiny uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
+                                                                                                <Link href={o?.content?.sourceUrl}>{o?.content?.title}</Link>
+                                                                                                <h6 className="text-tiny my-3">DOI: {o?.content?.doiNumber}</h6>
+
+                                                                                                <h6>{o?.whyRelevant}</h6>
+                                                                                                <div className="my-3">
+                                                                                                    <Chip color="warning" className="text-white">{o?.content?.contentType}</Chip>
+                                                                                                </div>
+                                                                                                {o?.content?.sciencePaperClassification ?
+                                                                                                    <>
+                                                                                                        <StudyClassification paperClassification={o?.content?.sciencePaperClassification} />
+                                                                                                        <Button
+                                                                                                            className="mt-2"
+                                                                                                            color="primary"
+                                                                                                            size="sm"
+                                                                                                            isLoading={isUpdatingEvidenceScore}
+                                                                                                            isDisabled={isUpdatingEvidenceScore}
+                                                                                                            onPress={async () => {
+                                                                                                                try {
+                                                                                                                    await updateEvidenceScore({ variables: { contentId: o?.content?.id } })
+                                                                                                                    await refetch()
+                                                                                                                } catch (e) {
+                                                                                                                    toast.error('Error updating evidence score')
+                                                                                                                    console.error(e)
+                                                                                                                }
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            Update Score
+                                                                                                        </Button>
+                                                                                                    </> :
+                                                                                                    <div>
+                                                                                                        <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
+                                                                                                        <Button
+                                                                                                            className="mt-2"
+                                                                                                            size="sm"
+                                                                                                            isLoading={isClassifyingContent}
+                                                                                                            isDisabled={!!o?.content?.sciencePaperClassification || isClassifyingContent}
+                                                                                                            onPress={async () => {
+                                                                                                                try {
+                                                                                                                    await classifyContent({ variables: { contentId: o?.content?.id } })
+                                                                                                                    await refetch()
+                                                                                                                } catch (e) {
+                                                                                                                    toast.error('Error classifying content')
+                                                                                                                    console.error(e)
+                                                                                                                }
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            Classify Now
+                                                                                                        </Button>
+                                                                                                    </div>
+                                                                                                }
+                                                                                            </div>
+                                                                                        </AccordionItem>
+                                                                                    </Accordion>
+                                                                                ))
+                                                                        }
+                                                                    </> :
+                                                                    <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
+                                                                }
+
+                                                            </AccordionItem>
+                                                        </Accordion>
+
+                                                    </CardBody>
+                                                </Card>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </>
                         )}
                     </div>
                 </CardBody>

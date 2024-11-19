@@ -6,7 +6,10 @@ from .config.logging import logger
 from .endpoints.get_channel_data import upsert_influencer_endpoint
 from .utils.auth.user import require_auth
 from .utils.validators import validate_input
-from .endpoints.actions.user_analyse_content import user_analyse_content_endpoint
+from .endpoints.actions.user_analyse_content import (
+    user_analyse_content_endpoint,
+    add_pro_against_assertions,
+)
 from .endpoints.actions.user_add_content import user_add_content_endpoint
 from .endpoints.actions.action_user_classify_evidence_endpoint import (
     action_user_classify_evidence_endpoint,
@@ -131,6 +134,33 @@ def action_update_assertion_score_method(input_data):
         logger.error("Error adding content %s", e)
         return (
             jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
+
+
+@app.route("/action_update_assertions_score", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["contentId"],
+    payload_key="input",
+)
+def action_update_assertions_score_method(input_data):
+    """Action to add user content"""
+    try:
+        result = add_pro_against_assertions(content_id=input_data["contentId"])
+        return (
+            jsonify({"message": "Content score updated", "success": True}),
+            200,
+        )
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify(
+                {
+                    "message": f"Error action_update_assertion_score_method {str(e)}",
+                    "success": False,
+                }
+            ),
             500,
         )
 

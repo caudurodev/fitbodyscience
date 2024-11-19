@@ -14,6 +14,8 @@ from ...scoring.update import update_content_aggregate_score
 from ...endpoints.actions.action_update_assertion_score_endpoint import (
     update_assertion_score_by_id,
 )
+from ...endpoints.assertions import insert_assertions_opposing
+from ...utils.run_async import run_method_async
 
 
 def user_analyse_content_endpoint(content_id):
@@ -53,14 +55,8 @@ def user_analyse_content_endpoint(content_id):
             logger.info(f"classify_evidence for related content {child_content_id}")
             classify_evidence(content_id=child_content_id)
 
-        content_assertions = get_content_assertions(content_id=content_id)
-        for content_assertion in content_assertions:
-            content_assertion_id = content_assertion["id"]
-            logger.info(f"content_assertion_id {content_assertion_id}")
-            # update_assertion_score(assertion_id=content_assertion_id)
-            update_assertion_score_by_id(content_assertion_id)
-
-        update_content_aggregate_score(content_id)
+        # get opposing viewpoints
+        run_method_async(add_pro_against_assertions, content_id)
 
         # get opposing viewpoints
 
@@ -69,3 +65,21 @@ def user_analyse_content_endpoint(content_id):
         logger.info(f"Finished analyzing content {content_id}")
     except Exception as e:
         logger.error(f"Error analyzing content {content_id}: {str(e)}")
+
+
+def add_pro_against_assertions(content_id):
+    """Add pro against assertions"""
+    logger.warning(f"add_pro_against_assertions content_id: {content_id}")
+    content_assertions = get_content_assertions(content_id=content_id)
+
+    logger.info(f"content_assertions: {content_assertions}")
+
+    for content_assertion in content_assertions:
+        content_assertion_id = content_assertion["assertion"]["id"]
+        logger.warning(f"content_assertion_id: {content_assertion_id}")
+        insert_assertions_opposing(assertion_id=content_assertion_id)
+        update_assertion_score_by_id(content_assertion_id)
+        update_content_aggregate_score(content_id)
+        break
+
+    return "done"

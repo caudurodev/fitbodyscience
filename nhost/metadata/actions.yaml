@@ -7,6 +7,14 @@ actions:
     permissions:
       - role: user
     comment: recalculate_aggregate_score
+  - name: updateAssertionsScore
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/action_update_assertions_score
+      timeout: 600
+    permissions:
+      - role: user
+    comment: updateAssertionsScore
   - name: userAddContent
     definition:
       kind: synchronous
@@ -58,4 +66,5 @@ custom_types:
     - name: classifyEvidenceOutput
     - name: userUpdateEvidenceScoreOutput
     - name: UserUpdateAssertionScoreOutput
+    - name: UpdateAssertionsScoreOutput
   scalars: []

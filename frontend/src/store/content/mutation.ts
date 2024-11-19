@@ -70,3 +70,12 @@ mutation UserUpdateEvidenceScoreMutation($contentId: String!) {
   }
 }
 `
+
+export const USER_UPDATE_ASSERTIONS_SCORE_MUTATION = gql`
+mutation UserUpdateAssertionsScoreMutation($contentId: String!) {
+  updateAssertionsScore(contentId: $contentId) {
+    message
+    success
+  }
+}
+`

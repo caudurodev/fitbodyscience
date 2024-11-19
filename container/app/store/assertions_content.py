@@ -15,10 +15,11 @@ def get_content_assertions(
         "query": """
             query GetAssertionsContentQuery($contentId: uuid!) {
                 assertions_content(where: {contentId: {_eq: $contentId}}) {
-                    id
+                    assertion{
+                        id
+                    }
                 }
             }
-
         """,
     }
     try:

@@ -5,6 +5,12 @@ type Mutation {
 }
 
 type Mutation {
+  updateAssertionsScore(
+    contentId: String!
+  ): UpdateAssertionsScoreOutput
+}
+
+type Mutation {
   userAddContent(
     url: String!
     mediaType: String
@@ -64,5 +70,10 @@ type userUpdateEvidenceScoreOutput {
 type UserUpdateAssertionScoreOutput {
   message: String
   success: Boolean
+}
+
+type UpdateAssertionsScoreOutput {
+  message: String
+  success: Boolean!
 }
 

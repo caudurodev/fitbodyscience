@@ -17,11 +17,18 @@ def get_opposing_viewpoints(assertion_id):
     """Get opposing viewpoints on a given topic"""
 
     assertion = get_assertion_content(assertion_id)
-    main_claim = f"{assertion['text']}, The original assertion text was: {assertion['original_sentence']}."
-    evidence_type = f"{assertion['evidence_type']}"
-    context = f"{assertion['content']['title']} - {assertion['content']['summary']} from the url {assertion['content']['source_url']} with the DOI {assertion['content']['doi_number']}."
-    assertion_search_verify = f'{assertion["assertion_search_verify"]}'
-    already_provided_evidence_for = f'{json.dumps(assertion["contents_assertions"])}'
+    try:
+        main_claim = f"{assertion['text']}, The original assertion text was: {assertion['originalSentence']}."
+        evidence_type = f"{assertion['evidenceType']}"
+        context = f"{assertion['content']['title']} - {assertion['content']['summary']} from the url {assertion['content']['canonicalUrl']} with the DOI {assertion['content']['doiNumber']}."
+        assertion_search_verify = f'{assertion["assertionSearchVerify"]}'
+        already_provided_evidence_for = (
+            f'{json.dumps(assertion["contents_assertions"])}'
+        )
+    except Exception as e:
+        logger.error("Error getting assertion content : %s", e)
+        logger.info("assertion: %s", assertion)
+        return None
 
     main_assertion = f"""
         The assertion is summarised as: 
@@ -122,7 +129,7 @@ def get_opposing_viewpoints(assertion_id):
             "evidence_supports": [
                 {      
                     "title": "Title of the paper",
-                    "source_url": "url where to find the paper",
+                    "canonical_url": "url where to find the paper",
                     "doi_number": "DOI number",
                     "how_assertion_is_supported": "How the assertion is supported by this paper",
                     "proof_assertion_is_true": "How the paper proves the assertion is true, what evidence is provided.",
@@ -132,7 +139,7 @@ def get_opposing_viewpoints(assertion_id):
             "evidence_disprove": [
                 {
                     "title": "Title of the paper",
-                    "source_url": "url where to find the paper",
+                    "canonical_url": "url where to find the paper",
                     "doi_number": "DOI number",
                     "how_assertion_is_disproven": "How the assertion is disproven by this paper",
                     "proof_assertion_is_false": "How the paper proves the assertion is false, what evidence is provided.",
@@ -167,7 +174,7 @@ def get_opposing_viewpoints(assertion_id):
             "evidence_supports": [
                 {      
                     "title": "Title of the paper",
-                    "source_url": "url where to find the paper",
+                    "canonical_url": "url where to find the paper",
                     "doi_number": "DOI number",
                     "how_assertion_is_supported": "How the assertion is supported by this paper",
                     "proof_assertion_is_true": "How the paper proves the assertion is true, what evidence is provided.",
@@ -177,7 +184,7 @@ def get_opposing_viewpoints(assertion_id):
             "evidence_disprove": [
                 {
                     "title": "Title of the paper",
-                    "source_url": "url where to find the paper",
+                    "canonical_url": "url where to find the paper",
                     "doi_number": "DOI number",
                     "how_assertion_is_disproven": "How the assertion is disproven by this paper",
                     "proof_assertion_is_false": "How the paper proves the assertion is false, what evidence is provided.",

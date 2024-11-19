@@ -11,13 +11,16 @@ from ..content_store.assertion_store import (
 from ..agents.more_pro_against_evidence import get_opposing_viewpoints
 from ..content_store.content_relation_store import create_content_relation
 from ..content_store.assertion_store import get_assertion_content
+from ..endpoints.actions.action_user_classify_evidence_endpoint import (
+    classify_evidence,
+)
 
 
 def insert_assertions_opposing(assertion_id):
     """insert assertions and related content for opposing viewpoints"""
     try:
         assertion = get_assertion_content(assertion_id)
-        parent_content_id = assertion.get("content_id")
+        parent_content_id = assertion.get("contentId")
     except Exception as e:
         logger.error(
             "Error insert_assertions_opposing getting assertion content: %s", e
@@ -26,31 +29,36 @@ def insert_assertions_opposing(assertion_id):
 
     try:
         result = get_opposing_viewpoints(assertion_id)
+
     except Exception as e:
         logger.error(
             "Error insert_assertions_opposing getting opposing viewpoints: %s", e
         )
+        logger.info("result: %s", result)
         return False
 
     evidence_supports = result.get("evidence_supports", [])
     evidence_disprove = result.get("evidence_disprove", [])
 
     if len(evidence_supports) > 0:
-        # logger.info("n evidence_supports: %s", len(evidence_supports))
         for evidence in evidence_supports:
-            # 1. add content from evidence
-            new_content_id = check_if_related_link_content_exists(
-                evidence.get("source_url")
-            )
-            if new_content_id is None:
+            # Try both canonical_url and source_url
+            canonical_url = evidence.get("canonical_url") or evidence.get("source_url")
+            if not canonical_url:
+                logger.error("Missing URL in evidence: %s", evidence)
+                continue
 
+            # 1. add content from evidence
+            new_content_id = check_if_related_link_content_exists(canonical_url)
+            if new_content_id is None:
                 new_content_id = save_related_link(
-                    source_url=evidence.get("source_url"),
-                    canonical_url=evidence.get("canonical_url"),
-                    content_type=evidence.get("evidence_type"),
+                    source_url=canonical_url,
+                    canonical_url=canonical_url,
+                    content_type=evidence.get("evidence_type", ""),
                     media_type="text",
-                    doi_number=evidence.get("doi_number"),
+                    doi_number=evidence.get("doi_number", ""),
                 )
+
             if new_content_id is not None:
                 create_content_relation(
                     parent_content_id=parent_content_id,
@@ -66,18 +74,27 @@ def insert_assertions_opposing(assertion_id):
                     is_pro_assertion=True,
                     is_citation_from_original_content=False,
                 )
+                classify_evidence(content_id=new_content_id)
 
     if len(evidence_disprove) > 0:
-        # logger.info("n evidence_disprove: %s", len(evidence_disprove))
         for evidence in evidence_disprove:
+            # Try both canonical_url and source_url
+            canonical_url = evidence.get("canonical_url") or evidence.get("source_url")
+            if not canonical_url:
+                logger.error("Missing URL in evidence: %s", evidence)
+                continue
+
             # 1. add content from evidence
-            new_content_id = save_related_link(
-                source_url=evidence.get("source_url"),
-                canonical_url=evidence.get("canonical_url"),
-                content_type=evidence.get("evidence_type"),
-                media_type="text",
-                doi_number=evidence.get("doi_number"),
-            )
+            new_content_id = check_if_related_link_content_exists(canonical_url)
+            if new_content_id is None:
+                new_content_id = save_related_link(
+                    source_url=canonical_url,
+                    canonical_url=canonical_url,
+                    content_type=evidence.get("evidence_type", ""),
+                    media_type="text",
+                    doi_number=evidence.get("doi_number", ""),
+                )
+
             if new_content_id is not None:
                 # 2. connect content to assertion
                 add_content_relation_to_assertion(
