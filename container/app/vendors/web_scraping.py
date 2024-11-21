@@ -22,7 +22,7 @@ def download_website(url_to_scrape, return_format="html"):
             content = None
 
             if vendor == "oxylabs":
-                content = get_website_with_oxylabs(url_to_scrape, return_format)
+                content = download_url_with_oxylabs(url_to_scrape, return_format)
             elif vendor == "use_scraper":
                 content = get_website_with_use_scraper(url_to_scrape, return_format)
             elif vendor == "scrapingbee":

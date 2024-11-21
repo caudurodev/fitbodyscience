@@ -9,7 +9,7 @@ from ..content_store.assertion_store import get_assertion_content
 from ..utils.llm import extract_json_part_from_string
 
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-os.environ["OPENAI_MODEL_NAME"] = "gpt-4o-2024-05-13"
+os.environ["OPENAI_MODEL_NAME"] = "gpt-4o"
 os.environ["SERPER_API_KEY"] = settings.SERPER_API_KEY
 
 
@@ -17,16 +17,49 @@ def get_opposing_viewpoints(assertion_id):
     """Get opposing viewpoints on a given topic"""
 
     assertion = get_assertion_content(assertion_id)
+    if not assertion:
+        logger.error(f"No assertion found for id: {assertion_id}")
+        return None
+
     try:
-        main_claim = f"{assertion['text']}, The original assertion text was: {assertion['originalSentence']}."
-        evidence_type = f"{assertion['evidenceType']}"
-        context = f"{assertion['content']['title']} - {assertion['content']['summary']} from the url {assertion['content']['canonicalUrl']} with the DOI {assertion['content']['doiNumber']}."
-        assertion_search_verify = f'{assertion["assertionSearchVerify"]}'
-        already_provided_evidence_for = (
-            f'{json.dumps(assertion["contents_assertions"])}'
+        # Build main claim with fallbacks for missing fields
+        main_claim_parts = []
+        if assertion.get("text"):
+            main_claim_parts.append(assertion["text"])
+        if assertion.get("originalSentence"):
+            main_claim_parts.append(
+                f"The original assertion text was: {assertion['originalSentence']}"
+            )
+        main_claim = ". ".join(main_claim_parts) + "."
+
+        # Get evidence type with fallback
+        evidence_type = assertion.get("evidenceType", "No evidence type provided")
+
+        # Build context with fallbacks for missing content fields
+        context_parts = []
+        content = assertion.get("content", {}) or {}
+        if content.get("title"):
+            context_parts.append(content["title"])
+        if content.get("summary"):
+            context_parts.append(content["summary"])
+        if content.get("canonicalUrl"):
+            context_parts.append(f"from the url {content['canonicalUrl']}")
+        if content.get("doiNumber"):
+            context_parts.append(f"with the DOI {content['doiNumber']}")
+        context = (
+            " - ".join(filter(None, context_parts)) or "No additional context available"
         )
+
+        # Get assertion search verify with fallback
+        assertion_search_verify = assertion.get("assertionSearchVerify", "")
+
+        # Get contents assertions with fallback
+        already_provided_evidence_for = json.dumps(
+            assertion.get("contents_assertions", [])
+        )
+
     except Exception as e:
-        logger.error("Error getting assertion content : %s", e)
+        logger.error("Error getting assertion content: %s", e)
         logger.info("assertion: %s", assertion)
         return None
 

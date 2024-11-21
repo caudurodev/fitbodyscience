@@ -21,8 +21,8 @@ const config: Config = {
         light: {
           layout: {},
           colors: {
-            // background: "#f6f0ee",
-            // foreground: "#220705",
+            background: "#f6f0ee",
+            foreground: "#220705",
             focus: "#006FEE",
             primary: {
               DEFAULT: "#81cefd",

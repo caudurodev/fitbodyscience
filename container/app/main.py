@@ -20,8 +20,12 @@ from .endpoints.actions.action_update_assertion_score_endpoint import (
 from .endpoints.actions.action_update_evidence_score_endpoint import (
     action_update_evidence_score_endpoint,
 )
+from .endpoints.actions.action_user_search_more_evidence_endpoint import (
+    action_user_search_more_evidence_endpoint,
+)
 from .utils.run_async import run_method_async
 from .scoring.update import update_content_aggregate_score
+from .store.assertions_content import get_content_assertions
 
 app = Flask(__name__)
 CORS(app)
@@ -118,6 +122,35 @@ def action_update_evidence_score_method(input_data):
         )
 
 
+@app.route("/action_user_search_more_evidence", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["assertionId"],
+    payload_key="input",
+)
+def action_user_search_more_evidence_method(input_data):
+    """Action to add user content"""
+    try:
+        action_user_search_more_evidence_endpoint(
+            assertion_id=input_data["assertionId"]
+        )
+        return (
+            jsonify({"message": "Assertion evidence searched", "success": True}),
+            200,
+        )
+    except Exception as e:
+        logger.error("Error searching for more evidence %s", e)
+        return (
+            jsonify(
+                {
+                    "message": f"Error searching for more evidence {str(e)}",
+                    "success": False,
+                }
+            ),
+            500,
+        )
+
+
 @app.route("/action_update_assertion_score", methods=["POST"])
 @require_auth
 @validate_input(
@@ -148,6 +181,7 @@ def action_update_assertions_score_method(input_data):
     """Action to add user content"""
     try:
         result = add_pro_against_assertions(content_id=input_data["contentId"])
+        logger.info("action_update_assertions_score_method result: %s", result)
         return (
             jsonify({"message": "Content score updated", "success": True}),
             200,

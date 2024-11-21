@@ -59,14 +59,14 @@ export const YouTubePlayer = ({
 
         return (
             <div
-                className={`${className} relative cursor-pointer group overflow-hidden`}
+                className={`${className} relative cursor-pointer group overflow-hidden rounded-xl border-4 border-primary`}
                 onClick={() => setShowPlayer(true)}
             >
                 <Image
                     src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
                     alt="Video thumbnail"
                     fill
-                    className="object-cover z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="object-cover z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 "
                     priority
                     sizes="(max-width: 768px) 100vw, 33vw"
                 />

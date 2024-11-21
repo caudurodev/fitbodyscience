@@ -31,6 +31,12 @@ type Mutation {
 }
 
 type Mutation {
+  userSearchMoreEvidence(
+    assertionId: String!
+  ): UserSearchMoreEvidenceOutput
+}
+
+type Mutation {
   userUpdateAssertionScore(
     assertionId: String!
   ): UserUpdateAssertionScoreOutput
@@ -75,5 +81,10 @@ type UserUpdateAssertionScoreOutput {
 type UpdateAssertionsScoreOutput {
   message: String
   success: Boolean!
+}
+
+type UserSearchMoreEvidenceOutput {
+  message: String
+  success: Boolean
 }
 

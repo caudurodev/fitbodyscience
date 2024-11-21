@@ -40,6 +40,14 @@ actions:
       - role: public
       - role: user
     comment: userClassifyEvidence
+  - name: userSearchMoreEvidence
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/action_user_search_more_evidence
+      timeout: 600
+    permissions:
+      - role: user
+    comment: userSearchMoreEvidence
   - name: userUpdateAssertionScore
     definition:
       kind: synchronous
@@ -67,4 +75,5 @@ custom_types:
     - name: userUpdateEvidenceScoreOutput
     - name: UserUpdateAssertionScoreOutput
     - name: UpdateAssertionsScoreOutput
+    - name: UserSearchMoreEvidenceOutput
   scalars: []

@@ -29,12 +29,12 @@ def insert_assertions_opposing(assertion_id):
 
     try:
         result = get_opposing_viewpoints(assertion_id)
+        logger.info("get_opposing_viewpoints result: %s", result)
 
     except Exception as e:
         logger.error(
             "Error insert_assertions_opposing getting opposing viewpoints: %s", e
         )
-        logger.info("result: %s", result)
         return False
 
     evidence_supports = result.get("evidence_supports", [])

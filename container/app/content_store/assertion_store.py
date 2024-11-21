@@ -109,6 +109,26 @@ def parse_assertions_long_text(content_id, long_text, additional_information="")
 
 def add_assertion_to_content(content_id, assertion):
     """add assertions to content"""
+    # Validate main content_id first
+    check_content_query = {
+        "variables": {"contentId": content_id},
+        "query": """
+            query CheckContent($contentId: uuid!) {
+                content_by_pk(id: $contentId) {
+                    id
+                }
+            }
+        """,
+    }
+    try:
+        result = make_graphql_call(check_content_query)
+        if not result.get("data", {}).get("content_by_pk"):
+            logger.error(f"Main content ID {content_id} not found in content table")
+            return None
+    except Exception as e:
+        logger.error(f"Error checking main content: {e}")
+        return None
+
     now = datetime.datetime.now()
     citations = assertion.get("citations", [])
 
@@ -116,7 +136,6 @@ def add_assertion_to_content(content_id, assertion):
     if isinstance(citations, list):
         for citation in citations:
             if citation.get("contentId") == "uuid" or not citation.get("contentId"):
-                # Generate a new UUID if none exists or if it's the placeholder
                 citation["contentId"] = str(uuid.uuid4())
         citation_content_ids = [citation.get("contentId", "") for citation in citations]
     else:
@@ -124,60 +143,66 @@ def add_assertion_to_content(content_id, assertion):
             citations["contentId"] = str(uuid.uuid4())
         citation_content_ids = [citations.get("contentId", "")]
 
-    citation_content_id = citation_content_ids[0] if citation_content_ids else None
-
-    # Convert empty string UUID to None
-    if citation_content_id == "":
-        citation_content_id = None
-
-    # logger.info(
-    #     f"content_id: {content_id} add_assertion_to_content citations: {citations}"
-    # )
-    # logger.info(f"assertion: {assertion}")
+    # Validate citation_content_id
+    citation_content_id = None
+    if citation_content_ids and citation_content_ids[0]:
+        # Check if the content exists in the content table
+        check_query = {
+            "variables": {"contentId": citation_content_ids[0]},
+            "query": """
+                query CheckContent($contentId: uuid!) {
+                    content_by_pk(id: $contentId) {
+                        id
+                    }
+                }
+            """,
+        }
+        try:
+            result = make_graphql_call(check_query)
+            if result.get("data", {}).get("content_by_pk"):
+                citation_content_id = citation_content_ids[0]
+            else:
+                logger.warning(
+                    f"Citation content ID {citation_content_ids[0]} not found in content table"
+                )
+        except Exception as e:
+            logger.error(f"Error checking citation content: {e}")
 
     assertion_text = assertion.get("assertion", "")
 
-    # First check if assertion already exists
-    check_query = {
-        "variables": {"contentId": content_id, "text": assertion_text},
-        "query": """
-            query CheckExistingAssertion($contentId: uuid!, $text: String!) {
-                assertions(where: {contentId: {_eq: $contentId}, text: {_eq: $text}}) {
-                    id
-                }
-            }
-        """,
-    }
+    is_fallacy = assertion.get("is_fallacy", False)
+    evidence_type = assertion.get("evidence_type", "")
+    assertion_search_verify = assertion.get("assertion_search_verify", "")
+    original_sentence = assertion.get("part_of_text_assertion_made", "")
+    timestamp = assertion.get("part_of_transcript_assertion_timestamp", "")
+    standalone_assertion_reliability = str(
+        assertion.get("standalone_assertion_reliability", "0")
+    )
 
-    result = make_graphql_call(check_query, user_id=None, user_role=None, is_admin=True)
-    existing_assertions = result.get("data", {}).get("assertions", [])
-
-    if existing_assertions:
-        # Assertion already exists, return its ID
-        logger.info(f"Assertion already exists for content_id {content_id}")
-        return existing_assertions[0].get("id")
+    try:
+        variables = {
+            "contentId": content_id,
+            "text": assertion_text,
+            "isFallacy": is_fallacy,
+            "evidenceType": evidence_type,
+            "citations": citations,
+            "citationContentId": citation_content_id,
+            "assertionSearchVerify": assertion_search_verify,
+            "originalSentence": original_sentence,
+            "timestamp": timestamp,
+            "dateCreated": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "standaloneAssertionReliability": standalone_assertion_reliability,
+        }
+        logger.info("add_assertion_to_content variables: %s", variables)
+    except Exception as e:
+        logger.error("Error adding assertions to content: %s", e)
+        return None
 
     try:
         query = {
-            "variables": {
-                "contentId": content_id,
-                "text": assertion.get("assertion", ""),
-                "isFallacy": assertion.get("is_fallacy", False),
-                "evidenceType": assertion.get("evidence_type", ""),
-                "citations": citations,
-                "citationContentId": citation_content_id,
-                "assertionSearchVerify": assertion.get("assertion_search_verify", ""),
-                "originalSentence": assertion.get("part_of_text_assertion_made", ""),
-                "timestamp": assertion.get(
-                    "part_of_transcript_assertion_timestamp", ""
-                ),
-                "dateCreated": now.strftime("%Y-%m-%d %H:%M:%S"),
-                "standaloneAssertionReliability": str(
-                    assertion.get("standalone_assertion_reliability", "0")
-                ),
-            },
+            "variables": variables,
             "query": """
-                mutation InsertContentAssertionMutation(
+                mutation UpsertContentAssertionMutation(
                     $contentId: uuid!, 
                     $citations: jsonb!, 
                     $evidenceType: String!, 
@@ -190,19 +215,34 @@ def add_assertion_to_content(content_id, assertion):
                     $dateCreated: timestamptz!,
                     $standaloneAssertionReliability: String!
                 ) {
-                    insert_assertions(objects: {
-                        citations: $citations,
-                        contentId: $contentId, 
-                        evidenceType: $evidenceType, 
-                        isFallacy: $isFallacy, 
-                        assertionSearchVerify: $assertionSearchVerify,
-                        text: $text,
-                        originalSentence: $originalSentence,
-                        timestamp: $timestamp,
-                        dateCreated: $dateCreated, 
-                        citationContentId: $citationContentId,
-                        standaloneAssertionReliability: $standaloneAssertionReliability
-                    }) {
+                    insert_assertions(
+                        objects: {
+                            citations: $citations,
+                            contentId: $contentId, 
+                            evidenceType: $evidenceType, 
+                            isFallacy: $isFallacy, 
+                            assertionSearchVerify: $assertionSearchVerify,
+                            text: $text,
+                            originalSentence: $originalSentence,
+                            timestamp: $timestamp,
+                            dateCreated: $dateCreated,
+                            citationContentId: $citationContentId,
+                            standaloneAssertionReliability: $standaloneAssertionReliability
+                        },
+                        on_conflict: {
+                            constraint: assertions_pkey,
+                            update_columns: [
+                                citations,
+                                evidenceType,
+                                isFallacy,
+                                assertionSearchVerify,
+                                originalSentence,
+                                timestamp,
+                                citationContentId,
+                                standaloneAssertionReliability
+                            ]
+                        }
+                    ) {
                         affected_rows
                         returning {
                             id
@@ -212,18 +252,10 @@ def add_assertion_to_content(content_id, assertion):
             """,
         }
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-        logger.info("add_assertion_to_content result: %s", result)
-        assertion_id = (
-            result.get("data", {})
-            .get("insert_assertions", {})
-            .get("returning", [{}])[0]
-            .get("id", None)
-        )
-        if assertion_id is None:
-            logger.error("Failed to get assertion_id from result: %s", result)
-        return assertion_id
+        return result["data"]["insert_assertions"]["returning"][0]["id"]
     except Exception as e:
         logger.error("Error adding assertions to content: %s", e)
+        logger.info("result: %s", result)
         return None
 
 
@@ -560,7 +592,6 @@ def get_assertion_evidence_scores(assertion_id):
         }
         result = make_graphql_call(query)
         return result["data"]["assertions"]
-        return assertion
 
     except Exception as e:
         logger.error("Error getting assertion content : %s", e)

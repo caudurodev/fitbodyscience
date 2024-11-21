@@ -12,6 +12,7 @@ colorlog
 unidecode
 json5
 trafilatura
+json-repair
 
 yt_dlp
 youtube-transcript-api

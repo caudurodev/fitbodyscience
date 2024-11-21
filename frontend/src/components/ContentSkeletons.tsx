@@ -1,8 +1,8 @@
-import { Card, Skeleton } from "@nextui-org/react";
+import { Skeleton } from "@nextui-org/react";
 
 export const SummarySkeleton = () => {
   return (
-    <Card className="w-full p-4 space-y-3">
+    <div className="w-full p-4 space-y-3">
       <Skeleton className="rounded-lg">
         <div className="h-3 w-3/4 rounded-lg bg-default-200"></div>
       </Skeleton>
@@ -12,7 +12,7 @@ export const SummarySkeleton = () => {
       <Skeleton className="rounded-lg">
         <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
       </Skeleton>
-    </Card>
+    </div>
   );
 };
 
@@ -20,7 +20,7 @@ export const AssertionsSkeleton = () => {
   return (
     <div className="space-y-8">
       {[1, 2, 3].map((i) => (
-        <Card key={i} className="w-full p-4 space-y-3">
+        <div key={i} className="w-full p-4 space-y-3">
           <Skeleton className="rounded-md">
             <div className="h-3 w-1/2 rounded-lg bg-default-200"></div>
           </Skeleton>
@@ -31,7 +31,7 @@ export const AssertionsSkeleton = () => {
             <Skeleton className="rounded-full w-20 h-6" />
             <Skeleton className="rounded-full w-20 h-6" />
           </div>
-        </Card>
+        </div>
       ))}
     </div>
   );
@@ -39,7 +39,7 @@ export const AssertionsSkeleton = () => {
 
 export const EvidenceClassificationSkeleton = () => {
   return (
-    <Card className="w-full p-4">
+    <div className="w-full p-4">
       <div className="space-y-4">
         <Skeleton className="rounded-lg">
           <div className="h-6 w-48 rounded-lg bg-default-200"></div>
@@ -55,6 +55,6 @@ export const EvidenceClassificationSkeleton = () => {
           ))}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

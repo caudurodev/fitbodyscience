@@ -3,8 +3,9 @@ This file contains the implementation of the Together model for generating respo
     """
 
 import os
-import json
 import re
+from json_repair import repair_json
+import json
 import json5
 from together import Together
 from ...config.logging import logger
@@ -30,17 +31,13 @@ def parse_llm_json(content):
 
     # Try json5 parsing next
     try:
-        import json5
-
         return json5.loads(content)
     except Exception as e:
         logger.warning(f"JSON5 parsing failed: {str(e)}")
 
-    # Try jsonfix as last resort
+    # Try json_repair as last resort
     try:
-        from jsonfix import fix_json_string
-
-        fixed = fix_json_string(content)
+        fixed = repair_json(content)
         return json.loads(fixed)
     except Exception as e:
         logger.error(f"All JSON parsing attempts failed: {str(e)}")
