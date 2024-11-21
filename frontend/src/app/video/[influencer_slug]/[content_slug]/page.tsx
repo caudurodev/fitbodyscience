@@ -1,6 +1,8 @@
 'use client'
 
-import { Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chip, CardHeader, Accordion, AccordionItem } from "@nextui-org/react";
+import {
+    Card, Spinner, Slider, CardBody, CardFooter, Divider, Button, Link, Chip, CardHeader, Accordion, AccordionItem
+} from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
@@ -22,7 +24,19 @@ import toast from "react-hot-toast";
 import { useRouter } from 'next/navigation';
 import YouTubePlayer from '@/components/YouTubePlayer';
 import { SummarySkeleton, AssertionsSkeleton } from '@/components/ContentSkeletons';
-import { assert } from "console";
+
+const convertTimestampToSeconds = (timestamp: string) => {
+    if (!timestamp) return 0;
+    if (timestamp.includes('-')) {
+        const startTime = timestamp.split('-')[0];
+        return parseInt(startTime.replace('s', ''));
+    }
+    if (timestamp.includes(':')) {
+        const [minutes, seconds] = timestamp.split(':').map(Number);
+        return minutes * 60 + seconds;
+    }
+    return parseInt(timestamp.replace('s', ''));
+};
 
 const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
     const router = useRouter()
@@ -45,7 +59,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
             skip: !params.content_slug || !params.influencer_slug || isParsed === true
         },
     )
-    const [recalculateAggregateScores] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
+    const [recalculateAggregateScores, { loading: isRecalculating }] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
     const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
@@ -58,44 +72,37 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const isHydrated = useHydration()
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
     const [player, setPlayer] = useState<any>(null);
-    const convertTimestampToSeconds = (timestamp: string) => {
-        if (!timestamp) return 0;
 
-        if (timestamp.includes('-')) {
-            const startTime = timestamp.split('-')[0];
-            return parseInt(startTime.replace('s', ''));
-        }
-        if (timestamp.includes(':')) {
-            const [minutes, seconds] = timestamp.split(':').map(Number);
-            return minutes * 60 + seconds;
-        }
-        return parseInt(timestamp.replace('s', ''));
-    };
     if (!isHydrated) { return null }
     return (
         <>
-            <h6>{isParsed === true ? 'is Parsed true' : 'is not parsed'} {mainContent?.id}</h6>
-            <Button
-                className="my-2"
-                color="primary"
-                isLoading={isAnalysingContent}
-                onPress={() => {
-                    userAnalyseContent({ variables: { contentId: mainContent?.id } })
-                }}
-            >
-                Analyse content
-            </Button>
-            <Button
-                className="my-2 mx-4"
-                color="danger"
-                isLoading={isDeletingContent}
-                onPress={async () => {
-                    deleteContent({ variables: { contentId: mainContent?.id } })
-                    router.push(`/`)
-                }}
-            >
-                Delete content
-            </Button>
+            <div className="flex flex-row items-center justify-end gap-2">
+                {isParsed === false ? <h6 className="text-xs"><Spinner /> Parsing</h6> : <h6 className="text-xs">Parsed.</h6>}
+                {/* <h6>{isParsed === true ? 'is Parsed true' : 'is not parsed'} {mainContent?.id}</h6> */}
+                <Button
+                    className="my-2"
+                    color="primary"
+                    size="sm"
+                    isLoading={isAnalysingContent}
+                    onPress={() => {
+                        userAnalyseContent({ variables: { contentId: mainContent?.id } })
+                    }}
+                >
+                    Analyse
+                </Button>
+                <Button
+                    className="my-2 mx-4"
+                    size="sm"
+                    color="danger"
+                    isLoading={isDeletingContent}
+                    onPress={async () => {
+                        deleteContent({ variables: { contentId: mainContent?.id } })
+                        router.push(`/`)
+                    }}
+                >
+                    Delete
+                </Button>
+            </div>
             <Card>
                 <CardBody className="flex sm:flex-row sm:gap-x-8">
                     <div className="sm:w-1/3">
@@ -103,7 +110,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             videoId={mainContent?.videoId}
                             currentTimestamp={currentTimestamp}
                             onPlayerReady={setPlayer}
-                            className="w-full aspect-video"
+                            className="w-full aspect-video my-3"
                         />
                         {!mainContent?.title ?
                             <Spinner /> :
@@ -111,126 +118,69 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2, ease: "easeInOut" }}
-                                className="text-3xl font-bold my-8">{mainContent?.title}
+                                className="text-xl font-bold my-2">
+                                {mainContent?.title}
                             </motion.h1>
                         }
-                        <h4 className="uppercase text-tiny my-3">Overall Score</h4>
-                        <div className="mb-5">
-                            <Chip color="danger" size="lg" className="mr-2 text-white">
-                                <Icon icon="ci:stop-sign" className="inline mr-2" />
-                                {mainContent?.againstAggregateContentScore} / 100
-                            </Chip>
-                            <Chip color="success" size="lg" className="mr-2 text-white">
+                        <h4 className="uppercase text-tiny my-2">Overall Score</h4>
+                        <div className="mb-2">
+                            <Chip color="success" size="lg" className="mr-2">
                                 <Icon icon="mdi:approve" className="inline mr-2" />
                                 {mainContent?.proAggregateContentScore} / 100
                             </Chip>
+                            <Chip color="danger" size="lg" className="mr-2">
+                                <Icon icon="ci:stop-sign" className="inline mr-2" />
+                                {mainContent?.againstAggregateContentScore} / 100
+                            </Chip>
                             <Button
                                 size="sm"
-                                className="ml-4"
-                                variant="flat"
+                                className="my-4"
+                                variant="solid"
                                 color="primary"
+                                isLoading={isRecalculating}
                                 isDisabled={!mainContent?.id}
                                 onPress={() => {
                                     recalculateAggregateScores({ variables: { contentId: mainContent?.id } })
                                 }}
                             >
-                                Refresh Score
+                                {!isRecalculating && <Icon icon="mdi:refresh" className="inline" />} score
                             </Button>
                         </div>
-                        {assertions_contents?.length > 0 &&
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, ease: "easeInOut" }}
-                            >
-                                <h4 className="uppercase text-tiny my-3">Breakdown of argument</h4>
-                                {
-                                    assertions_contents?.length > 0 && assertions_contents.map((assertions_content: any, index: number) => (
-                                        <Card className="mb-4" key={`assertion_content_${index}`}>
-                                            <CardBody >
-                                                <Link
-                                                    onPress={() => {
-                                                        if (!player) return;
-                                                        const seconds = convertTimestampToSeconds(assertions_content?.videoTimestamp);
-                                                        try {
-                                                            player.seekTo(seconds);
-                                                        } catch (error) {
-                                                            console.error('Error seeking video:', error);
-                                                        }
-
-                                                        const element = document.getElementById(`assertion_${index}`);
-                                                        element?.scrollIntoView({ behavior: 'smooth' });
-                                                    }}
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    {index + 1}) (time: {assertions_content?.videoTimestamp}): {assertions_content?.assertion.text}
-                                                </Link>
-                                                <Slider
-                                                    step={1}
-                                                    isDisabled
-                                                    size="sm"
-                                                    hideThumb={true}
-                                                    hideValue={true}
-                                                    color="success"
-                                                    showSteps={false}
-                                                    maxValue={10}
-                                                    minValue={0}
-                                                    defaultValue={Number(assertions_content?.weightConclusion)}
-                                                    className="max-w-md mb-2"
-                                                />
-                                                <div>
-                                                    <Chip color="success" className="text-white mr-2 ">
-                                                        <Icon icon="mdi:approve" className="inline" />{' '}
-                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.proEvidenceAggregateScore || 0} /> / 100
-                                                    </Chip>
-                                                    <Chip color="danger" className="text-white">
-                                                        <Icon icon="ci:stop-sign" className="inline" />{' '}
-                                                        <AnimatedNumber targetNumber={assertions_content?.assertion?.againstEvidenceAggregateScore || 0} /> / 100
-                                                    </Chip>
-                                                </div>
-                                                <div className="block mt-3">
-                                                    {
-                                                        assertions_content?.assertion?.contents_assertions.map((o: any, i: number) => (
-                                                            <Chip
-                                                                key={i}
-                                                                color={o?.isProAssertion === true ? 'success' : 'danger'}
-                                                                className="text-white mr-2"
-                                                            // className={`${o?.is_pro_assertion === true ? 'bg-green-500' : 'bg-red-500'} px-4 text-tiny  inline-block mr-2 p-1 text-white rounded-full`}
-                                                            >
-                                                                {/* {o?.is_pro_assertion === true ? <Icon icon="mdi:approve" className="inline" /> : <Icon icon="ci:stop-sign" className="inline" />} */}
-                                                                {/* {Math.round(o?.content?.content_score) || 0} */}
-                                                                <AnimatedNumber targetNumber={Math.round(o?.content?.contentScore) || 0} /> / 100
-                                                            </Chip>
-                                                        ))
-                                                    }
-                                                </div>
-                                            </CardBody>
-                                        </Card >
-                                    ))
-                                }
-                            </motion.div>
-                        }
                     </div>
                     <div className="sm:w-2/3">
-
-                        <h2 className="uppercase text-xs my-2">Main point</h2>
-                        {!mainContent?.conclusion ? (
+                        <h2 className="uppercase text-xs my-2 font-bold text-primary">Main point</h2>
+                        {!mainContent?.summaryJsonb?.conclusion ? (
                             <SummarySkeleton />
                         ) : (
-                            <h2 className="text-xl my-2">{mainContent?.conclusion}</h2>
+                            <h2 className="text-2xl my-2">{mainContent?.summaryJsonb?.conclusion}</h2>
                         )}
-
-                        <h2 className="uppercase text-xs my-4">Summary</h2>
-                        {!mainContent?.summary ? (
-                            <SummarySkeleton />
-                        ) : (
-                            <h2 className="text-sm my-4">{mainContent?.summary}</h2>
-                        )}
+                        <div className="flex flex-col w-full gap-4">
+                            <div className="w-3/4 mx-auto">
+                                {mainContent?.summaryJsonb?.eli5 &&
+                                    <div className="my-4">
+                                        <h2 className="uppercase font-bold text-primary my-4">Tl;Dw:</h2>
+                                        <ul className="list-disc list-inside  ">
+                                            {mainContent?.summaryJsonb?.eli5?.map((e: string, i: number) =>
+                                                <li key={i}>{e}</li>)
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                            <div className=" ">
+                                <h2 className="uppercase  my-4 font-bold text-primary">Summary</h2>
+                                {!mainContent?.summaryJsonb?.summary ? (
+                                    <SummarySkeleton />
+                                ) : (
+                                    <h2 className=" my-4">{mainContent?.summaryJsonb?.summary}</h2>
+                                )}
+                            </div>
+                        </div>
 
                         <Button
                             color="primary"
                             size="sm"
+                            className="mb-4"
                             isLoading={isUpdatingAssertionsScore}
                             onPress={async () => {
                                 await updateAssertionsScore({
@@ -239,7 +189,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     }
                                 })
                             }}>
-                            update assertions score
+                            {!isUpdatingAssertionsScore && <Icon icon="mdi:refresh" className="inline" />} score
                         </Button>
                         {!assertions_contents?.length ? (
                             <AssertionsSkeleton />
@@ -266,7 +216,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                                         updateAssertionScore({ variables: { assertionId: assertions_content?.assertion?.id } })
                                                                     }}
                                                                 >
-                                                                    Update assertion score
+                                                                    {!isUpdatingAssertionScore && <Icon icon="mdi:refresh" className="inline" />} score
                                                                 </Button>
                                                             </div>
                                                         }
@@ -286,8 +236,20 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                                         />
                                                     </CardHeader>
                                                     <CardBody className="flex gap-2">
-                                                        <h5 className="uppercase text-xs">The author said (time: {assertions_content?.videoTimestamp}):</h5>
-                                                        <p className="text-sm italic">&quot;{assertions_content?.assertion.originalSentence}&quot;</p>
+                                                        <Accordion>
+                                                            <AccordionItem
+                                                                key="evidence"
+                                                                title={
+                                                                    <h5 className="text-xs">
+                                                                        The author said (time: {assertions_content?.videoTimestamp}):
+                                                                    </h5>
+                                                                }
+                                                            >
+                                                                <p className=" italic">
+                                                                    &quot;{assertions_content?.assertion.originalSentence}&quot;
+                                                                </p>
+                                                            </AccordionItem>
+                                                        </Accordion>
                                                         <Accordion>
                                                             <AccordionItem
                                                                 key="evidence"

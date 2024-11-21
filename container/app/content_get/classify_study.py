@@ -25,106 +25,117 @@ def classify_evidence_content(content_id):
     try:
         classify = get_response(
             f"""
-            Given a science paper with crossref json data like this:
-            
+            Given a scientific paper with Crossref JSON data as follows:
+
             {crossref_data}
 
-            and full text like this:
+            and the full text of the paper as follows:
 
             {study_fulltext}
 
-            Return a JSON with important classification information following the instructions below:
+            **Task**: Classify the scientific paper based on its rigor, quality, and reliability, and return a JSON object with the specified structure.
 
-            To classify a scientific paper based on its rigor, quality, and reliability, follow these detailed instructions:
-            Input Information
+            **Instructions**:
 
-            Crossref Information: Use the provided metadata such as journal name, publication date, DOI, author affiliations, and citation count.
-            Summary and Abstract: Utilize the abstract and summary of the paper to understand the study's objectives, methods, and conclusions.
+            **1. Analyze the Paper**
 
-            Steps to Classify the Paper
+            - Use the provided Crossref metadata (e.g., journal name, publication date, DOI, author affiliations, citation count).
+            - Utilize the abstract and summary from the full text to understand the study's objectives, methods, and conclusions.
 
-                Identify the Type of Study:
-                    Systematic Review and Meta-Analysis: Look for indications that the paper synthesizes results from multiple studies.
-                    Randomized Controlled Trial (RCT): Check for terms like "randomized", "control group", and "trial".
-                    Cohort Study: Identify if the study follows a group of people over time.
-                    Case-Control Study: Determine if the study compares individuals with and without a condition.
-                    Cross-Sectional Study: Look for data collected at a single point in time.
-                    Case Report/Series: Look for detailed descriptions of individual or grouped cases.
-                    Expert Opinion/Editorial: Identify if the paper is based on expert consensus or clinical experience.
+            **2. Classification Steps**
 
-                Assess Study Design and Methodology:
-                    Randomization: Check if the subjects were randomly assigned to groups.
-                    Blinding: Look for terms indicating whether the study was single-blind, double-blind, or not blinded.
-                    Control Groups: Determine if there is a comparison against a baseline or control group.
-                    Sample Size: Note the number of participants; larger sizes typically increase reliability.
-                    Follow-Up Duration: Check how long the subjects were followed.
-                    Confounding Control: Look for statistical methods used to control confounding variables.
+            **a. Identify the Type of Study**
 
-                Evaluate Statistical Analysis:
-                    Statistical Tests: Ensure appropriate statistical tests were used for the data type.
-                    Effect Size and Confidence Intervals: Check if these measures are reported.
-                    P-Values and Significance Levels: Note the p-values and whether the results are statistically significant.
+            Choose one of the following for `"type"`:
 
-                Review Reporting and Transparency:
-                    Research Questions and Objectives: Ensure the study has clear aims and hypotheses.
-                    Methodology Details: Verify that the study design, procedures, and analysis methods are described thoroughly.
-                    Conflict of Interest Disclosures: Look for disclosures about funding sources and conflicts of interest.
-                    Replication and Reproducibility: Assess if the study can be replicated with the provided information.
+            - "Systematic Review and Meta-Analysis"
+            - "Randomized Controlled Trial"
+            - "Cohort Study"
+            - "Case-Control Study"
+            - "Cross-Sectional Study"
+            - "Case Report/Series"
+            - "Expert Opinion/Editorial"
 
-                Check Peer Review and Publication:
-                    Peer-Reviewed Journal: Confirm if the paper is published in a reputable, peer-reviewed journal.
-                    Impact Factor: Consider the journal's impact factor as an additional quality indicator.
-                    Pre-Registration: Check if the study was pre-registered in a clinical trial database or registry.
+            **b. Assess Study Design and Methodology**
 
-                Assess External Validity:
-                    Generalizability: Determine if the findings can be applied to broader populations.
-                    Ecological Validity: Assess if the study conditions reflect real-world settings.
+            - `"randomization"`: `true` or `false`
+            - `"blinding"`: One of "None", "Single-blind", "Double-blind", "Triple-blind"
+            - `"controlGroup"`: `true` or `false`
+            - `"sampleSize"`: Integer (number of participants)
+            - `"model"`: One of "Observational", "Experimental", "Quasi-experimental"
+            - `"conclusionType"`: One of "Causal", "Correlational", "Descriptive"
+            - `"statisticalSignificance"`: Numeric value (e.g., 0.05)
+            - `"studySubjects"`: One of "Human", "Animal", "In Vitro", "Other"
+            - `"followUpDuration"`: String (e.g., "12 months")
+            - `"confoundingControl"`: One of "None", "Multivariate analysis", "Randomization", "Matching", "Stratification", "Statistical adjustment"
 
-            Output Classification
+            **c. Evaluate Statistical Analysis**
 
-            Based on the analysis, classify the scientific paper into one of the following categories:
+            - `"appropriateTests"`: `true` or `false`
+            - `"effectSizeReported"`: `true` or `false`
+            - `"confidenceIntervalsReported"`: `true` or `false`
+            - `"pValuesReported"`: `true` or `false`
+            - `"pValueSignificance"`: Numeric value (e.g., 0.001)
 
-                High Quality and Reliable: Papers that rank high in the hierarchy of evidence, have rigorous study designs, appropriate statistical analysis, transparent reporting, and are published in reputable journals.
-                Moderate Quality and Reliability: Papers that are generally sound but may have some limitations in methodology or reporting.
-                Low Quality and Reliability: Papers with significant methodological flaws, poor reporting, or published in less reputable journals.
+            **d. Review Reporting and Transparency**
 
-            Example Classification Process
+            - `"researchQuestionsClear"`: `true` or `false`
+            - `"detailedMethodology"`: `true` or `false`
+            - `"conflictOfInterestDisclosed"`: `true` or `false`
+            - `"replicationPossible"`: `true` or `false`
 
-                Study Type: Determine if the study is a Randomized Controlled Trial.
-                Design and Methodology: Check for randomization and blinding methods.
-                Statistical Analysis: Ensure appropriate statistical tests were used and results are significant.
-                Reporting and Transparency: Verify detailed methodology and conflict of interest disclosures.
-                Peer Review and Publication: Confirm publication in a peer-reviewed journal with a high impact factor.
-                External Validity: Assess if the results are generalizable and ecologically valid.
+            **e. Check Peer Review and Publication**
 
-            By following these steps, you can classify scientific papers effectively, determining their rigor, quality, and reliability.
+            - `"peerReviewedJournal"`: `true` or `false`
+            - `"journalImpactFactor"`: Numeric value (e.g., 8.5)
+            - `"preRegistration"`: `true` or `false`
 
-            Return valid JSON response like this:
-           {{
+            **f. Assess External Validity**
+
+            - `"generalizability"`: One of "High", "Moderate", "Low"
+            - `"ecologicalValidity"`: One of "High", "Moderate", "Low"
+
+            **3. Output Classification**
+
+            Based on your analysis, set `"hierarchyOfEvidence"` to one of:
+
+            - "High"
+            - "Moderate"
+            - "Low"
+
+            **4. Return a Valid JSON Object**
+
+            Structure your JSON response exactly like this:
+
+            {{
                 "paperDetails": {{
-                    "title": "",
-                    "authors": ["John Doe", "Jane Smith"],
-                    "journal": "Journal of Medical Research",
-                    "publicationDate": "2024-05-01",
-                    "doi": "10.1234/jmr.2024.5678",
+                    "title": "<Title of the paper>",
+                    "authors": ["Author One", "Author Two"],
+                    "journal": "<Journal Name>",
+                    "publicationDate": "YYYY-MM-DD",
+                    "doi": "<DOI>"
                 }},
                 "studyClassification": {{
-                    "type": "Randomized Controlled Trial",
-                    "hierarchyOfEvidence": "High",
+                    "type": "<Type of Study from the list above>",
+                    "hierarchyOfEvidence": "<High|Moderate|Low>",
                     "methodology": {{
                         "randomization": true,
-                        "blinding": "Double-blind",
+                        "blinding": "<None|Single-blind|Double-blind|Triple-blind>",
                         "controlGroup": true,
-                        "sampleSize": 500,
-                        "followUpDuration": "12 months",
-                        "confoundingControl": "Multivariate analysis"
+                        "sampleSize": <Integer>,
+                        "model": "<Observational|Experimental|Quasi-experimental>",
+                        "conclusionType": "<Causal|Correlational|Descriptive>",
+                        "statisticalSignificance": <Numeric value>,
+                        "studySubjects": "<Human|Animal|In Vitro|Other>",
+                        "followUpDuration": "<Duration (e.g., '12 months')>",
+                        "confoundingControl": "<Option from the list above>"
                     }},
                     "statisticalAnalysis": {{
                         "appropriateTests": true,
                         "effectSizeReported": true,
                         "confidenceIntervalsReported": true,
                         "pValuesReported": true,
-                        "pValueSignificance": 0.001
+                        "pValueSignificance": <Numeric value>
                     }},
                     "reportingTransparency": {{
                         "researchQuestionsClear": true,
@@ -134,26 +145,54 @@ def classify_evidence_content(content_id):
                     }},
                     "peerReviewPublication": {{
                         "peerReviewedJournal": true,
-                        "journalImpactFactor": 8.5,
+                        "journalImpactFactor": <Numeric value>,
                         "preRegistration": true
                     }},
                     "externalValidity": {{
-                        "generalizability": "High",
-                        "ecologicalValidity": "Moderate"
+                        "generalizability": "<High|Moderate|Low>",
+                        "ecologicalValidity": "<High|Moderate|Low>"
                     }}
                 }}
             }}
-
-        """
+            
+        """,
+            quality="best",
         )
-        # #logger.info("classify result : %s", classify)
+        # Log the raw response for debugging
+        logger.debug(f"Raw classification response: {classify}")
+        
+        if not classify:
+            logger.error("Empty response from classification")
+            return None
+        
+        # Remove any trailing whitespace or newlines that might affect JSON parsing
+        classify = classify.strip()
+        
+        # Try to parse the JSON
         try:
             classify_json = json.loads(classify)
-            return classify_json
-        except Exception as e:
-            logger.error("Error classify_evidence_content assertions1: %s", e)
-            logger.info("classify: %s", classify)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {str(e)}")
+            logger.error(f"Failed JSON content: {classify}")
             return None
+        
+        # Validate required fields are present
+        required_fields = ["paperDetails", "studyClassification"]
+        for field in required_fields:
+            if field not in classify_json:
+                logger.error(f"Missing required field '{field}' in classification response")
+                return None
+        
+        # Validate study classification fields
+        study_class = classify_json.get("studyClassification", {})
+        required_study_fields = ["methodology", "statisticalAnalysis", "reportingTransparency", "peerReviewPublication", "externalValidity"]
+        for field in required_study_fields:
+            if field not in study_class:
+                logger.error(f"Missing required study classification field '{field}'")
+                return None
+        
+        return classify_json
+        
     except Exception as e:
-        logger.error("Error classify_evidence_content2: %s", e)
+        logger.error(f"Unexpected error in classify_evidence_content: {str(e)}")
         return None

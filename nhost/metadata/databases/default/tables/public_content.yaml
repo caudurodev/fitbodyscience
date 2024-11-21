@@ -37,6 +37,8 @@ configuration:
       custom_name: sciencePaperClassification
     source_url:
       custom_name: sourceUrl
+    summary_jsonb:
+      custom_name: summaryJsonb
     video_description:
       custom_name: videoDescription
     video_id:
@@ -61,6 +63,7 @@ configuration:
     pro_aggregate_content_score: proAggregateContentScore
     science_paper_classification: sciencePaperClassification
     source_url: sourceUrl
+    summary_jsonb: summaryJsonb
     video_description: videoDescription
     video_id: videoId
     video_transcript: videoTranscript
@@ -189,6 +192,7 @@ select_permissions:
         - crossref_info
         - html_jsonb
         - science_paper_classification
+        - summary_jsonb
         - video_transcript
         - against_aggregate_content_score
         - content_score
@@ -221,6 +225,7 @@ select_permissions:
         - crossref_info
         - html_jsonb
         - science_paper_classification
+        - summary_jsonb
         - video_transcript
         - against_aggregate_content_score
         - content_score

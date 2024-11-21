@@ -47,7 +47,7 @@ export const Header = () => {
             maxWidth="2xl"
             onMenuOpenChange={setIsMenuOpen}
             isBlurred={false}
-            className="sm:mb-16 mb-8"
+            className="sm:mb-16 mb-8 px-4 sm:px-8"
         >
             <NavbarContent className="-ml-[20px]">
                 {isMobile &&
@@ -57,7 +57,7 @@ export const Header = () => {
                         className="sm:hidden text-8xl text-primary"
                     />
                 }
-                <NavbarBrand className="-ml-[5px] ">
+                <NavbarBrand>
                     <Link
                         onPress={() => { router.push('/') }}
                         className="font-bold sm:text-2xl text-xl cursor-pointer text-foreground"
@@ -193,7 +193,7 @@ export const Header = () => {
                     ))}
 
                     <>
-                        <h6 className="flex items-center mt-8">
+                        <h6 className="flex items-center  mt-8">
                             <span className="text-sm mr-3">Dark Mode</span>
                             <ThemeSwitcher />
                         </h6>

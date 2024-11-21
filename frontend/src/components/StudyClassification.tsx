@@ -10,17 +10,43 @@ export const StudyClassification = ({ paperClassification }: { paperClassificati
             setScores(scoresCalculated)
         }
     }, [paperClassification])
+    
     const paperDetails = paperClassification?.paperDetails
     const studyType = paperClassification?.studyClassification?.type
+    const methodology = paperClassification?.studyClassification?.methodology
+    
+    // Extract key evidence details
+    const isHumanStudy = methodology?.studySubjects === "Human"
+    const sampleSize = methodology?.sampleSize || 0
+    const pValue = methodology?.statisticalSignificance || 0
+    const hasSignificance = pValue > 0
+    
     return (
         <div>
-            {/* {!!scores && <>
-                <ScoresDisplay scores={scores} />
-            </>} */}
             {!!paperDetails &&
-                <div className="my-4">
-                    {/* <h6 className="text-tiny uppercase">{paperDetails?.doi}</h6> */}
-                    <Chip color="warning" className="text-white">{studyType}</Chip>
+                <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                        <Chip color="warning" className="text-white">{studyType}</Chip>
+                        {isHumanStudy && <Chip color="success" className="text-white">Human Study</Chip>}
+                        {sampleSize > 0 && (
+                            <Chip color="primary" className="text-white">
+                                n={sampleSize}
+                            </Chip>
+                        )}
+                        {hasSignificance && (
+                            <Chip color="secondary" className="text-white">
+                                p≤{pValue}
+                            </Chip>
+                        )}
+                    </div>
+                    <div className="text-sm text-default-500">
+                        {paperDetails.journal && (
+                            <div>Published in: {paperDetails.journal}</div>
+                        )}
+                        {paperDetails.publicationDate && (
+                            <div>Date: {paperDetails.publicationDate}</div>
+                        )}
+                    </div>
                 </div>
             }
         </div>

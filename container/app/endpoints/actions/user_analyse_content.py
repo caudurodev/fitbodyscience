@@ -80,6 +80,6 @@ def add_pro_against_assertions(content_id):
         insert_assertions_opposing(assertion_id=content_assertion_id)
         update_assertion_score_by_id(content_assertion_id)
         update_content_aggregate_score(content_id)
-        break
+        # break
 
     return "done"

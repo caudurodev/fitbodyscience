@@ -200,13 +200,13 @@ def get_opposing_viewpoints(assertion_id):
         tasks=[evidence, review_research],
         output_format="json",
         output_json=True,
-        verbose=1,
+        verbose=0,
     )
 
     result = crew.kickoff()
 
-    logger.info("######################")
-    logger.info("agent crewai result %s", result)
+    # logger.info("######################")
+    # logger.info("agent crewai result %s", result)
 
     try:
         # Convert CrewOutput to string if needed

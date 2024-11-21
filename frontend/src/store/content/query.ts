@@ -10,6 +10,7 @@ export const GET_CONTENT_SUBSCRIPTION = gql`
       contentType
       title
       summary
+      summaryJsonb
       conclusion
       videoId
       contentScore
@@ -71,6 +72,7 @@ export const GET_CONTENT_QUERY = gql`
       contentType
       title
       summary
+      summaryJsonb
       conclusion
       videoId
       contentScore

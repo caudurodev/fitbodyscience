@@ -5,13 +5,14 @@ from ..utils.config import logger
 from ..utils.graphql import make_graphql_call
 
 
-def add_summary_to_content(content_id, summary, conclusion):
+def add_summary_to_content(content_id, summary, summary_jsonb, conclusion):
     """create entries in database to be retrieved later"""
     now = datetime.datetime.now()
     query = {
         "variables": {
             "contentId": content_id,
             "summary": summary,
+            "summaryJsonb": summary_jsonb,
             "conclusion": conclusion,
             "dateLastModified": now.strftime("%Y-%m-%d %H:%M:%S"),
         },
@@ -20,6 +21,7 @@ def add_summary_to_content(content_id, summary, conclusion):
                 $conclusion: String = "",
                 $contentId: uuid!,
                 $summary: String = "", 
+                $summaryJsonb: jsonb = "", 
                 $dateLastModified: timestamptz!, 
             ) {
                 update_content(
@@ -29,6 +31,7 @@ def add_summary_to_content(content_id, summary, conclusion):
                     _set: {
                         conclusion: $conclusion,
                         summary: $summary,
+                        summaryJsonb: $summaryJsonb,
                         dateLastModified: $dateLastModified
                     }
                 ) {
@@ -45,8 +48,10 @@ def add_summary_to_content(content_id, summary, conclusion):
         # #logger.info("result: %s", result)
         content_id = result["data"]["update_content"]["returning"][0]["id"]
         return content_id
+
     except Exception as e:
         logger.error("add_summary_to_content Error making graphql call: %s", e)
+        logger.info("result: %s", result)
         return None
 
 

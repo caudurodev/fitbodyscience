@@ -18,10 +18,10 @@ export const SummarySkeleton = () => {
 
 export const AssertionsSkeleton = () => {
   return (
-    <div className="space-y-3">
+    <div className="space-y-8">
       {[1, 2, 3].map((i) => (
         <Card key={i} className="w-full p-4 space-y-3">
-          <Skeleton className="rounded-lg">
+          <Skeleton className="rounded-md">
             <div className="h-3 w-1/2 rounded-lg bg-default-200"></div>
           </Skeleton>
           <Skeleton className="rounded-lg">

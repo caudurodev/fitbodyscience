@@ -35,6 +35,11 @@ def get_paper_main(content_doi_number, content_url):
         logger.error("get_paper_main No DOI number provided")
         return None
 
+    doi_pattern = r"^10\.\d{4,}/[-._;()/:\w]+$"
+    if not re.match(doi_pattern, content_doi_number):
+        logger.info(f"Invalid DOI format: {content_doi_number}")
+        return None
+
     try:
         # logger.info("Getting Crossref data for DOI: %s", content_doi_number)
         # TODO check if crossref data already exists

@@ -7,40 +7,90 @@ from ..content_get.website_content import get_visible_text
 from ..utils.config import settings, logger
 
 
-def download_website(url_to_scrape, return_format="text", vendor="oxylabs"):
-    """Extract visible text from HTML content"""
-    try:
-        if vendor == "oxylabs":
-            # logger.info("Using Oxylabs to fetch website content")
-            data = download_url_with_oxylabs(url_to_scrape, return_format)
-        elif vendor == "use_scraper":
-            # logger.info("Using Use Scraper to fetch website content")
-            data = get_website_with_use_scraper(url_to_scrape, return_format)
-        elif vendor == "scrapingbee":
-            # logger.info("Using ScrapingBee to fetch website content")
-            data = get_website_with_scrapingbee(url_to_scrape, return_format)
-        elif vendor == "brightdata":
-            # logger.info("Using BrightData to fetch website content")
-            data = get_website_with_brightdata(url_to_scrape, return_format)
-        else:
-            logger.error("Unsupported vendor: %s", vendor)
-            return None
+def download_website(url_to_scrape, return_format="html"):
+    """
+    Download website content using multiple vendors with fallback
+    """
+    errors = []
+    vendors = ["oxylabs", "use_scraper", "scrapingbee", "brightdata"]
 
-        # #logger.info("download_website return data from vendor %s: %s", vendor, data)
-        if data is None or data == "":
-            logger.error("No content found in response")
-            return None
-        # #logger.info("get_visible_data return data: %s", data)
-        if return_format == "text":
-            return get_visible_text(data)
+    for vendor in vendors:
+        try:
+            logger.info(
+                f"Attempting to download content from {url_to_scrape} using {vendor}"
+            )
+            content = None
 
-        return data
-    except requests.exceptions.RequestException as e:
-        logger.error("Failed to fetch article via %s API: %s", vendor, e)
-        return None
+            if vendor == "oxylabs":
+                content = get_website_with_oxylabs(url_to_scrape, return_format)
+            elif vendor == "use_scraper":
+                content = get_website_with_use_scraper(url_to_scrape, return_format)
+            elif vendor == "scrapingbee":
+                content = get_website_with_scrapingbee(url_to_scrape, return_format)
+            elif vendor == "brightdata":
+                content = get_website_with_brightdata(url_to_scrape, return_format)
+            else:
+                logger.error(f"Unsupported vendor: {vendor}")
+                continue
+
+            if content:
+                content_length = len(content) if content else 0
+                logger.info(
+                    f"Successfully downloaded content using {vendor} (length: {content_length} chars)"
+                )
+                if content_length > 0:
+                    logger.info(f"First 100 chars: {content[:100]}")
+                else:
+                    logger.warning("Downloaded content is empty")
+                    continue
+
+                if return_format == "text":
+                    try:
+                        text_content = get_visible_text(content)
+                        if not text_content:
+                            logger.warning(
+                                f"Failed to extract visible text with {vendor}"
+                            )
+                            continue
+
+                        text = text_content.get("content", "")
+                        if not text:
+                            logger.warning(f"No text content extracted with {vendor}")
+                            continue
+
+                        text_length = len(text)
+                        logger.info(f"Extracted text length: {text_length} chars")
+                        if text_length > 0:
+                            logger.info(
+                                f"First 100 chars of extracted text: {text[:100]}"
+                            )
+                            return text_content
+                        else:
+                            logger.warning(f"Empty text content from {vendor}")
+                            continue
+                    except Exception as e:
+                        logger.error(f"Error extracting text with {vendor}: {str(e)}")
+                        continue
+
+                return content
+            else:
+                logger.warning(f"No content returned from {vendor}")
+                errors.append(f"{vendor}: No content returned")
+
+        except Exception as e:
+            error_msg = f"Unexpected error with {vendor}: {str(e)}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+            continue
+
+    # If we get here, all attempts failed
+    logger.error("All download attempts failed:")
+    for error in errors:
+        logger.error(f"- {error}")
+    return None
 
 
-def download_url_with_oxylabs(url_to_scrape, return_format="text"):
+def download_url_with_oxylabs(url_to_scrape, return_format="html"):
     """Extract visible text from HTML content"""
     api_url = "https://realtime.oxylabs.io/v1/queries"
     payload = {
@@ -99,7 +149,7 @@ def download_url_with_oxylabs(url_to_scrape, return_format="text"):
 
 
 # https://docs.usescraper.com/api-reference/scraper/scrape
-def get_website_with_use_scraper(url_to_scrape, return_format="text"):
+def get_website_with_use_scraper(url_to_scrape, return_format="html"):
     """Extract visible text from HTML content"""
     api_url = "https://api.usescraper.com/scraper/scrape"
 

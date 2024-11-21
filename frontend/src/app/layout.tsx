@@ -34,8 +34,8 @@ export default function RootLayout({
           <NhostApolloProvider nhost={nhost}>
             <NextUIProvider>
               <ThemeProvider attribute="class" defaultTheme="light">
+                <Header />
                 <main className="px-4 sm:px-8">
-                  <Header />
                   {children}
                 </main>
                 <Toaster position="bottom-right" />

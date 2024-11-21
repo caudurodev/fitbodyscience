@@ -31,12 +31,22 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
     methodology = payload["studyClassification"].get("methodology", {})
     sample_size = methodology.get("sampleSize", 0)
     try:
-        sample_size = int(sample_size)
+        sample_size = int(sample_size) if sample_size is not None else 0
     except (ValueError, TypeError):
         sample_size = 0
 
     follow_up_duration = methodology.get("followUpDuration", "") or ""
     confounding_control = methodology.get("confoundingControl", "") or ""
+    study_subjects = methodology.get("studySubjects", "").lower()
+
+    # Study subjects multiplier (affects final score)
+    subjects_multiplier = 1.0  # Default multiplier
+    if "human" in study_subjects:
+        subjects_multiplier = 1.0  # Full score for human studies
+    elif "animal" in study_subjects:
+        subjects_multiplier = 0.8  # 80% score for animal studies
+    elif "in vivo" in study_subjects:
+        subjects_multiplier = 0.6  # 60% score for in vivo studies
 
     methodology_scores = {
         "randomization": 20 if methodology.get("randomization") else 0,
@@ -57,6 +67,23 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
     methodology_total = sum(methodology_scores.values())
 
     statistical_analysis = payload["studyClassification"].get("statisticalAnalysis", {})
+    statistical_significance = methodology.get("statisticalSignificance")
+
+    # Add bonus for stricter statistical significance
+    statistical_significance_bonus = 0
+    try:
+        if statistical_significance is not None:
+            sig_value = float(statistical_significance)
+            if sig_value <= 0.01:
+                statistical_significance_bonus = 10
+            elif sig_value <= 0.05:
+                statistical_significance_bonus = 5
+    except (ValueError, TypeError):
+        logger.warning(
+            f"Invalid statistical significance value: {statistical_significance}"
+        )
+        statistical_significance_bonus = 0
+
     statistical_analysis_scores = {
         "appropriateTests": 25 if statistical_analysis.get("appropriateTests") else 0,
         "effectSizeReported": (
@@ -67,7 +94,9 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
         ),
         "pValuesReported": 25 if statistical_analysis.get("pValuesReported") else 0,
     }
-    statistical_analysis_total = sum(statistical_analysis_scores.values())
+    statistical_analysis_total = (
+        sum(statistical_analysis_scores.values()) + statistical_significance_bonus
+    )
 
     reporting_transparency = payload["studyClassification"].get(
         "reportingTransparency", {}
@@ -85,7 +114,7 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
         "replicationPossible": (
             20 if reporting_transparency.get("replicationPossible") else 0
         ),
-        "dataAvailable": 0,  # Data availability not provided in the payload, assuming 0
+        "dataAvailable": 20 if reporting_transparency.get("dataAvailable") else 0,
     }
     reporting_transparency_total = sum(reporting_transparency_scores.values())
 
@@ -93,71 +122,60 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
         "peerReviewPublication", {}
     )
     journal_impact_factor = peer_review_publication.get("journalImpactFactor", "") or ""
+
+    # Convert journal_impact_factor to float, handling string cases with '>' symbol
+    if isinstance(journal_impact_factor, str):
+        journal_impact_factor = float(
+            journal_impact_factor.replace(">", "").strip() or 0
+        )
+    else:
+        journal_impact_factor = float(journal_impact_factor or 0)
+
     peer_review_publication_scores = {
         "peerReviewedJournal": (
             50 if peer_review_publication.get("peerReviewedJournal") else 0
         ),
         "journalImpactFactor": (
-            30
-            if journal_impact_factor == "High"
+            50
+            if journal_impact_factor > 10
             else (
-                20
-                if journal_impact_factor == "Moderate"
-                else 10 if journal_impact_factor else 0
+                30
+                if journal_impact_factor > 5
+                else (
+                    20
+                    if journal_impact_factor > 2
+                    else (10 if journal_impact_factor > 1 else 0)
+                )
             )
         ),
-        "preRegistration": 20 if peer_review_publication.get("preRegistration") else 0,
     }
     peer_review_publication_total = sum(peer_review_publication_scores.values())
 
-    external_validity = payload["studyClassification"].get("externalValidity", {})
-    generalizability = external_validity.get("generalizability", "") or ""
-    ecological_validity = external_validity.get("ecologicalValidity", "") or ""
-    external_validity_scores = {
-        "generalizability": (
-            50
-            if generalizability == "High"
-            else 25 if generalizability == "Moderate" else 0
-        ),
-        "ecologicalValidity": (
-            50
-            if ecological_validity == "High"
-            else 25 if ecological_validity == "Moderate" else 0
-        ),
-    }
-    external_validity_total = sum(external_validity_scores.values())
+    # Calculate weighted scores
+    methodology_weight = 0.35
+    statistical_analysis_weight = 0.25
+    reporting_transparency_weight = 0.20
+    peer_review_publication_weight = 0.20
 
-    hierarchy_of_evidence_scores = {
-        "Systematic Reviews and Meta-Analyses": 100,
-        "Randomized Controlled Trials (RCTs)": 90,
-        "Cohort Studies": 70,
-        "Case-Control Studies": 60,
-        "Cross-Sectional Studies": 50,
-        "Case Reports and Case Series": 30,
-        "Expert Opinion and Editorials": 10,
-    }
-    hierarchy_of_evidence_score = hierarchy_of_evidence_scores.get(
-        payload["studyClassification"].get("hierarchyOfEvidence", ""), 0
+    weighted_total = (
+        methodology_total * methodology_weight
+        + statistical_analysis_total * statistical_analysis_weight
+        + reporting_transparency_total * reporting_transparency_weight
+        + peer_review_publication_total * peer_review_publication_weight
     )
 
-    total_score = (
-        methodology_total
-        + statistical_analysis_total
-        + reporting_transparency_total
-        + peer_review_publication_total
-        + external_validity_total
-        + hierarchy_of_evidence_score
-    )
-
-    normalized_score = (total_score / 600) * 100
+    # Apply study subjects multiplier to the final score
+    final_score = weighted_total * subjects_multiplier
 
     return {
-        "methodologyScores": methodology_scores,
-        "statisticalAnalysisScores": statistical_analysis_scores,
-        "reportingTransparencyScores": reporting_transparency_scores,
-        "peerReviewPublicationScores": peer_review_publication_scores,
-        "externalValidityScores": external_validity_scores,
-        "hierarchyOfEvidenceScore": hierarchy_of_evidence_score,
-        "totalScore": total_score,
-        "normalizedScore": normalized_score,
+        "totalScore": final_score,
+        "normalizedScore": min(100, max(0, final_score)),
+        "details": {
+            "methodologyScore": methodology_total,
+            "statisticalAnalysisScore": statistical_analysis_total,
+            "reportingTransparencyScore": reporting_transparency_total,
+            "peerReviewPublicationScore": peer_review_publication_total,
+            "studySubjectsMultiplier": subjects_multiplier,
+            "statisticalSignificanceBonus": statistical_significance_bonus,
+        },
     }

@@ -12,11 +12,48 @@ from ...config.logging import logger
 client = Together(api_key=os.environ.get("TOGETHER_API_KEY"))
 
 
+def parse_llm_json(content):
+    """Parse and validate JSON from LLM response with fallbacks"""
+    if not content:
+        return None
+
+    # Clean up markdown code blocks if present
+    if content.startswith("```json\n") and content.endswith("\n```"):
+        content = content[8:-4]
+    content = content.replace("```", "").strip()
+
+    # Try standard JSON parsing first
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        logger.warning(f"Standard JSON parsing failed: {str(e)}")
+
+    # Try json5 parsing next
+    try:
+        import json5
+
+        return json5.loads(content)
+    except Exception as e:
+        logger.warning(f"JSON5 parsing failed: {str(e)}")
+
+    # Try jsonfix as last resort
+    try:
+        from jsonfix import fix_json_string
+
+        fixed = fix_json_string(content)
+        return json.loads(fixed)
+    except Exception as e:
+        logger.error(f"All JSON parsing attempts failed: {str(e)}")
+        logger.error(f"Problematic content: {content[:200]}...")
+        return None
+
+
 def get_response(prompt, quality="fast"):
     """Get a response from the Together model."""
     json_prompt_instructions = """
         Make sure your JSON response is valid JSON that respects the following instructions:
         - Does not include double quotes within strings
+        - Does not duplicate double brackets or curly braces that might break the JSON
         - Is formatted correctly
         - Don't add newlines \n in the JSON response this will break the JSON - make sure strings are on a single line
         - Only include one JSON object in your response
@@ -54,22 +91,8 @@ def get_response(prompt, quality="fast"):
         return None
 
     content = response.choices[0].message.content
-    if content.startswith("```json\n") and content.endswith("\n```"):
-        content = content[8:-4]
-    content = content.replace("```", "")
+    parsed = parse_llm_json(content)
 
-    try:
-        json.loads(content)
-        logger.info(f"json is fine!")
-        return content
-    except json.JSONDecodeError:
-        try:
-            logger.info(f"broken json: {content}")
-            fixed_json_object = json5.loads(content)
-            logger.info(f"fixed json: {fixed_json_object}")
-            fixed_json = json.dumps(fixed_json_object)
-            return fixed_json
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to  fix JSON: {e}")
-
-            return None
+    if parsed:
+        return json.dumps(parsed)  # Return standardized JSON string
+    return None
