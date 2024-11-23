@@ -52,11 +52,16 @@ def classify_evidence(content_id):
                     update_content(content_id, {"canonicalUrl": paper_url})
                     url_to_scrape = paper_url
 
+            # Extract title from Crossref data, handling array case
+            title = cross_ref_info_data.get("message", {}).get("title", "")
+            if isinstance(title, list):
+                title = title[0] if title else ""
+
             update_content(
                 content_id,
                 {
                     "crossrefInfo": cross_ref_info_data,
-                    "title": cross_ref_info_data.get("message", {}).get("title", ""),
+                    "title": title,
                 },
             )
             logger.info(f"Updated content with Crossref data for DOI: {doi_number}")

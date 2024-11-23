@@ -12,93 +12,114 @@ def extract_assertions_from_long_text(
     try:
         assertions = get_response(
             f"""
-            Given this long text: 
-            
+            Given the following:
+
+            1. **Long Text:**
+
             {long_text}
 
-            and additional infortmation about the long text (possibly links to evidence, etc.):
+            2. **Additional Information about the Long Text (possibly links to evidence, etc.):**
 
             {additional_information}
 
-            here are saved links related to the text in json format:
+            3. **Saved Links Related to the Text in JSON Format:**
 
             {related_content}
 
-            Return a JSON with all of the assertions mentioned in thge long text and categorize them 
-            as assertions that are based on scientific evidence, or likely false assertions such as
-            assertions that are based on misinformation, conspiracy theories, or fake news.
-            
-            in the "assertion_type" json property: add the most likely type of assertion such as true or false.
-            in the "evidence_type" json property: add the evidence that supports the assertion if the video 
-            mentions the evidence. 
-           
-            in the "fallacy" json property: add the type of fallacy if the assertion is likely false.
+            ---
 
-            in the "main_point" json property: add one or more main point of the texts. What are the main assertions?
-            
-            in the "tags" json property: add the tags that describe the text.
+            **Instructions:**
 
-            "part_of_text_assertion_made" json property: add the sentence where the assertion was made from original text.
-            
-            "part_of_transcript_assertion_timestamp" json property: add the timestamp of the assertion in the video transcript if timestamp is present.
-            
-            "assertion_weight" is a json property that tries to rank how important the individual assertion is to the main point
-            of the long text - it should be a value of 0 to 10 in which 0 is irrelevant and 10 is so critical, the main point is
-            not made without it.
+            Extract all important assertions from the long text that make up the core of the argument. For each assertion, provide detailed information as specified below, and return a valid JSON object.
 
-            "assertion_search_verify" Create a text that will be used to verify the assertion in a search engine. It should be a complete
-            sentence that is precise in encapsulating the assertion, specific subject matter and topics and should lead to evidence that verifies of falsifies the assertion.
+            ---
 
-            "standalone_assertion_reliability": is an evaluation of the assertion by itself without the larger context. 
-            Does it make sense, is it factual, does it rely on good evidence to be made. A score of 0 to 10 where 0 is completely unreliable and 10 
-            is completely reliable should be given.
+            **JSON Structure:**
 
-            "why_relevant_main_point" is a short explanation of why the assertion is relevant to the main point of the text.
-            "assertion_context" is a short explanation of the context of the assertion so that readers can understand what topics
-            it is referring to. It should add clarity about the topics and subject matter.
-            in the citation, add any relevant links provided in the text or additional text that are relevant to the assertion.
-            Add the sources of the evidence if the text mentions the source. The source can be links, people, studies, etc. If the 
-            citation is the same as the saved links related to the text, add the with the correct uuid in contentId.
-
-            Don't add assertions not from the text. Don't add evidence that is not from the text.
-
-            Ignore any promotional content in the text or sponsored content. If the sponsored content is clearly
-            a conflict of interest, ignore it. Add any conflict of interest to the "conflict_of_interest" json property.conflit_of_interest
-
-            In "main_conclusion" property add the main conclusion of the text for which most assertions are relevant for.
-            In "why_relevant" property add a short explanation of why the evidence is relevant to the assertion.
-            In "content_weight_to_assertion" property add a score of 0 to 10 where 0 is irrelevant and 10 is so critical to have the evidence to support the assertion.
-
-            Make sure to extract all important assertions that make up the core of the argument.
-            When returning JSON, make sure to return a valid JSON response, fixing things like unnecessary trailing commas.
-            Return valid JSON response like this:
-            {{  
-                "main_conclusion":"The main point most of the assertions are trying to make",
-                "assertions": [
+            {{
+            "main_conclusion": "The main conclusion of the text for which most assertions are relevant.",
+            "assertions": [
+                {{
+                "assertion": "The specific assertion from the text.",
+                "assertion_weight": "An integer from 0 to 10 indicating how important the assertion is to the main point (0 = irrelevant, 10 = critical).",
+                "standalone_assertion_reliability": "An integer from 0 to 10 evaluating the reliability of the assertion by itself without larger context (0 = completely unreliable, 10 = completely reliable).",
+                "why_relevant_main_point": "A short explanation of why the assertion is relevant to the main conclusion.",
+                "assertion_context": "Context to help readers understand the topics the assertion refers to.",
+                "assertion_search_verify": "A precise sentence encapsulating the assertion for verification via a search engine.",
+                "part_of_text_assertion_made": "The exact sentence from the original text where the assertion was made.",
+                "part_of_transcript_assertion_timestamp": "The timestamp from the video transcript where the assertion appears, if available.",
+                "assertion_type": "The most likely type of assertion (e.g., 'true', 'false').",
+                "fallacy": "Type of fallacy if the assertion is likely false; otherwise, 'none'.",
+                "evidence_type": "Evidence supporting the assertion if mentioned in the text.",
+                "conflict_of_interest": "Any conflicts of interest related to the assertion, if mentioned.",
+                "citations": [
                     {{
-                        "assertion_weight":"3",
-                        "standalone_assertion_reliability":"4",
-                        "why_relevant_main_point":"",
-                        "assertion":"The earth is round",
-                        "assertion_context":"we are talking about the shape of the earth",
-                        "assertion_search_verify":"",
-                        "part_of_text_assertion_made": "",
-                        "part_of_transcript_assertion_timestamp": "3:12",
-                        "assertion_type": "true",
-                        "fallacy": "none",
-                        "evidence_type":"The earth is round because it has been observed from space",
-                        "citations":[
-                            {{
-                                "url":"https://www.tandfonline.com/doi/full/10.1186/1550-2783-10-39",
-                                "contentId":"uuid",
-                                "why_relevant":"",
-                                "content_weight_to_assertion":"3"
-                            }}
-                        ]
+                    "url": "URL of the source provided in the text or additional information.",
+                    "contentId": "The UUID from related_content if applicable.",
+                    "why_relevant": "Explanation of why the evidence is relevant to the assertion.",
+                    "content_weight_to_assertion": "An integer from 0 to 10 indicating how critical the evidence is to support the assertion (0 = irrelevant, 10 = critical)."
                     }}
-                ]
+                ],
+                "tags": ["List", "of", "tags", "describing", "the", "text"]
+                }}
+            ]
             }}
-        """
+
+            ---
+
+            **Additional Guidelines:**
+
+            - **Source Integrity:** Only include assertions and evidence present in the provided text or additional information. Do not add any content not found in these sources.
+            - **Promotional Content:** Ignore any promotional or sponsored content. If sponsored content presents a conflict of interest, note it in the "conflict_of_interest" property.
+            - **Assertion Clarity:** Ensure each assertion is clear and accurately reflects the original text.
+            - **Evidence Accuracy:** Only include evidence that is directly mentioned in the text. Do not infer or add external evidence.
+            - **JSON Validity:** Return a well-formatted JSON without syntax errors, such as unnecessary trailing commas.
+            - **Exclusions:** Do not include any assertions or evidence not found in the provided text.
+
+            ---
+
+            **Example JSON Response:**
+
+            {{
+            "main_conclusion": "The main point most of the assertions are trying to make.",
+            "assertions": [
+                {{
+                "assertion": "The earth is round.",
+                "assertion_weight": "10",
+                "standalone_assertion_reliability": "10",
+                "why_relevant_main_point": "This assertion supports the main conclusion about the earth's shape.",
+                "assertion_context": "Discussion about the shape of the Earth in a geographical context.",
+                "assertion_search_verify": "Is there scientific evidence that the Earth is round?",
+                "part_of_text_assertion_made": "Scientists have proven that the Earth is round through satellite imagery.",
+                "part_of_transcript_assertion_timestamp": "3:12",
+                "assertion_type": "true",
+                "fallacy": "none",
+                "evidence_type": "Satellite images and space missions confirm the Earth's roundness.",
+                "conflict_of_interest": "",
+                "citations": [
+                    {{
+                    "url": "https://www.nasa.gov/mission_pages/satellites/main/index.html",
+                    "contentId": "uuid-1234",
+                    "why_relevant": "Provides satellite evidence supporting the Earth's shape.",
+                    "content_weight_to_assertion": "9"
+                    }}
+                ],
+                "tags": ["astronomy", "geography", "science", "Earth"]
+                }}
+            ]
+            }}
+
+            ---
+
+            **Final Notes:**
+
+            - Focus on extracting assertions that are significant to the text's main argument.
+            - Provide comprehensive details for each assertion to facilitate verification through primary scientific studies.
+            - Ensure all information is accurate and derived solely from the provided text and additional information.
+            - Avoid adding any content not found in the provided text or additional information.
+
+            ---
+            """
         )
         # #logger.info("Assertions found: %s", assertions)
         try:

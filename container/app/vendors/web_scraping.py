@@ -1,7 +1,8 @@
 """Web scraping utilities"""
 
 import requests
-
+import time
+from requests.exceptions import RequestException
 
 from ..content_get.website_content import get_visible_text
 from ..utils.config import settings, logger
@@ -90,8 +91,17 @@ def download_website(url_to_scrape, return_format="html"):
     return None
 
 
-def download_url_with_oxylabs(url_to_scrape, return_format="html"):
-    """Extract visible text from HTML content"""
+def download_url_with_oxylabs(
+    url_to_scrape, return_format="html", max_retries=3, retry_delay=5
+):
+    """Extract visible text from HTML content with retry logic
+
+    Args:
+        url_to_scrape (str): URL to scrape
+        return_format (str): Format to return ('html' or 'text')
+        max_retries (int): Maximum number of retry attempts
+        retry_delay (int): Delay in seconds between retries
+    """
     api_url = "https://realtime.oxylabs.io/v1/queries"
     payload = {
         "source": "universal",
@@ -102,53 +112,54 @@ def download_url_with_oxylabs(url_to_scrape, return_format="html"):
     headers = {"Content-Type": "application/json"}
     auth = (settings.OXYLABS_USER, settings.OXYLABS_PASS)
 
-    try:
-        # #logger.info(
-        #     "download_url_with_oxylabs Fetching article from Oxylabs API: %s",
-        #     url_to_scrape,
-        # )
-        response = requests.post(
-            api_url, json=payload, headers=headers, auth=auth, timeout=120
-        )
-        # #logger.info("download_url_with_oxylabs response : %s", response)
-
-        response.raise_for_status()
-        oxylabs_response = response.json()
-        # #logger.info(
-        #     "download_url_with_oxylabs oxylabs_response: %s",
-        #     oxylabs_response,
-        # )
-        downloaded = oxylabs_response.get("results", [{}])[0].get("content", "")
-        # #logger.info(
-        #     "download_url_with_oxylabs downloaded: %s",
-        #     downloaded,
-        # )
-
-        if not downloaded:
-            logger.error(
-                "download_url_with_oxylabs Error No content found in Oxylabs response"
+    for attempt in range(max_retries):
+        try:
+            logger.info(
+                f"Attempt {attempt + 1}/{max_retries} to fetch content from {url_to_scrape}"
             )
+            response = requests.post(
+                api_url, json=payload, headers=headers, auth=auth, timeout=120
+            )
+            response.raise_for_status()
+            oxylabs_response = response.json()
+            downloaded = oxylabs_response.get("results", [{}])[0].get("content", "")
 
-            logger.info(f"failed to download {url_to_scrape}")
-            logger.info(f"downloaded {downloaded}")
-            # #logger.info(
-            #     "download_url_with_oxylabs Error Oxylabs response: %s", oxylabs_response
-            # )
-            # #logger.info(
-            #     "download_url_with_oxylabs vError Oxylabs downloaded: %s", downloaded
-            # )
+            if downloaded:
+                logger.info(f"Successfully downloaded content on attempt {attempt + 1}")
+                return downloaded
+            else:
+                logger.warning(
+                    f"Attempt {attempt + 1}: No content found in Oxylabs response"
+                )
+                if attempt < max_retries - 1:  # Don't sleep on the last attempt
+                    time.sleep(retry_delay)
+                continue
 
-        # logger.info(
-        #     "download_url_with_oxylabs success Oxylabs downloaded: %s", downloaded
-        # )
+        except RequestException as e:
+            logger.error(
+                f"Attempt {attempt + 1} failed with RequestException: {str(e)}"
+            )
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            continue
+        except ValueError as e:
+            logger.error(f"Attempt {attempt + 1} failed with ValueError: {str(e)}")
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            continue
+        except Exception as e:
+            logger.error(
+                f"Attempt {attempt + 1} failed with unexpected error: {str(e)}"
+            )
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            continue
 
-        return downloaded
-    except requests.exceptions.RequestException as e:
-        logger.error("Failed to fetch article via Oxylabs API: %s", e)
-        return None
-    except ValueError as e:
-        logger.error("Error processing Oxylabs response: %s", e)
-        return None
+    logger.error(f"All {max_retries} attempts to download content failed")
+    return None
 
 
 # https://docs.usescraper.com/api-reference/scraper/scrape

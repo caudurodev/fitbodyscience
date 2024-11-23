@@ -38,9 +38,7 @@ mutation DeleteContentMutation($contentId: uuid!) {
   delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
     affected_rows
   }
-  delete_content_relationship(where: {_or: [{childContentId: {_eq: $contentId}}, {parentContentId: {_eq: $contentId}}]}) {
-    affected_rows
-  }
+  
   delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
     affected_rows
   }
@@ -54,6 +52,20 @@ mutation DeleteContentMutation($contentId: uuid!) {
     affected_rows
   }
 }
+`
+
+export const DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION = gql`
+  mutation DeleteRelatedContentAndRelationshipsMutation($contentId: uuid!) {
+    delete_content_relationship(where: {parentContentId: {_eq: $contentId}}) {
+      affected_rows
+    }
+    delete_content(where: {content_relationships: {parentContentId: {_eq: $contentId}}}) {
+      affected_rows
+      returning {
+        id
+      }
+    }
+  }
 `
 
 export const CLASSIFY_CONTENT_MUTATION = gql`

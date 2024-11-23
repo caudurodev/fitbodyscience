@@ -12,6 +12,7 @@ import {
 } from '@/store/content/mutation'
 import StudyClassification from "@/components/StudyClassification";
 import toast from "react-hot-toast";
+import { Icon } from '@iconify/react'
 
 
 export const EvidenceInfo = ({ evidence, refetch }: { evidence: any, refetch: () => void }) => {
@@ -27,24 +28,42 @@ export const EvidenceInfo = ({ evidence, refetch }: { evidence: any, refetch: ()
             {evidence?.sciencePaperClassification ?
                 <>
                     <StudyClassification paperClassification={evidence?.sciencePaperClassification} />
-                    <Button
-                        className="mt-2"
-                        color="primary"
-                        size="sm"
-                        isLoading={isUpdatingEvidenceScore}
-                        isDisabled={isUpdatingEvidenceScore}
-                        onPress={async () => {
-                            try {
-                                await updateEvidenceScore({ variables: { contentId: evidence?.id } })
-                                await refetch()
-                            } catch (e) {
-                                toast.error('Error updating evidence score')
-                                console.error(e)
-                            }
-                        }}
-                    >
-                        Update Score
-                    </Button>
+                    <div className="flex gap-2 my-2">
+                        <Button
+                            color="primary"
+                            size="sm"
+                            isLoading={isUpdatingEvidenceScore}
+                            isDisabled={isUpdatingEvidenceScore}
+                            onPress={async () => {
+                                try {
+                                    await updateEvidenceScore({ variables: { contentId: evidence?.id } })
+                                    await refetch()
+                                } catch (e) {
+                                    toast.error('Error updating evidence score')
+                                    console.error(e)
+                                }
+                            }}
+                        >
+                            Update Score
+                        </Button>
+                        <Button
+                            size="sm"
+                            color="danger"
+                            isLoading={isClassifyingContent}
+                            isDisabled={isClassifyingContent}
+                            onPress={async () => {
+                                try {
+                                    await classifyContent({ variables: { contentId: evidence?.id } })
+                                    await refetch()
+                                } catch (e) {
+                                    toast.error('Error classifying content')
+                                    console.error(e)
+                                }
+                            }}
+                        >
+                            <Icon icon="mdi:refresh" className="inline mr-2" /> re-Classify
+                        </Button>
+                    </div>
                 </>
                 :
                 <div>

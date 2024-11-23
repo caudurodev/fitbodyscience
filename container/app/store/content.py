@@ -267,13 +267,16 @@ def update_content(content_id: str, updates: dict):
             "is_parsed": True
         })
     """
-    # Convert Python snake_case to GraphQL camelCase
-    graphql_updates = {
-        "".join(
+    # Convert Python snake_case to GraphQL camelCase and handle arrays
+    graphql_updates = {}
+    for k, v in updates.items():
+        key = "".join(
             word.capitalize() if i > 0 else word for i, word in enumerate(k.split("_"))
-        ): v
-        for k, v in updates.items()
-    }
+        )
+        if isinstance(v, (list, tuple)):
+            graphql_updates[key] = str(v[0]) if v else ""  # Take first element if array
+        else:
+            graphql_updates[key] = v
 
     # Build dynamic GraphQL variables
     variables = {"contentId": content_id}
@@ -305,12 +308,13 @@ def update_content(content_id: str, updates: dict):
         response = make_graphql_call(query)
         if response.get("errors"):
             logger.error("GraphQL Error: %s", response["errors"])
-            logger.info("Response: %s", response)
+            logger.error("Response: %s", response)
             logger.info("query: %s", query)
             return False
         return True
     except Exception as e:
         logger.error(f"Error updating content: {e}")
+        logger.info("Response: %s", response)
         return False
 
 

@@ -11,6 +11,7 @@ import {
     RECALCULATE_AGGREGATE_SCORES_MUTATION,
     USER_ANALYSE_CONTENT_MUTATION,
     DELETE_CONTENT_MUTATION,
+    DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION,
     USER_UPDATE_ASSERTIONS_SCORE_MUTATION
 } from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
@@ -49,6 +50,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const [recalculateAggregateScores, { loading: isRecalculating }] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
+    const [deleteRelatedContentAndRelationships, { loading: isDeletingRelatedContentAndRelationships }] = useMutation(DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION)
     const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
 
     const assertions_contents = mainContent?.assertions_contents
@@ -173,9 +175,10 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     className="my-2 mx-4"
                                     size="sm"
                                     color="danger"
-                                    isLoading={isDeletingContent}
+                                    isLoading={isDeletingContent || isDeletingRelatedContentAndRelationships}
                                     onPress={async () => {
-                                        deleteContent({ variables: { contentId: mainContent?.id } })
+                                        await deleteContent({ variables: { contentId: mainContent?.id } })
+                                        await deleteRelatedContentAndRelationships({ variables: { contentId: mainContent?.id } })
                                         router.push(`/`)
                                     }}
                                 >
