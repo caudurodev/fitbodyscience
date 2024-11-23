@@ -60,7 +60,10 @@ def action_user_add_content_method(input_data):
         )
     except Exception as e:
         logger.error("Error adding content %s", e)
-        return jsonify({"message": f"Error adding content {str(e)}"}), 500
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
 
 
 @app.route("/action_user_analyse_content", methods=["POST"])

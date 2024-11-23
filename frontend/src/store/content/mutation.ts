@@ -32,6 +32,9 @@ export const USER_ANALYSE_CONTENT_MUTATION = gql`
 
 export const DELETE_CONTENT_MUTATION = gql`
 mutation DeleteContentMutation($contentId: uuid!) {
+  delete_content_activity(where: {contentId: {_eq: $contentId}}) {
+    affected_rows
+  }
   delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
     affected_rows
   }

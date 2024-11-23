@@ -29,10 +29,14 @@ configuration:
       custom_name: htmlJsonb
     is_parsed:
       custom_name: isParsed
+    is_science_based:
+      custom_name: isScienceBased
     media_type:
       custom_name: mediaType
     pro_aggregate_content_score:
       custom_name: proAggregateContentScore
+    science_based_evaluation:
+      custom_name: scienceBasedEvaluation
     science_paper_classification:
       custom_name: sciencePaperClassification
     source_url:
@@ -59,8 +63,10 @@ configuration:
     full_text: fullText
     html_jsonb: htmlJsonb
     is_parsed: isParsed
+    is_science_based: isScienceBased
     media_type: mediaType
     pro_aggregate_content_score: proAggregateContentScore
+    science_based_evaluation: scienceBasedEvaluation
     science_paper_classification: sciencePaperClassification
     source_url: sourceUrl
     summary_jsonb: summaryJsonb

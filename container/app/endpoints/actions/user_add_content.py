@@ -10,6 +10,9 @@ from ...store.influencer_contents import add_influencer_content_relationship
 from ...store.content import get_content_by_url
 from ...store.content_activity import add_content_activity
 from ...content_get.youtube_video import get_youtube_video_data
+from ...meaning.evaluate_content_for_science import (
+    evaluate_transcript_for_science_based,
+)
 
 
 def user_add_content_endpoint(content_url, content_type):
@@ -111,6 +114,19 @@ def user_add_content_endpoint(content_url, content_type):
 
         slug = generate_slug(video_title)
         logger.info("slug: %s", slug)
+        video_transcript = video_data.get("transcript", "")
+        if video_transcript is None:
+            logger.error("No transcript found in data: %s", video_data)
+            return {"message": "Error: Could not get transcript", "success": False}
+        science_based_evaluation = evaluate_transcript_for_science_based(
+            text_content=video_transcript,
+        )
+        logger.info("science_based_evaluation: %s", science_based_evaluation)
+        is_science_based = (
+            science_based_evaluation is not None
+            and science_based_evaluation.get("evaluation") == "true"
+        )
+        logger.info("is_science_based: %s", is_science_based)
 
         content_id = upsert_content(
             video_title=video_title,
@@ -118,12 +134,18 @@ def user_add_content_endpoint(content_url, content_type):
             video_url=content_url,
             content_type=content_type,
             canonical_url=cleaned_url,
-            transcript=video_data.get("transcript", ""),
+            transcript=video_transcript,
             video_description=video_info.get("description", ""),
             full_text_transcript=video_data.get("full_text_transcript", ""),
             is_parsed=False,
+            is_science_based=is_science_based,
+            science_based_evaluation=science_based_evaluation,
             slug=slug,
         )
+        if content_id is None:
+            return {"message": "Error saving content", "success": False}
+
+        logger.info("content_id: %s", content_id)
         add_content_activity(
             name="Retrieved video content",
             content_id=content_id,
@@ -139,6 +161,14 @@ def user_add_content_endpoint(content_url, content_type):
             activity_type="info",
             description="Content description has been processed and evidence has been retrieved",
         )
+
+        if is_science_based is False:
+            add_content_activity(
+                name="Video is Not Science Based",
+                content_id=content_id,
+                activity_type="info",
+                description="Video is Not Science Based",
+            )
 
         # result = analyze_youtube_video(video_data, influencer_id)
         full_slug = f"{influencer_info['slug']}/{slug}"

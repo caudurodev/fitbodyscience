@@ -86,23 +86,34 @@ def get_opposing_viewpoints(assertion_id):
 
     desired_evidence = """
         The task is to find evidence that is directly related to the assertion in the scientific literature.
-        Search for scientific papers or widely accepted evidence that **directly and specifically** prove or disprove the assertion and provide a summary of their findings.
-        Prefer primary research and highly ranked hierarchy of evidence over opinion, articles, and specialist opinions.
-        Only return results which have a DOI number. 
+        Search for scientific papers that **directly and specifically** prove or disprove the assertion and provide a summary of their findings.
+        Use primary research and highly ranked hierarchy of evidence over opinions, articles, and specialist opinions.
+        Only return results which have a DOI number.
 
-        The studies should be for or against the assertion. The study should contribute to or disprove the 
-        point/assertion being made.
+        **Classification Criteria**:
+        - **Supports the Assertion**: Evidence where the findings **agree with or confirm** the assertion.
+        - **Disproves the Assertion**: Evidence where the findings **contradict or refute** the assertion.
+
+        **Important Instructions**:
+        - **Do not misclassify evidence**. Ensure that each piece of evidence is placed in the correct category based on whether it supports or disproves the assertion.
+        - If you cannot find evidence that disproves the assertion, set `"found_disproven": false` and leave `"evidence_disprove": []`.
+        - If you cannot find evidence that supports the assertion, set `"found_support": false` and leave `"evidence_supports": []`.
+        - **Do not include studies that only partially relate to the assertion** or address a broader or different topic.
+        - Never return any results that match the already provided source URLs, studies, etc.
+        - Only return papers that are about the same subject matter.
+        - Don't provide evidence from a different field of study that is unrelated.
+
+        **Examples**:
+        - *Assertion*: "Eating high amounts of vegetables is not the best approach for longevity."
+          - **Supports**: A study showing that high vegetable intake does not correlate with increased longevity compared to other diets.
+          - **Disproves**: A study showing that high vegetable intake significantly increases longevity.
+
+        - *Assertion*: "Diet sodas cause cancer."
+          - **Supports**: A study demonstrating a link between diet soda consumption and increased cancer risk.
+          - **Disproves**: A study showing no link or a negative link between diet soda consumption and cancer risk.
 
         **Ensure that the evidence directly addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned.**
-        Do not include studies that only partially relate to the assertion or that address a broader or different topic.
-        For example, if the assertion is about "eating high amounts of vegetables is not the best approach for longevity," focus on studies that specifically examine whether consuming high amounts of vegetables is or is not the best approach for longevity, possibly in comparison to other dietary strategies.
-
-        Never return any results that match the already provided source_urls, studies, etc. 
-        All papers must be new and not duplicates of what was already provided.
-        Only return papers that are about the same subject matter. 
-        Don't provide evidence that is from a different field of study that is unrelated.
-        For example, don't provide a study about energy from electricity to support a claim about energy from food. 
-        """
+    """
 
     search_tool = SerperDevTool()
 
@@ -116,6 +127,9 @@ def get_opposing_viewpoints(assertion_id):
         You are meticulous in ensuring that the evidence you find **directly addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned**.
         You avoid including evidence that only partially relates to the assertion or that addresses a broader or different topic.
         You are able to find the best evidence to support or contradict a given assertion.
+
+        Very impportant - You absolutely reject opinion, expert opinions, reviews, or any other form of opinion that is not primary scienceresearch as
+        acceptable link of evidence even if from a respected authority or body - these are absolutely rejected - remove them from the results.
         """,
         verbose=False,
         allow_delegation=False,
@@ -128,12 +142,16 @@ def get_opposing_viewpoints(assertion_id):
         backstory="""
         You are an expert in logical and factual assertions. 
         You excel at reviewing scientific papers and ensuring the evidence provided is accurate and relevant.
-        You pay close attention to the precise wording of the assertion and ensure that the evidence provided **directly addresses all aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons**.
+        You pay close attention to the precise wording of the assertion and ensure that the evidence provided **directly 
+        addresses all aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons**.
         You review the work of others to make sure they complete their tasks correctly. 
         You make sure evidence is classified correctly and that any assertions are supported or contradicted by the evidence provided directly.
         Your task is to guide scientists to find the best evidence to support or contradict a given assertion and complete tasks successfully.
         You are critical of the data you receive and make sure it is accurate and relevant. 
         You reject any evidence that does not specifically support or contradict the assertion as it is stated.
+        
+        Very impportant - You absolutely reject opinion, expert opinions, reviews, or any other form of opinion that is not primary science research as
+        acceptable link of evidence even if from a respected authority or body - these are absolutely rejected - remove them from the results.
         """,
         verbose=False,
         allow_delegation=True,
@@ -142,49 +160,36 @@ def get_opposing_viewpoints(assertion_id):
 
     evidence = Task(
         description=f"""
-            Your task is to find papers that prove and disprove this assertion in the scientific literature:
+            Your task is to find papers that **prove or disprove** this assertion in the scientific literature:
 
             {main_assertion}
 
-            Identify scientific papers or widely accepted evidence that **directly and specifically** prove or disprove this assertion and provide a summary of their findings.
+            {desired_evidence}
 
-            **Ensure that the evidence you find addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned.**
-            Do not include studies that only partially relate to the assertion or that address a broader or different topic.
-
-            For example, if the assertion is "Eating high amounts of vegetables is not the best approach for longevity," focus on studies that specifically examine whether consuming high amounts of vegetables is or is not the best approach for longevity, possibly in comparison to other dietary strategies.
-
-            Don't allow any papers that are not from the same field of study or are not directly related to the assertion—for example, providing a study about energy from electricity to support a claim about energy from food. 
-
-            Don't use the original source of the assertion as a potential paper reference.
-
-            Try to return at least one paper that proves the assertion and one that disproves it.
-            If you cannot find papers to disprove, return `found_disproven` as false.
-            If you cannot find papers to support, return `found_support` as false.
-
-            Return only JSON format and nothing else. Don't explain, don't add any extra information or text to the response which is not pure JSON.
-            """,
+            Return the results in JSON format as specified, and nothing else. Do not include any explanations or additional text.
+        """,
         expected_output="""
         {
             "found_support": <true|false>,
             "found_disproven": <true|false>,
             "evidence_supports": [
-                {      
+                {
                     "title": "Title of the paper",
-                    "canonical_url": "url where to find the paper",
+                    "canonical_url": "URL where to find the paper",
                     "doi_number": "DOI number",
-                    "how_assertion_is_supported": "How the assertion is supported by this paper",
-                    "proof_assertion_is_true": "How the paper proves the assertion is true, what evidence is provided.",
-                    "evidence_type": "Meta analysis, clinical trial, observational study, etc."
+                    "how_assertion_is_supported": "Explanation of how the paper supports the assertion.",
+                    "proof_assertion_is_true": "Summary of the evidence provided in the paper that proves the assertion is true.",
+                    "evidence_type": "Type of study (e.g., Meta-analysis, Clinical trial, Observational study, Cohort study, etc.)"
                 }
             ],
             "evidence_disprove": [
                 {
                     "title": "Title of the paper",
-                    "canonical_url": "url where to find the paper",
+                    "canonical_url": "URL where to find the paper",
                     "doi_number": "DOI number",
-                    "how_assertion_is_disproven": "How the assertion is disproven by this paper",
-                    "proof_assertion_is_false": "How the paper proves the assertion is false, what evidence is provided.",
-                    "evidence_type": "Meta analysis, clinical trial, observational study, etc."
+                    "how_assertion_is_disproven": "Explanation of how the paper disproves the assertion.",
+                    "proof_assertion_is_false": "Summary of the evidence provided in the paper that proves the assertion is false.",
+                    "evidence_type": "Type of study (e.g., Meta-analysis, Clinical trial, Observational study, etc.)"
                 }
             ]
         }""",

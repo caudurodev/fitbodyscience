@@ -15,6 +15,8 @@ def upsert_content(
     video_description,
     full_text_transcript,
     is_parsed,
+    is_science_based,
+    science_based_evaluation,
     slug,
 ):
     """save content to database"""
@@ -31,6 +33,8 @@ def upsert_content(
             "fullText": full_text_transcript,
             "contentType": content_type,
             "isParsed": is_parsed,
+            "isScienceBased": is_science_based,
+            "scienceBasedEvaluation": science_based_evaluation,
             "dateAdded": now.strftime("%Y-%m-%d %H:%M:%S"),
             "dateLastModified": now.strftime("%Y-%m-%d %H:%M:%S"),
             "slug": slug,
@@ -47,6 +51,8 @@ def upsert_content(
                 $videoTranscript: jsonb,
                 $videoDescription: String,
                 $isParsed: Boolean,
+                $isScienceBased: Boolean,
+                $scienceBasedEvaluation: jsonb,
                 $dateAdded: timestamptz,
                 $dateLastModified: timestamptz,
                 $slug: String!
@@ -59,6 +65,8 @@ def upsert_content(
                     mediaType: $mediaType,
                     fullText: $fullText,
                     sourceUrl: $sourceUrl,
+                    isScienceBased: $isScienceBased,
+                    scienceBasedEvaluation: $scienceBasedEvaluation,
                     videoTranscript: $videoTranscript,
                     videoDescription: $videoDescription,
                     isParsed: $isParsed,
@@ -71,7 +79,7 @@ def upsert_content(
                     update_columns: [
                         title, videoId, contentType, mediaType, fullText,
                         sourceUrl, videoTranscript, videoDescription, isParsed,
-                        dateLastModified, slug
+                        isScienceBased, scienceBasedEvaluation, dateLastModified, slug, 
                     ]
                 }) {
                     id

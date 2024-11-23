@@ -1,45 +1,24 @@
 'use client'
 
-import {
-    Card, Spinner, CardBody, ScrollShadow,
-    Button, Link, Chip, CardHeader, Accordion, AccordionItem
-} from "@nextui-org/react";
+import { Spinner, ScrollShadow, Button, Chip } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation';
 import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY } from '@/store/content/query'
 import {
     RECALCULATE_AGGREGATE_SCORES_MUTATION,
     USER_ANALYSE_CONTENT_MUTATION,
     DELETE_CONTENT_MUTATION,
-    CLASSIFY_CONTENT_MUTATION,
-    USER_UPDATE_EVIDENCE_SCORE_MUTATION,
     USER_UPDATE_ASSERTIONS_SCORE_MUTATION
 } from '@/store/content/mutation'
-import { USER_UPDATE_ASSERTION_SCORE_MUTATION } from '@/store/assertion/mutation'
-import { USER_SEARCH_MORE_EVIDENCE_MUTATION } from '@/store/action/action'
 import { useHydration } from '@/hooks/useHydration'
-import StudyClassification from "@/components/StudyClassification";
-import { useState } from 'react'
-import toast from "react-hot-toast";
-import { useRouter } from 'next/navigation';
-import YouTubePlayer from '@/components/YouTubePlayer';
+import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { SummarySkeleton, AssertionsSkeleton } from '@/components/ContentSkeletons';
-import { ScoreBar } from "@/components/scoring/ScoreBar";
 import { ContentNotification } from '@/components/notifications/ContentNotification';
-
-const convertTimestampToSeconds = (timestamp: string) => {
-    if (!timestamp) return 0;
-    if (timestamp.includes('-')) {
-        const startTime = timestamp.split('-')[0];
-        return parseInt(startTime.replace('s', ''));
-    }
-    if (timestamp.includes(':')) {
-        const [minutes, seconds] = timestamp.split(':').map(Number);
-        return minutes * 60 + seconds;
-    }
-    return parseInt(timestamp.replace('s', ''));
-};
+import { AssertionCard } from '@/components/VideoPage/AssertionCard';
+import { convertTimestampToSeconds } from '@/utils/time'
 
 const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
     const router = useRouter()
@@ -52,7 +31,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
         fetchPolicy: 'network-only'
     })
 
-    const isParsed = contentData?.content?.[0]?.isParsed === true
     const { data: subscriptionData } = useSubscription(
         GET_CONTENT_SUBSCRIPTION,
         {
@@ -60,16 +38,19 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                 contentSlug: params?.content_slug,
                 influencerSlug: params?.influencer_slug
             },
-            // skip: !params.content_slug || !params.influencer_slug || isParsed 
-            skip: true
+            skip: !params.content_slug || !params.influencer_slug || !contentData
         },
     )
+
+    // Use query data for initial load, then switch to subscription data when available
+    const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
+
+    const isParsed = mainContent?.isParsed === true
     const [recalculateAggregateScores, { loading: isRecalculating }] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
     const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
 
-    const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
     const assertions_contents = mainContent?.assertions_contents
     const isHydrated = useHydration()
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
@@ -80,14 +61,11 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     if (!isHydrated) { return null }
     return (
         <>
-
             <ContentNotification contentId={mainContent?.id} />
             <main className="h-[calc(100vh-180px)] overflow-hidden">
                 <div className="h-full flex flex-col lg:flex-row">
-                    {/* Video Column */}
                     <aside className="w-full lg:w-[400px] shrink-0 p-4">
                         <div className="space-y-4">
-                            {/* Video player section */}
                             <div className="w-full">
                                 <YouTubePlayer
                                     videoId={mainContent?.videoId}
@@ -118,7 +96,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                 </Chip>
                             </div>
                             <h6 className="text-xs">{mainContent?.id}</h6>
-
                             <Button
                                 size="sm"
                                 className="my-4"
@@ -132,7 +109,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             >
                                 {!isRecalculating && <Icon icon="mdi:refresh" className="inline" />} recaulculate aggregate score
                             </Button>
-
                             {assertions_contents?.length > 0 && (
                                 <div className="flex gap-2 mt-4">
                                     <Button
@@ -208,8 +184,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             </div>
                         </div>
                     </aside>
-
-                    {/* Content Column */}
                     <section className="flex-1 h-full overflow-hidden p-4">
                         <ScrollShadow className="h-full overflow-y-auto px-6">
                             <div className="space-y-6 pb-8">
@@ -240,7 +214,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     )}
                                 </div>
                             </div>
-
                             <Button
                                 color="primary"
                                 size="sm"
@@ -275,7 +248,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     </ul>
                                 </>
                             )}
-
                         </ScrollShadow>
                     </section>
                 </div>
@@ -283,285 +255,6 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
         </>
 
     );
-}
-
-
-interface AssertionCardProps {
-    highlightedAssertion: number | null;
-    assertions_content: any;
-    refetch: () => void
-    assertionIndex: number
-}
-export const AssertionCard = ({
-    refetch,
-    highlightedAssertion,
-    assertionIndex,
-    assertions_content,
-}: AssertionCardProps) => {
-    const [updateAssertionScore, { loading: isUpdatingAssertionScore }] = useMutation(USER_UPDATE_ASSERTION_SCORE_MUTATION)
-
-    return (<li className="mb-8 scroll-mt-28" id={`assertion_${assertionIndex}`} >
-        <motion.div
-            animate={{
-                backgroundColor: highlightedAssertion === assertionIndex ?
-                    ['rgba(var(--color-primary-200), 0.2)', 'rgba(var(--color-primary-200), 0)'] :
-                    'rgba(var(--color-primary-200), 0)',
-            }}
-            transition={{
-                duration: 1.5,
-                ease: "easeOut",
-            }}
-            className="rounded-lg"
-        >
-            <Card shadow="none" radius="sm">
-                <CardHeader className="flex-col items-start gap-2">
-                    <h4 className="text-xl font-bold text-primary-400">  {assertions_content.assertion.text}</h4>
-                    <h4 className="text-sm my-2"> {assertions_content.assertionContext}</h4>
-                    {assertions_content?.assertion &&
-                        <>
-
-                            <div className="flex items-center gap-4">
-                                <span className="text-xs uppercase">Evidence</span>
-                                <div className="flex items-center gap-2">
-                                    <Icon icon="mdi:approve" className="text-success" />
-                                    <ScoreBar score={(assertions_content?.assertion?.proEvidenceAggregateScore || 0) / 10} />
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Icon icon="ci:stop-sign" className="text-danger" />
-                                    <ScoreBar score={(assertions_content?.assertion?.againstEvidenceAggregateScore || 0) / 10} />
-                                </div>
-
-                                <Button
-                                    color="primary"
-                                    size="sm"
-                                    isLoading={isUpdatingAssertionScore}
-                                    onPress={async () => {
-                                        updateAssertionScore({ variables: { assertionId: assertions_content?.assertion?.id } })
-                                    }}
-                                >
-                                    {!isUpdatingAssertionScore && <Icon icon="mdi:refresh" className="inline" />} update assertionscore
-                                </Button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs uppercase">Importance</span>
-                                <ScoreBar score={assertions_content?.weightConclusion || 0} />
-                            </div>
-                        </>
-                    }
-                </CardHeader>
-                <CardBody className="flex">
-                    <Accordion
-                        showDivider={false}
-                        itemClasses={{
-                            base: "py-0",
-                            title: "font-normal text-small",
-                            trigger: "px-0 py-0 data-[hover=true]:bg-default-100",
-                            content: "text-small px-2"
-                        }}
-                    >
-                        <AccordionItem
-                            key="evidence"
-                            title={
-                                <h5 className="text-xs uppercase">
-                                    Was said (time: {assertions_content?.videoTimestamp}):
-                                </h5>
-                            }
-                        >
-                            <p className="italic">
-                                &quot;{assertions_content?.assertion.originalSentence}&quot;
-                            </p>
-                        </AccordionItem>
-                    </Accordion>
-
-                    <RelatedEvidence
-                        refetch={refetch}
-                        assertions_content={assertions_content}
-                    />
-                </CardBody>
-            </Card>
-        </motion.div>
-    </li>)
-}
-
-interface RelatedEvidenceProps {
-    assertions_content: any;
-    refetch: () => void
-}
-export const RelatedEvidence = ({
-    assertions_content,
-    refetch,
-}: RelatedEvidenceProps) => {
-
-    const [userSearchMoreEvidence, { loading: isSearchingMoreEvidence }] = useMutation(USER_SEARCH_MORE_EVIDENCE_MUTATION)
-    return (
-        <Accordion
-            showDivider={false}
-            itemClasses={{
-                base: "py-0",
-                title: "font-normal text-small",
-                trigger: "px-0 py-0 data-[hover=true]:bg-default-100",
-                content: "text-small px-2"
-            }}
-        >
-            <AccordionItem
-                key="evidence"
-                aria-label="Evidence related to assertion"
-                title={
-                    <>
-                        <h5 className="uppercase text-xs">
-                            Evidence related to assertion
-                            ({assertions_content?.assertion?.contents_assertions?.length})
-                        </h5>
-                        <div className="flex gap-2 mt-2">
-                            {(() => {
-                                const proEvidence = assertions_content?.assertion?.contents_assertions?.filter((e: any) => e.isProAssertion) || [];
-                                const conEvidence = assertions_content?.assertion?.contents_assertions?.filter((e: any) => !e.isProAssertion) || [];
-
-                                return (
-                                    <>
-                                        {proEvidence.length > 0 && (
-                                            <Chip color="success" size="sm" className="text-white">
-                                                <Icon icon="mdi:approve" className="inline" />{' '}
-                                                {proEvidence.length} supporting ({
-                                                    Math.round(
-                                                        proEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / proEvidence.length
-                                                    )
-                                                }/100)
-                                            </Chip>
-                                        )}
-                                        {conEvidence.length > 0 && (
-                                            <Chip color="danger" size="sm" className="text-white">
-                                                <Icon icon="ci:stop-sign" className="inline" />{' '}
-                                                {conEvidence.length} opposing ({
-                                                    Math.round(
-                                                        conEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / conEvidence.length
-                                                    )
-                                                }/100)
-                                            </Chip>
-                                        )}
-                                    </>
-                                );
-                            })()}
-                        </div>
-                    </>
-                }
-            >
-                {!assertions_content?.assertion?.contents_assertions?.length || assertions_content?.assertion?.contents_assertions?.length === 0 &&
-                    <Spinner />
-                }
-                {assertions_content?.assertion?.contents_assertions?.length > 0 ?
-                    <>
-                        {
-                            assertions_content?.assertion?.contents_assertions.map(
-                                (o: any, i: number) => (
-                                    <Accordion key={i} id={`assertion_${i}`} className="mb-4">
-                                        <AccordionItem
-                                            key="evidence-details"
-                                            aria-label={o?.content?.title || "Evidence details"}
-                                            title={
-                                                <div className="flex items-top gap-2">
-                                                    <Chip
-                                                        color={o?.isProAssertion ? 'success' : 'danger'}
-                                                        className="text-white"
-                                                    >
-                                                        <Icon className="inline text-lg" icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
-                                                        {Math.round(o?.content?.contentScore || 0)} / 100
-                                                    </Chip>
-                                                    <span className="text-sm">{o?.content?.title ?? "Not yet downladed..."}</span>
-                                                </div>
-                                            }
-                                        >
-                                            <div className="ml-8 my-2">
-                                                <h6 className="text-tiny uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
-                                                <h6>{o?.whyRelevant}</h6>
-                                                <EvidenceInfo refetch={refetch} evidence={o?.content} />
-                                            </div>
-
-                                        </AccordionItem>
-                                    </Accordion>
-                                ))
-                        }
-                    </> :
-                    <div>
-                        <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
-                        <Button
-                            color="primary"
-                            variant="solid"
-                            isLoading={isSearchingMoreEvidence}
-                            onPress={async () => {
-                                console.log('Search for evidence')
-                                await userSearchMoreEvidence({ variables: { assertionId: assertions_content?.assertion?.id } })
-                                refetch()
-                            }}
-                            className="my-3"
-                            size="sm"
-                        >
-                            Search for evidence
-                        </Button>
-                    </div>
-                }
-
-            </AccordionItem>
-        </Accordion>
-    )
-}
-
-export const EvidenceInfo = ({ evidence, refetch }: { evidence: any, refetch: () => void }) => {
-    const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
-    const [updateEvidenceScore, { loading: isUpdatingEvidenceScore }] = useMutation(USER_UPDATE_EVIDENCE_SCORE_MUTATION)
-    return (
-        <>
-            <Link href={evidence?.sourceUrl}>{evidence?.title ?? "Not yet downladed..."}</Link>
-            <h6 className="text-tiny my-3">DOI: {evidence?.doiNumber}</h6>
-            <div className="my-3">
-                <Chip color="warning" className="text-white">{evidence?.contentType}</Chip>
-            </div>
-            {evidence?.sciencePaperClassification ?
-                <>
-                    <StudyClassification paperClassification={evidence?.sciencePaperClassification} />
-                    <Button
-                        className="mt-2"
-                        color="primary"
-                        size="sm"
-                        isLoading={isUpdatingEvidenceScore}
-                        isDisabled={isUpdatingEvidenceScore}
-                        onPress={async () => {
-                            try {
-                                await updateEvidenceScore({ variables: { contentId: evidence?.id } })
-                                await refetch()
-                            } catch (e) {
-                                toast.error('Error updating evidence score')
-                                console.error(e)
-                            }
-                        }}
-                    >
-                        Update Score
-                    </Button>
-                </>
-                :
-                <div>
-                    <h6 className="text-red-500 font-bold">* Evidence not yet classified</h6>
-                    <Button
-                        className="mt-2"
-                        size="sm"
-                        isLoading={isClassifyingContent}
-                        isDisabled={!!evidence?.sciencePaperClassification || isClassifyingContent}
-                        onPress={async () => {
-                            try {
-                                await classifyContent({ variables: { contentId: evidence?.id } })
-                                await refetch()
-                            } catch (e) {
-                                toast.error('Error classifying content')
-                                console.error(e)
-                            }
-                        }}
-                    >
-                        Classify Now
-                    </Button>
-                </div>
-            }
-        </>
-    )
 }
 
 export default VideoPage
