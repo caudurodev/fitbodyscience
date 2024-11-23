@@ -11,6 +11,7 @@ from ..content_store.score_store import (
 from .evidence import evidence_score
 from .assertion import assertion_score
 from .aggregate import calculate_aggregate_content_score
+from ..store.content_activity import add_content_activity
 
 
 def update_evidence_score(content_id):
@@ -72,6 +73,11 @@ def update_content_aggregate_score(content_id):
         logger.error("Invalid assertion tree structure: %s", assertion_tree)
         return False
 
+    add_content_activity(
+        content_id=content_id,
+        name="Update evidence score",
+        description="Updating evidence score",
+    )
     for assertion_content in assertion_tree:
         if not isinstance(assertion_content, dict):
             logger.error("Invalid assertion content structure: %s", assertion_content)

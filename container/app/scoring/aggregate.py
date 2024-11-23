@@ -5,7 +5,9 @@ from typing import Dict, Any, List
 from ..utils.config import logger
 
 
-def calculate_aggregate_content_score(assertion_tree: List[Dict[str, Any]]) -> Dict[str, int]:
+def calculate_aggregate_content_score(
+    assertion_tree: List[Dict[str, Any]]
+) -> Dict[str, int]:
     """Calculate the aggregate score based on the provided content"""
     additional_points = 1
 
@@ -26,31 +28,44 @@ def calculate_aggregate_content_score(assertion_tree: List[Dict[str, Any]]) -> D
         pro = assertion.get("proEvidenceAggregateScore", 0) or 0
         against = assertion.get("againstEvidenceAggregateScore", 0) or 0
 
-        max_weight = 10
-        multiplier = 1 + (max_weight - weight_conclusion) / max_weight
-        weigh_assertion_to_main_argument = ((multiplier - 1) / 2) + 1
+        # Normalize weight to be between 0.5 and 1.0
+        weight = 0.5 + (weight_conclusion / 20)  # This ensures max weight is 1.0
 
         if pro > 0:
-            total_score_pro += pro * weigh_assertion_to_main_argument
+            weighted_score = min(
+                100, pro * weight
+            )  # Cap individual weighted scores at 100
+            total_score_pro += weighted_score
             total_assertions_pro += 1
             additional_points_more_assertions_pro += additional_points
 
         if against > 0:
-            total_score_against += against * weigh_assertion_to_main_argument
+            weighted_score = min(
+                100, against * weight
+            )  # Cap individual weighted scores at 100
+            total_score_against += weighted_score
             total_assertions_against += 1
             additional_points_more_assertions_against += additional_points
 
     final_score_pro = 0
     if total_assertions_pro > 0:
-        final_score_pro = (
-            total_score_pro / total_assertions_pro
-        ) + additional_points_more_assertions_pro
+        average_score = total_score_pro / total_assertions_pro
+        bonus_points = min(
+            10, additional_points_more_assertions_pro
+        )  # Cap bonus points at 10
+        final_score_pro = min(
+            100, average_score + bonus_points
+        )  # Ensure final score never exceeds 100
 
     final_score_against = 0
     if total_assertions_against > 0:
-        final_score_against = (
-            total_score_against / total_assertions_against
-        ) + additional_points_more_assertions_against
+        average_score = total_score_against / total_assertions_against
+        bonus_points = min(
+            10, additional_points_more_assertions_against
+        )  # Cap bonus points at 10
+        final_score_against = min(
+            100, average_score + bonus_points
+        )  # Ensure final score never exceeds 100
 
     logger.info(
         "Final scores - Pro: %s, Against: %s",
@@ -59,6 +74,6 @@ def calculate_aggregate_content_score(assertion_tree: List[Dict[str, Any]]) -> D
     )
 
     return {
-        "pro": round(max(0, min(100, final_score_pro))),
-        "against": round(max(0, min(100, final_score_against))),
+        "pro": round(max(0, final_score_pro)),
+        "against": round(max(0, final_score_against)),
     }

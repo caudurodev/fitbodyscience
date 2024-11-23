@@ -56,6 +56,7 @@ def classify_evidence(content_id):
                 content_id,
                 {
                     "crossrefInfo": cross_ref_info_data,
+                    "title": cross_ref_info_data.get("message", {}).get("title", ""),
                 },
             )
             logger.info(f"Updated content with Crossref data for DOI: {doi_number}")

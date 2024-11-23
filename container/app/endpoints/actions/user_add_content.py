@@ -8,6 +8,7 @@ from ...store.content import upsert_content
 from ...store.slug import generate_slug
 from ...store.influencer_contents import add_influencer_content_relationship
 from ...store.content import get_content_by_url
+from ...store.content_activity import add_content_activity
 from ...content_get.youtube_video import get_youtube_video_data
 
 
@@ -123,8 +124,22 @@ def user_add_content_endpoint(content_url, content_type):
             is_parsed=False,
             slug=slug,
         )
+        add_content_activity(
+            name="Retrieved video content",
+            content_id=content_id,
+            activity_type="info",
+            description="Transcript and metadata have been retrieved",
+        )
 
         add_influencer_content_relationship(influencer_info["id"], content_id)
+
+        add_content_activity(
+            name="Video Description Processed",
+            content_id=content_id,
+            activity_type="info",
+            description="Content description has been processed and evidence has been retrieved",
+        )
+
         # result = analyze_youtube_video(video_data, influencer_id)
         full_slug = f"{influencer_info['slug']}/{slug}"
         logger.info("full_slug: %s", full_slug)

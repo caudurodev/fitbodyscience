@@ -14,7 +14,7 @@ client = Together(api_key=os.environ.get("TOGETHER_API_KEY"))
 
 
 def parse_llm_json(content):
-    """Parse and validate JSON from LLM response with fallbacks"""
+    """Parse JSON from LLM response with fallbacks"""
     if not content:
         return None
 
@@ -28,12 +28,16 @@ def parse_llm_json(content):
         return json.loads(content)
     except json.JSONDecodeError as e:
         logger.warning(f"Standard JSON parsing failed: {str(e)}")
+        logger.warning(f"Problem at position {e.pos}, line {e.lineno}, col {e.colno}")
+        logger.warning(f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}")
 
     # Try json5 parsing next
     try:
         return json5.loads(content)
     except Exception as e:
         logger.warning(f"JSON5 parsing failed: {str(e)}")
+        if hasattr(e, 'pos'):
+            logger.warning(f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}")
 
     # Try json_repair as last resort
     try:
@@ -41,7 +45,8 @@ def parse_llm_json(content):
         return json.loads(fixed)
     except Exception as e:
         logger.error(f"All JSON parsing attempts failed: {str(e)}")
-        logger.error(f"Problematic content: {content[:200]}...")
+        logger.error("Full problematic content:")
+        logger.error(content)
         return None
 
 

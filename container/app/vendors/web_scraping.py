@@ -128,6 +128,9 @@ def download_url_with_oxylabs(url_to_scrape, return_format="html"):
             logger.error(
                 "download_url_with_oxylabs Error No content found in Oxylabs response"
             )
+
+            logger.info(f"failed to download {url_to_scrape}")
+            logger.info(f"downloaded {downloaded}")
             # #logger.info(
             #     "download_url_with_oxylabs Error Oxylabs response: %s", oxylabs_response
             # )

@@ -86,28 +86,35 @@ def get_opposing_viewpoints(assertion_id):
 
     desired_evidence = """
         The task is to find evidence that is directly related to the assertion in the scientific literature.
-        Search for scientific papers or widely accepted evidence that prove or disprove the assertion and provide a summary of their findings.
-        Prefer primary research and highly ranked hierarchy of evidence over opinion, articles and specialist opinions.
+        Search for scientific papers or widely accepted evidence that **directly and specifically** prove or disprove the assertion and provide a summary of their findings.
+        Prefer primary research and highly ranked hierarchy of evidence over opinion, articles, and specialist opinions.
         Only return results which have a DOI number. 
 
-        The studies should be for or against the assertion. The study should contribute or disprove the 
-        point / assertion being made.
+        The studies should be for or against the assertion. The study should contribute to or disprove the 
+        point/assertion being made.
+
+        **Ensure that the evidence directly addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned.**
+        Do not include studies that only partially relate to the assertion or that address a broader or different topic.
+        For example, if the assertion is about "eating high amounts of vegetables is not the best approach for longevity," focus on studies that specifically examine whether consuming high amounts of vegetables is or is not the best approach for longevity, possibly in comparison to other dietary strategies.
 
         Never return any results that match the already provided source_urls, studies, etc. 
         All papers must be new and not duplicates of what was already provided.
         Only return papers that are about the same subject matter. 
         Don't provide evidence that is from a different field of study that is unrelated.
         For example, don't provide a study about energy from electricity to support a claim about energy from food. 
-    """
+        """
+
     search_tool = SerperDevTool()
 
     science_researcher = Agent(
         role="Senior Scientist",
-        goal="Research what the science literature says about a topic from an evidence-based perspective",
+        goal="Make sure the evidence provided is accurate, relevant, and directly addresses the specific assertion",
         backstory="""
-        You are an experienced scientist research assistant who has read thousands of peer-reviewed papers. 
+        You are an experienced scientific research assistant who has read thousands of peer-reviewed papers. 
         You are known for your ability to find relevant science papers that support or contradict a given assertion or fact about a topic.
         You are very precise and able to classify studies by their hierarchy of evidence.
+        You are meticulous in ensuring that the evidence you find **directly addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned**.
+        You avoid including evidence that only partially relates to the assertion or that addresses a broader or different topic.
         You are able to find the best evidence to support or contradict a given assertion.
         """,
         verbose=False,
@@ -120,13 +127,13 @@ def get_opposing_viewpoints(assertion_id):
         goal="Make sure the evidence provided is accurate and relevant",
         backstory="""
         You are an expert in logical and factual assertions. 
-        You are very good at reviewing scientific papers and making sure the evidence provided is accurate and relevant.
+        You excel at reviewing scientific papers and ensuring the evidence provided is accurate and relevant.
+        You pay close attention to the precise wording of the assertion and ensure that the evidence provided **directly addresses all aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons**.
         You review the work of others to make sure they complete their tasks correctly. 
-        You make sure evidence is classified correctly and that any assertions are supported or
-        contradicted by the evidence provided directly.
-        Your task is to guide scientists to find the best evidence to support or contradict a given assertion
-        and complete tasks successfully.
-        You are critical of data you receive and make sure it is accurate and relevant. 
+        You make sure evidence is classified correctly and that any assertions are supported or contradicted by the evidence provided directly.
+        Your task is to guide scientists to find the best evidence to support or contradict a given assertion and complete tasks successfully.
+        You are critical of the data you receive and make sure it is accurate and relevant. 
+        You reject any evidence that does not specifically support or contradict the assertion as it is stated.
         """,
         verbose=False,
         allow_delegation=True,
@@ -135,30 +142,31 @@ def get_opposing_viewpoints(assertion_id):
 
     evidence = Task(
         description=f"""
-        Your task is to find papers that prove and disprove this assertion in the scientific literature:
-        
-        {main_assertion}
+            Your task is to find papers that prove and disprove this assertion in the scientific literature:
 
-        Identify scientific papers or widely accepted evidence that prove or disprove  this assertion and provide a summary of their findings.
+            {main_assertion}
 
-        The resulting papers provided should include supporting and disproving papers if the assertion is likely to be 
-        proven or disproven by scientific papers. It is OK to not have results if the assertion seems to be not supported or disproven by scientific papers.
+            Identify scientific papers or widely accepted evidence that **directly and specifically** prove or disprove this assertion and provide a summary of their findings.
 
-        Don't allow any papers that are not from the same field of study or are not directly related to the assertion like for example
-        providing a study about energy from electricity to support a claim about energy from food. 
+            **Ensure that the evidence you find addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned.**
+            Do not include studies that only partially relate to the assertion or that address a broader or different topic.
 
-        Don't use the original source of the assertion as a a potential paper reference.
-        
-        Try to return at least one paper that proves the assertion and one that disproves it.
-        If you cannot find papers to disprove return found_disproven as false.
-        If you cannot find papers to support return found_support as false.
+            For example, if the assertion is "Eating high amounts of vegetables is not the best approach for longevity," focus on studies that specifically examine whether consuming high amounts of vegetables is or is not the best approach for longevity, possibly in comparison to other dietary strategies.
 
-        Return only JSON format and nothing else. dont' explain, don't add any extra information or text to the response which is not pure json.
-        """,
+            Don't allow any papers that are not from the same field of study or are not directly related to the assertion—for example, providing a study about energy from electricity to support a claim about energy from food. 
+
+            Don't use the original source of the assertion as a potential paper reference.
+
+            Try to return at least one paper that proves the assertion and one that disproves it.
+            If you cannot find papers to disprove, return `found_disproven` as false.
+            If you cannot find papers to support, return `found_support` as false.
+
+            Return only JSON format and nothing else. Don't explain, don't add any extra information or text to the response which is not pure JSON.
+            """,
         expected_output="""
         {
-            "found_support": true,
-            "found_disproven": false,
+            "found_support": <true|false>,
+            "found_disproven": <true|false>,
             "evidence_supports": [
                 {      
                     "title": "Title of the paper",
@@ -185,10 +193,13 @@ def get_opposing_viewpoints(assertion_id):
 
     review_research = Task(
         description=f"""
-        Your task is to review the papers found by scientists to make sure they are 
-        accurate and relevant. Do they prove or disprove this assertion:
-        
+        Your task is to review the papers found by scientists to ensure they are 
+        accurate and relevant. Specifically, verify whether they prove or disprove this assertion:
+
         {main_assertion}
+
+        **Ensure that the evidence directly addresses the specific aspects and nuances of the assertion, including any qualifiers, quantities, conditions, or comparisons mentioned.**
+        Reject any papers that do not directly relate to the assertion or that only partially address it.
 
         If the research has flaws, instruct the scientist to find better papers if 
         you judge it likely they will find better papers. Don't let them waste time.
@@ -196,14 +207,17 @@ def get_opposing_viewpoints(assertion_id):
 
         {desired_evidence}
 
-        if the research is correct, then return the results of pro and aginast papers in 
-        JSON format and nothing else. dont' explain, 
-        don't add any extra information or text to the response which is not pure json.
+        If the research is correct, then return the results of pro and against papers in 
+        JSON format and nothing else. Don't explain, 
+        don't add any extra information or text to the response which is not pure JSON.
+        Remove research found that is not correctly classified or that is missing information. 
+        Remove research that is not a scientific paper.
+
         """,
         expected_output="""
         {
-            "found_support": true,
-            "found_disproven": false,
+            "found_support": <true|false>,
+            "found_disproven": <true|false>,
             "evidence_supports": [
                 {      
                     "title": "Title of the paper",

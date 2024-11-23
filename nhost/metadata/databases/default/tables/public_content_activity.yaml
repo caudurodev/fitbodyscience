@@ -1,0 +1,47 @@
+table:
+  name: content_activity
+  schema: public
+configuration:
+  column_config:
+    content_id:
+      custom_name: contentId
+    created_at:
+      custom_name: createdAt
+    expires_at:
+      custom_name: expiresAt
+  custom_column_names:
+    content_id: contentId
+    created_at: createdAt
+    expires_at: expiresAt
+  custom_root_fields: {}
+object_relationships:
+  - name: content
+    using:
+      foreign_key_constraint_on: content_id
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - created_at
+        - expires_at
+        - description
+        - name
+        - type
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - created_at
+        - expires_at
+        - description
+        - name
+        - type
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""

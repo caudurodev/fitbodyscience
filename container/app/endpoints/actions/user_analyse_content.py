@@ -16,6 +16,7 @@ from ...endpoints.actions.action_update_assertion_score_endpoint import (
 )
 from ...endpoints.assertions import insert_assertions_opposing
 from ...utils.run_async import run_method_async
+from ...store.content_activity import add_content_activity
 
 
 def user_analyse_content_endpoint(content_id):
@@ -35,15 +36,51 @@ def user_analyse_content_endpoint(content_id):
 
         update_content_is_parsed(content_id=content_id, is_parsed=False)
 
+        add_content_activity(
+            name="Start analysis",
+            content_id=content_id,
+            activity_type="info",
+            description="Starting to review video content",
+        )
+
+        add_content_activity(
+            name="Summarising video content",
+            content_id=content_id,
+            activity_type="info",
+            description="Summarising video content into main points",
+        )
+
         summarise_text_and_add_to_content(
             video_content_id=content_id,
             long_text=video_transcript,
             video_description=video_description,
         )
+
+        add_content_activity(
+            name="Summarising done",
+            content_id=content_id,
+            activity_type="info",
+            description="Summarising video content done",
+        )
+
+        add_content_activity(
+            name="Extracting assertions started",
+            content_id=content_id,
+            activity_type="info",
+            description="Extracting assertions from video content",
+        )
+
         parse_assertions_long_text(
             content_id=content_id,
             long_text=video_transcript,
             additional_information=video_description,
+        )
+
+        add_content_activity(
+            name="Extracting assertions done",
+            content_id=content_id,
+            activity_type="info",
+            description="Extracting assertions from video content done",
         )
 
         # evaluate evidence
@@ -53,7 +90,15 @@ def user_analyse_content_endpoint(content_id):
         for related_content in related_contents:
             child_content_id = related_content["childContentId"]
             logger.info(f"classify_evidence for related content {child_content_id}")
-            classify_evidence(content_id=child_content_id)
+            # classify_evidence(content_id=child_content_id)
+            run_method_async(classify_evidence, child_content_id)
+
+        add_content_activity(
+            name="Searching for opposing evidence started",
+            content_id=content_id,
+            activity_type="info",
+            description="Searching for opposing evidence",
+        )
 
         # get opposing viewpoints
         run_method_async(add_pro_against_assertions, content_id)

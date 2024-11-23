@@ -25,7 +25,14 @@ def evidence_score(content_id):
 
 def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Calculate the evidence score based on the provided payload"""
-    if not payload.get("studyClassification"):
+    # Handle case where payload is a list
+    if isinstance(payload, list):
+        logger.warning("Received list instead of dict for evidence scoring, using first item")
+        if not payload:
+            return {"totalScore": 0, "normalizedScore": 0}
+        payload = payload[0]
+
+    if not payload or not payload.get("studyClassification"):
         return {"totalScore": 0, "normalizedScore": 0}
 
     methodology = payload["studyClassification"].get("methodology", {})

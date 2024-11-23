@@ -11,6 +11,7 @@
 - "!include public_assertions.yaml"
 - "!include public_assertions_content.yaml"
 - "!include public_content.yaml"
+- "!include public_content_activity.yaml"
 - "!include public_content_relationship.yaml"
 - "!include public_contents_assertion.yaml"
 - "!include public_influencer_contents.yaml"

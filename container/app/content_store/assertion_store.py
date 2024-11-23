@@ -578,6 +578,7 @@ def get_assertion_evidence_scores(assertion_id):
                 query GetAssertionEvidenceScoresQuery($assertionId: uuid!) {
                     assertions(where: {id: {_eq: $assertionId}}) {
                         id
+                        contentId
                         contents_assertions {
                             isProAssertion
                             content {

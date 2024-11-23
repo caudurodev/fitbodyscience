@@ -52,6 +52,9 @@ dependencies:
   react-responsive:
     specifier: ^10.0.0
     version: 10.0.0(react@18.0.0)
+  react-toastify:
+    specifier: ^10.0.6
+    version: 10.0.6(react-dom@18.0.0)(react@18.0.0)
   react-youtube:
     specifier: ^10.1.0
     version: 10.1.0(react@18.0.0)
@@ -7035,6 +7038,17 @@ packages:
       use-latest: 1.2.1(@types/react@18.0.0)(react@18.0.0)
     transitivePeerDependencies:
       - '@types/react'
+    dev: false
+
+  /react-toastify@10.0.6(react-dom@18.0.0)(react@18.0.0):
+    resolution: {integrity: sha512-yYjp+omCDf9lhZcrZHKbSq7YMuK0zcYkDFTzfRFgTXkTFHZ1ToxwAonzA4JI5CxA91JpjFLmwEsZEgfYfOqI1A==}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    dependencies:
+      clsx: 2.1.1
+      react: 18.0.0
+      react-dom: 18.0.0(react@18.0.0)
     dev: false
 
   /react-youtube@10.1.0(react@18.0.0):

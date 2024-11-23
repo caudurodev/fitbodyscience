@@ -46,6 +46,7 @@ def action_user_add_content_method(input_data):
         )
         logger.info("response: %s", response)
         new_content_id = response.get("content_id", None)
+
         run_method_async(user_analyse_content_endpoint, new_content_id)
         return (
             jsonify(

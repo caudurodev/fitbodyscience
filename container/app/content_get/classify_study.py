@@ -23,7 +23,7 @@ def classify_evidence_content(content_id):
         return None
 
     try:
-        classify = get_response(
+        raw_response = get_response(
             f"""
             Given a scientific paper with Crossref JSON data as follows:
 
@@ -159,40 +159,38 @@ def classify_evidence_content(content_id):
             quality="best",
         )
         # Log the raw response for debugging
-        logger.debug(f"Raw classification response: {classify}")
-        
-        if not classify:
+        logger.debug("Raw classification response: %s", raw_response)
+
+        if not raw_response:
             logger.error("Empty response from classification")
             return None
-        
-        # Remove any trailing whitespace or newlines that might affect JSON parsing
-        classify = classify.strip()
-        
-        # Try to parse the JSON
+
         try:
-            classify_json = json.loads(classify)
+            # Try to parse the response
+            if isinstance(raw_response, str):
+                logger.debug("Response is string, attempting to parse")
+                logger.debug("Response length: %d", len(raw_response))
+                logger.debug("Response content: %s", raw_response)
+                classification = json.loads(raw_response)
+            else:
+                classification = raw_response
+
+            logger.debug("Parsed classification: %s", classification)
+            return classification
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {str(e)}")
-            logger.error(f"Failed JSON content: {classify}")
+            logger.error("Failed to parse classification response: %s", str(e))
+            logger.error(
+                "Error at position %d, line %d, col %d", e.pos, e.lineno, e.colno
+            )
+            logger.error(
+                "Content around error: %s",
+                raw_response[max(0, e.pos - 50) : min(len(raw_response), e.pos + 50)],
+            )
             return None
-        
-        # Validate required fields are present
-        required_fields = ["paperDetails", "studyClassification"]
-        for field in required_fields:
-            if field not in classify_json:
-                logger.error(f"Missing required field '{field}' in classification response")
-                return None
-        
-        # Validate study classification fields
-        study_class = classify_json.get("studyClassification", {})
-        required_study_fields = ["methodology", "statisticalAnalysis", "reportingTransparency", "peerReviewPublication", "externalValidity"]
-        for field in required_study_fields:
-            if field not in study_class:
-                logger.error(f"Missing required study classification field '{field}'")
-                return None
-        
-        return classify_json
-        
+        except Exception as e:
+            logger.error("Unexpected error parsing classification: %s", str(e))
+            return None
+
     except Exception as e:
         logger.error(f"Unexpected error in classify_evidence_content: {str(e)}")
         return None

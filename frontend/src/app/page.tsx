@@ -26,7 +26,7 @@ export default function Home() {
             behind fitness
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
-            A simple, <span className="text-secondary">intuitive</span>
+            A simple, <span className="text-secondary">intuitive</span>{' '}
             platform for science-checking influence content. Use our
             scoring system to evaluate content credibility and sources of online claims.
           </p>
@@ -51,7 +51,7 @@ export default function Home() {
         </div>
       </section>
 
-      <h2 className="text-gradient text-2xl font-bold uppercase py-2">Latest Videos</h2>
+      {contentItems?.length > 0 && <h2 className="text-gradient text-2xl font-bold uppercase py-2">Latest Videos</h2>}
       <section className="mb-24">
         {
           loading ?

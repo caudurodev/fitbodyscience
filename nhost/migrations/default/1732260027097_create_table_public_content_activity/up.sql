@@ -1,0 +1,2 @@
+CREATE TABLE "public"."content_activity" ("id" uuid NOT NULL DEFAULT gen_random_uuid(), "name" text NOT NULL, "created_at" date NOT NULL, "content_id" uuid NOT NULL, "description" text NOT NULL, "expires_at" date NOT NULL, "type" text NOT NULL, PRIMARY KEY ("id") , FOREIGN KEY ("content_id") REFERENCES "public"."content"("id") ON UPDATE restrict ON DELETE restrict);
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
