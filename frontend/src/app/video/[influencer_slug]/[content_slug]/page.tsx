@@ -1,10 +1,10 @@
 'use client'
 
-import { Spinner, ScrollShadow, Button, Chip } from "@nextui-org/react";
+import { Spinner, ScrollShadow, Button, Card, Chip } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
-import { useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation';
 import { GET_CONTENT_SUBSCRIPTION, GET_CONTENT_QUERY } from '@/store/content/query'
 import {
@@ -21,8 +21,13 @@ import { ContentActivityFeed } from "@/components/notifications/ContentActivityF
 import { AssertionCard } from '@/components/VideoPage/AssertionCard';
 import { convertTimestampToSeconds } from '@/utils/time'
 
-const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug: string } }) => {
+export default function Page({ params }: { params: { influencer_slug: string, content_slug: string } }) {
     const router = useRouter()
+    const [currentAssertionIndex, setCurrentAssertionIndex] = useState(-1);
+    const [currentTimestamp, setCurrentTimestamp] = useState(0)
+    const [player, setPlayer] = useState<any>(null);
+    const [highlightedAssertion, setHighlightedAssertion] = useState<number | null>(null);
+
     const { data: contentData, refetch } = useQuery(GET_CONTENT_QUERY, {
         variables: {
             contentSlug: params?.content_slug,
@@ -55,21 +60,23 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
 
     const assertions_contents = mainContent?.assertions_contents
     const isHydrated = useHydration()
-    const [currentTimestamp, setCurrentTimestamp] = useState(0)
-    const [currentAssertionIndex, setCurrentAssertionIndex] = useState(-1);
-    const [player, setPlayer] = useState<any>(null);
-    const [highlightedAssertion, setHighlightedAssertion] = useState<number | null>(null);
+
 
     const influencerInfo = mainContent?.influencer_contents?.[0]?.influencer
+
+    const goToAssertionTimeStampInVideo = useCallback((assertionIndex: number) => {
+        const seconds = convertTimestampToSeconds(assertions_contents[assertionIndex]?.videoTimestamp);
+        player.seekTo(seconds);
+    }, [player, assertions_contents])
 
     if (!isHydrated) { return null }
     return (
         <>
             <main className="h-[calc(100vh-180px)] overflow-hidden">
-                <div className="h-full flex flex-col lg:flex-row">
-                    <ScrollShadow className="w-full lg:w-[400px] shrink-0 p-4">
+                <div className="h-full flex flex-col lg:flex-row gap-4">
+                    <ScrollShadow className="w-full lg:w-[400px] shrink-0 flex flex-col gap-4">
+                        <ContentActivityFeed contentId={mainContent?.id} />
                         <div className="space-y-4">
-                            <ContentActivityFeed contentId={mainContent?.id} />
 
                             <div className="w-full">
                                 <YouTubePlayer
@@ -124,53 +131,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             >
                                 {!isRecalculating && <Icon icon="mdi:refresh" className="inline" />} recaulculate aggregate score
                             </Button>
-                            {assertions_contents?.length > 0 && (
-                                <div className="flex gap-2 mt-4">
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        isDisabled={currentAssertionIndex === 0}
-                                        onPress={() => {
-                                            if (currentAssertionIndex > 0) {
-                                                const newIndex = currentAssertionIndex - 1;
-                                                setCurrentAssertionIndex(newIndex);
-                                                setHighlightedAssertion(newIndex);
-                                                const element = document.getElementById(`assertion_${newIndex}`);
-                                                element?.scrollIntoView({ behavior: 'smooth' });
-                                                if (player && assertions_contents[newIndex]) {
-                                                    const seconds = convertTimestampToSeconds(assertions_contents[newIndex]?.videoTimestamp);
-                                                    player.seekTo(seconds);
-                                                }
-                                                setTimeout(() => setHighlightedAssertion(null), 1500);
-                                            }
-                                        }}
-                                    >
-                                        <Icon icon="mdi:chevron-left" className="inline" /> Previous
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        isDisabled={currentAssertionIndex >= assertions_contents.length - 1}
-                                        onPress={() => {
-                                            if (currentAssertionIndex < assertions_contents.length - 1) {
-                                                const newIndex = currentAssertionIndex + 1;
-                                                setCurrentAssertionIndex(newIndex);
-                                                setHighlightedAssertion(newIndex);
-                                                const element = document.getElementById(`assertion_${newIndex}`);
-                                                console.log(`assertion_${newIndex}`, element)
-                                                element?.scrollIntoView({ behavior: 'smooth' });
-                                                if (player && assertions_contents[newIndex]) {
-                                                    const seconds = convertTimestampToSeconds(assertions_contents[newIndex]?.videoTimestamp);
-                                                    player.seekTo(seconds);
-                                                }
-                                                setTimeout(() => setHighlightedAssertion(null), 1500);
-                                            }
-                                        }}
-                                    >
-                                        Next <Icon icon="mdi:chevron-right" className="inline" />
-                                    </Button>
-                                </div>
-                            )}
+
                             <div className="flex flex-row items-center justify-start gap-2 mt-16">
                                 {isParsed === false ? <h6 className="text-xs"><Spinner /> Parsing</h6> : <h6 className="text-xs">Parsed.</h6>}
                                 <Button
@@ -201,7 +162,7 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             </div>
                         </div>
                     </ScrollShadow>
-                    <ScrollShadow className=" flex-1 h-full overflow-y-auto px-6">
+                    <ScrollShadow className="flex-1 h-full overflow-y-auto px-6">
                         <div className="space-y-6 pb-8">
                             <h2 className="uppercase text-xs font-bold text-primary">Main point</h2>
                             {!mainContent?.summaryJsonb?.conclusion ? (
@@ -253,11 +214,12 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     {assertions_contents.map((assertions_content: any, index: number) => {
                                         return (
                                             <AssertionCard
-                                                highlightedAssertion={highlightedAssertion}
                                                 assertions_content={assertions_content}
                                                 key={index}
+                                                currentAssertionIndex={currentAssertionIndex}
                                                 assertionIndex={index}
                                                 refetch={refetch}
+
                                             />
                                         )
                                     })}
@@ -265,6 +227,14 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                             </>
                         )}
                     </ScrollShadow>
+                    <NavigateAssertions
+                        assertions={assertions_contents}
+                        currentAssertionIndex={currentAssertionIndex}
+                        onSetCurrentAssertionIndex={(i) => {
+                            console.log('onSetCurrentAssertionIndex', i)
+                            setCurrentAssertionIndex(i)
+                        }}
+                    />
                 </div>
             </main>
         </>
@@ -272,4 +242,65 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     );
 }
 
-export default VideoPage
+function NavigateAssertions({ assertions, currentAssertionIndex, onSetCurrentAssertionIndex }: { assertions: any, currentAssertionIndex: number, onSetCurrentAssertionIndex: React.Dispatch<React.SetStateAction<number>> }) {
+    const scrollToAssertion = useCallback((index: number) => {
+        onSetCurrentAssertionIndex(index);
+        const element = document.getElementById(`assertion_${index}`);
+        element?.scrollIntoView({ behavior: 'smooth' });
+    }, [onSetCurrentAssertionIndex])
+
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (currentAssertionIndex > 0) {
+                scrollToAssertion(currentAssertionIndex - 1);
+            }
+        } else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (currentAssertionIndex < assertions.length - 1) {
+                scrollToAssertion(currentAssertionIndex + 1);
+            }
+        }
+    }, [currentAssertionIndex, scrollToAssertion, assertions?.length]);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown])
+
+    return (
+        <>
+            {assertions?.length > 0 && (
+                <div className="z-10 fixed bottom-8 right-4 flex flex-col gap-2 mt-4 bg-white p-2   rounded-2xl shadow-xl">
+                    <h6 className="text-xs uppercase text-center"> {currentAssertionIndex > -1 ? `(${currentAssertionIndex + 1}/${assertions.length})` : `(${assertions.length})`}</h6>
+                    <Button
+                        size="sm"
+                        variant="solid"
+                        color="success"
+                        isDisabled={currentAssertionIndex <= 0}
+                        onPress={() => {
+                            if (currentAssertionIndex > 0) {
+                                scrollToAssertion(currentAssertionIndex - 1);
+                            }
+                        }}
+                    >
+                        <Icon icon="mdi:chevron-up" className="inline" />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="solid"
+                        color="success"
+                        isDisabled={currentAssertionIndex >= assertions.length - 1}
+                        onPress={() => {
+                            if (currentAssertionIndex < assertions.length - 1) {
+                                scrollToAssertion(currentAssertionIndex + 1);
+                            }
+                        }}
+                    >
+                        <Icon icon="mdi:chevron-down" className="inline" />
+                    </Button>
+                </div >
+            )}
+        </>
+    )
+}

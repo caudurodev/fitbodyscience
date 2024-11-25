@@ -56,12 +56,12 @@ export const ContentActivityFeed = ({ contentId }: ContentNotificationProps) => 
     const totalNotifications = data?.content_activity?.length || 1
 
     return (
-        <div className="px-2">
-            <h6 className="text-xs uppercase">Content Activity Feed</h6>
+        <div className="p-2 ">
+            <h6 className="text-xs uppercase font-bold text-primary">Content Activity</h6>
             <div className="my-2">
                 {loading && <Spinner />}
             </div>
-            <ScrollShadow ref={scrollRef} className="max-h-[140px]">
+            <ScrollShadow ref={scrollRef} className="max-h-[140px] bg-default-200 px-2 rounde">
                 <ul >
                     {data?.content_activity?.map((activity, index) => {
                         const firstActivityTime = data.content_activity[0]?.createdAt;
