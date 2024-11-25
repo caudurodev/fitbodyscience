@@ -44,9 +44,9 @@ def add_content_activity(
             mutation AddContentActivityMutation(
                 $name: String!
                 $contentId: uuid!
-                $createdAt: date!
+                $createdAt: timestamptz!
                 $type: String!
-                $expiresAt: date
+                $expiresAt: timestamptz
                 $description: String!
             ) {
                 insert_content_activity(

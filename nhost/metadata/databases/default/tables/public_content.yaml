@@ -202,8 +202,10 @@ select_permissions:
     permission:
       columns:
         - is_parsed
+        - is_science_based
         - crossref_info
         - html_jsonb
+        - science_based_evaluation
         - science_paper_classification
         - summary_jsonb
         - video_transcript
@@ -235,8 +237,10 @@ select_permissions:
     permission:
       columns:
         - is_parsed
+        - is_science_based
         - crossref_info
         - html_jsonb
+        - science_based_evaluation
         - science_paper_classification
         - summary_jsonb
         - video_transcript

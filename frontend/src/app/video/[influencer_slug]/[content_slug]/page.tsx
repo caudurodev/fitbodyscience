@@ -17,7 +17,7 @@ import {
 import { useHydration } from '@/hooks/useHydration'
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { SummarySkeleton, AssertionsSkeleton } from '@/components/ContentSkeletons';
-import { ContentNotification } from '@/components/notifications/ContentNotification';
+import { ContentActivityFeed } from "@/components/notifications/ContentActivityFeed";
 import { AssertionCard } from '@/components/VideoPage/AssertionCard';
 import { convertTimestampToSeconds } from '@/utils/time'
 
@@ -60,14 +60,17 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
     const [player, setPlayer] = useState<any>(null);
     const [highlightedAssertion, setHighlightedAssertion] = useState<number | null>(null);
 
+    const influencerInfo = mainContent?.influencer_contents?.[0]?.influencer
+
     if (!isHydrated) { return null }
     return (
         <>
-            <ContentNotification contentId={mainContent?.id} />
             <main className="h-[calc(100vh-180px)] overflow-hidden">
                 <div className="h-full flex flex-col lg:flex-row">
-                    <aside className="w-full lg:w-[400px] shrink-0 p-4">
+                    <ScrollShadow className="w-full lg:w-[400px] shrink-0 p-4">
                         <div className="space-y-4">
+                            <ContentActivityFeed contentId={mainContent?.id} />
+
                             <div className="w-full">
                                 <YouTubePlayer
                                     videoId={mainContent?.videoId}
@@ -86,6 +89,16 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     {mainContent?.title}
                                 </motion.h1>
                             }
+                            <Button
+                                variant="light"
+                                color="secondary"
+                                size="sm"
+                                onPress={() => {
+                                    router.push(`/video/${influencerInfo?.slug}`)
+                                }}
+                            >
+                                By {influencerInfo?.name}
+                            </Button>
                             <h4 className="uppercase text-tiny my-2">Overall Score</h4>
                             <div className="mb-2">
                                 <Chip color="success" size="lg" className="mr-2">
@@ -177,8 +190,9 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                     color="danger"
                                     isLoading={isDeletingContent || isDeletingRelatedContentAndRelationships}
                                     onPress={async () => {
-                                        await deleteContent({ variables: { contentId: mainContent?.id } })
-                                        await deleteRelatedContentAndRelationships({ variables: { contentId: mainContent?.id } })
+                                        const contentId = mainContent?.id
+                                        await deleteContent({ variables: { contentId } })
+                                        await deleteRelatedContentAndRelationships({ variables: { contentId } })
                                         router.push(`/`)
                                     }}
                                 >
@@ -186,73 +200,71 @@ const VideoPage = ({ params }: { params: { influencer_slug: string, content_slug
                                 </Button>
                             </div>
                         </div>
-                    </aside>
-                    <section className="flex-1 h-full overflow-hidden p-4">
-                        <ScrollShadow className="h-full overflow-y-auto px-6">
-                            <div className="space-y-6 pb-8">
-                                <h2 className="uppercase text-xs font-bold text-primary">Main point</h2>
-                                {!mainContent?.summaryJsonb?.conclusion ? (
+                    </ScrollShadow>
+                    <ScrollShadow className=" flex-1 h-full overflow-y-auto px-6">
+                        <div className="space-y-6 pb-8">
+                            <h2 className="uppercase text-xs font-bold text-primary">Main point</h2>
+                            {!mainContent?.summaryJsonb?.conclusion ? (
+                                <SummarySkeleton />
+                            ) : (
+                                <h2 className="text-2xl">{mainContent?.summaryJsonb?.conclusion}</h2>
+                            )}
+                            <div className="w-3/4 mx-auto">
+                                {mainContent?.summaryJsonb?.eli5 &&
+                                    <div className="my-4">
+                                        <h2 className="uppercase font-bold text-primary my-4">Tl;Dw:</h2>
+                                        <ul className="list-disc list-inside  ">
+                                            {mainContent?.summaryJsonb?.eli5?.map((e: string, i: number) =>
+                                                <li key={i}>{e}</li>)
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                            <div className=" ">
+                                <h2 className="uppercase  my-4 font-bold text-primary">Summary</h2>
+                                {!mainContent?.summaryJsonb?.summary ? (
                                     <SummarySkeleton />
                                 ) : (
-                                    <h2 className="text-2xl">{mainContent?.summaryJsonb?.conclusion}</h2>
+                                    <h2 className=" my-4">{mainContent?.summaryJsonb?.summary}</h2>
                                 )}
-                                <div className="w-3/4 mx-auto">
-                                    {mainContent?.summaryJsonb?.eli5 &&
-                                        <div className="my-4">
-                                            <h2 className="uppercase font-bold text-primary my-4">Tl;Dw:</h2>
-                                            <ul className="list-disc list-inside  ">
-                                                {mainContent?.summaryJsonb?.eli5?.map((e: string, i: number) =>
-                                                    <li key={i}>{e}</li>)
-                                                }
-                                            </ul>
-                                        </div>
-                                    }
-                                </div>
-                                <div className=" ">
-                                    <h2 className="uppercase  my-4 font-bold text-primary">Summary</h2>
-                                    {!mainContent?.summaryJsonb?.summary ? (
-                                        <SummarySkeleton />
-                                    ) : (
-                                        <h2 className=" my-4">{mainContent?.summaryJsonb?.summary}</h2>
-                                    )}
-                                </div>
                             </div>
-                            <Button
-                                color="primary"
-                                size="sm"
-                                className="mb-4"
-                                isLoading={isUpdatingAssertionsScore}
-                                onPress={async () => {
-                                    await updateAssertionsScore({
-                                        variables: {
-                                            contentId: mainContent?.id
-                                        }
-                                    })
-                                }}>
-                                {!isUpdatingAssertionsScore && <Icon icon="mdi:refresh" className="inline" />} score updateAssertionsScore
-                            </Button>
-                            {!assertions_contents?.length ? (
-                                <AssertionsSkeleton />
-                            ) : (
-                                <>
-                                    <h2 className="uppercase text-xs my-2">The main Assertions ({assertions_contents?.length})</h2>
-                                    <ul className="my-2">
-                                        {assertions_contents.map((assertions_content: any, index: number) => {
-                                            return (
-                                                <AssertionCard
-                                                    highlightedAssertion={highlightedAssertion}
-                                                    assertions_content={assertions_content}
-                                                    key={index}
-                                                    assertionIndex={index}
-                                                    refetch={refetch}
-                                                />
-                                            )
-                                        })}
-                                    </ul>
-                                </>
-                            )}
-                        </ScrollShadow>
-                    </section>
+                        </div>
+                        <Button
+                            color="primary"
+                            size="sm"
+                            className="mb-4"
+                            isLoading={isUpdatingAssertionsScore}
+                            onPress={async () => {
+                                await updateAssertionsScore({
+                                    variables: {
+                                        contentId: mainContent?.id
+                                    }
+                                })
+                            }}>
+                            {!isUpdatingAssertionsScore && <Icon icon="mdi:refresh" className="inline" />} score updateAssertionsScore
+                        </Button>
+                        {!assertions_contents?.length ? (
+                            <AssertionsSkeleton />
+                        ) : (
+                            <>
+                                <h2 className="uppercase text-xs my-2">The main Assertions by importance ({assertions_contents?.length})</h2>
+                                <ul className="my-2">
+                                    {assertions_contents.map((assertions_content: any, index: number) => {
+                                        return (
+                                            <AssertionCard
+                                                highlightedAssertion={highlightedAssertion}
+                                                assertions_content={assertions_content}
+                                                key={index}
+                                                assertionIndex={index}
+                                                refetch={refetch}
+                                            />
+                                        )
+                                    })}
+                                </ul>
+                            </>
+                        )}
+                    </ScrollShadow>
                 </div>
             </main>
         </>

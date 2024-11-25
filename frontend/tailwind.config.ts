@@ -9,7 +9,17 @@ const config: Config = {
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      keyframes: {
+        'fade-bg': {
+          '0%': { backgroundColor: 'var(--bg-from)' },
+          '100%': { backgroundColor: 'var(--bg-to)' }
+        }
+      },
+      animation: {
+        'fade-bg': 'fade-bg 2s ease-out forwards'
+      }
+    },
   },
   darkMode: 'class',
   plugins: [

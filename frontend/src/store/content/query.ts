@@ -25,6 +25,12 @@ export const GET_CONTENT_SUBSCRIPTION = gql`
           againstAggregateContentScore
         }
       }
+      influencer_contents{
+        influencer{
+          name
+          slug
+        }
+      }  
       assertions_contents(order_by: {weightConclusion: desc}) {
         weightConclusion
         whyRelevant
@@ -51,6 +57,7 @@ export const GET_CONTENT_SUBSCRIPTION = gql`
               title
               contentType
               sourceUrl
+              videoId
               contentScore
               doiNumber
               sciencePaperClassification
@@ -87,6 +94,12 @@ export const GET_CONTENT_QUERY = gql`
           againstAggregateContentScore
         }
       }
+      influencer_contents{
+        influencer{
+          name
+          slug
+        }
+      }  
       assertions_contents(order_by: {weightConclusion: desc}) {
         weightConclusion
         whyRelevant
@@ -112,6 +125,7 @@ export const GET_CONTENT_QUERY = gql`
               id
               title
               contentType
+              videoId
               sourceUrl
               contentScore
               doiNumber
@@ -126,6 +140,34 @@ export const GET_CONTENT_QUERY = gql`
   }
 `
 
+
+export const GET_INFLUENCER_CONTENT_QUERY = gql`
+query GetInfluencerContentQuery($influencerSlug: String! ) {
+  influencers(where: {slug: {_eq: $influencerSlug}}) {
+    ytLastUpdated
+    ytUrl
+    profileImg
+    name
+    influencer_contents {
+      content {
+        id
+        slug
+        videoId
+        title
+        dateAdded
+        contentType
+        proAggregateContentScore
+        againstAggregateContentScore
+        influencer_contents{
+        influencer{
+          slug
+        }
+      }
+      }
+    }
+  }
+}
+`
 
 
 export const GET_ALL_CONTENT_QUERY = gql`

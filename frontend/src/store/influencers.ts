@@ -5,6 +5,7 @@ export const GET_INFLUENCERS_QUERY = gql`
   query GetInfluencersQuery {
     influencers {
       name
+      slug
       profileImg
       ytChannelInfoJsonb
       ytDescription

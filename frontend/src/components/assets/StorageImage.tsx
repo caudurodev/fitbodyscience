@@ -56,17 +56,15 @@ export const StorageImage = ({
   if (!fileId) return null
 
   return (
-    <div style={{ minWidth: width, minHeight: height }}>
+    <div className="w-full">
       {isLoading ? (
-        <div style={{ width, height, backgroundColor: '#f0f0f0' }} />
+        <div className="w-full aspect-square bg-gray-200" />
       ) : (
         <Image
-          {...props}
-          width={width}
-          height={height}
           src={imageUrl}
-          alt={alt || 'Image'}
-          className={className}
+          alt={alt || ''}
+          className={`w-full aspect-square object-cover ${className || ''}`}
+          {...props}
         />
       )}
     </div>

@@ -38,7 +38,6 @@ mutation DeleteContentMutation($contentId: uuid!) {
   delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
     affected_rows
   }
-  
   delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
     affected_rows
   }
@@ -46,9 +45,6 @@ mutation DeleteContentMutation($contentId: uuid!) {
     affected_rows
   }
   delete_assertions(where: {_or: [{contentId: {_eq: $contentId}}, {citationContentId: {_eq: $contentId}}]}) {
-    affected_rows
-  }
-  delete_content(where: {id: {_eq: $contentId}}) {
     affected_rows
   }
 }
@@ -59,7 +55,14 @@ export const DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION = gql`
     delete_content_relationship(where: {parentContentId: {_eq: $contentId}}) {
       affected_rows
     }
-    delete_content(where: {content_relationships: {parentContentId: {_eq: $contentId}}}) {
+    delete_content(
+      where: {
+        _or: [
+          {content_relationships: {parentContentId: {_eq: $contentId}}},
+          {id: {_eq: $contentId}}
+        ]
+      }
+    ) {
       affected_rows
       returning {
         id
@@ -87,10 +90,10 @@ mutation UserUpdateEvidenceScoreMutation($contentId: String!) {
 `
 
 export const USER_UPDATE_ASSERTIONS_SCORE_MUTATION = gql`
-mutation UserUpdateAssertionsScoreMutation($contentId: String!) {
-  updateAssertionsScore(contentId: $contentId) {
-    message
-    success
+  mutation UserUpdateAssertionsScoreMutation($contentId: String!) {
+    updateAssertionsScore(contentId: $contentId) {
+      message
+      success
+    }
   }
-}
 `
