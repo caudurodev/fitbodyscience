@@ -25,6 +25,13 @@ type Mutation {
 }
 
 type Mutation {
+  userAppendEvidenceToAssertion(
+    assertionId: String!
+    contentUrl: String!
+  ): UserAppendEvidenceToAssertionOutput
+}
+
+type Mutation {
   userClassifyEvidence(
     contentId: String!
   ): classifyEvidenceOutput
@@ -84,6 +91,11 @@ type UpdateAssertionsScoreOutput {
 }
 
 type UserSearchMoreEvidenceOutput {
+  message: String
+  success: Boolean
+}
+
+type UserAppendEvidenceToAssertionOutput {
   message: String
   success: Boolean
 }

@@ -245,9 +245,16 @@ export default function Page({ params }: { params: { influencer_slug: string, co
 function NavigateAssertions({ assertions, currentAssertionIndex, onSetCurrentAssertionIndex }: { assertions: any, currentAssertionIndex: number, onSetCurrentAssertionIndex: React.Dispatch<React.SetStateAction<number>> }) {
     const scrollToAssertion = useCallback((index: number) => {
         onSetCurrentAssertionIndex(index);
-        const element = document.getElementById(`assertion_${index}`);
-        element?.scrollIntoView({ behavior: 'smooth' });
-    }, [onSetCurrentAssertionIndex])
+    }, [onSetCurrentAssertionIndex]);
+
+    useEffect(() => {
+        if (currentAssertionIndex >= 0) {
+            const element = document.getElementById(`assertion_${currentAssertionIndex}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, [currentAssertionIndex]);
 
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         if (event.key === 'ArrowUp') {

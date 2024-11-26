@@ -31,13 +31,20 @@ actions:
     permissions:
       - role: user
     comment: userAnalyseContent
+  - name: userAppendEvidenceToAssertion
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/action_user_append_evidence_to_assertion
+      timeout: 120
+    permissions:
+      - role: user
+    comment: userAppendEvidenceToAssertion
   - name: userClassifyEvidence
     definition:
       kind: synchronous
       handler: http://run-ai-fitbodyscience:5000/action_user_classify_evidence
       timeout: 120
     permissions:
-      - role: public
       - role: user
     comment: userClassifyEvidence
   - name: userSearchMoreEvidence
@@ -61,7 +68,6 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_update_evidence_score
       timeout: 120
     permissions:
-      - role: public
       - role: user
     comment: userUpdateEvidenceScore
 custom_types:
@@ -76,4 +82,5 @@ custom_types:
     - name: UserUpdateAssertionScoreOutput
     - name: UpdateAssertionsScoreOutput
     - name: UserSearchMoreEvidenceOutput
+    - name: UserAppendEvidenceToAssertionOutput
   scalars: []

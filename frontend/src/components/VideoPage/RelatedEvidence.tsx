@@ -3,12 +3,16 @@
 
 import {
     Spinner,
-    Button, Chip, Accordion, AccordionItem
+    Button, Chip, Accordion, AccordionItem,
+    Input,
 } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { useMutation } from '@apollo/client'
 import { EvidenceInfo } from '@/components/VideoPage/EvidenceInfo';
-import { USER_SEARCH_MORE_EVIDENCE_MUTATION } from '@/store/action/action'
+import { USER_APPEND_EVIDENCE_TO_ASSERTION_MUTATION, USER_SEARCH_MORE_EVIDENCE_MUTATION } from '@/store/action/action'
+import { useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { toast } from 'react-hot-toast'
 
 
 interface RelatedEvidenceProps {
@@ -22,7 +26,6 @@ export const RelatedEvidence = ({
     const contentAssertions = assertions_content?.assertion?.contents_assertions || [];
     const proEvidence = contentAssertions?.filter((e: any) => e.isProAssertion) || [];
     const conEvidence = contentAssertions?.filter((e: any) => !e.isProAssertion) || [];
-
     const [userSearchMoreEvidence, { loading: isSearchingMoreEvidence }] = useMutation(USER_SEARCH_MORE_EVIDENCE_MUTATION)
     return (
         <>
@@ -113,13 +116,12 @@ export const RelatedEvidence = ({
                         </> :
                         <div>
                             <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
-
                         </div>
                     }
 
                 </AccordionItem>
             </Accordion>
-            <div>
+            <div className="flex gap-2">
                 <Button
                     color="primary"
                     variant="solid"
@@ -135,7 +137,98 @@ export const RelatedEvidence = ({
                 >
                     Find more evidence
                 </Button>
+                <UserAddMoreEvidenceToAssertion assertionId={assertions_content?.assertion?.id} onAddEvidence={refetch} />
             </div>
         </>
+    )
+}
+
+export const UserAddMoreEvidenceToAssertion = ({ assertionId, onAddEvidence }: { assertionId: string, onAddEvidence: () => void }) => {
+
+    const [isShowAddEvidence, setIsShowAddEvidence] = useState(false)
+    const [addMoreEvidence, { loading }] = useMutation(USER_APPEND_EVIDENCE_TO_ASSERTION_MUTATION)
+    const {
+        handleSubmit,
+        control,
+        formState: { errors },
+        reset,
+    } = useForm()
+
+    const onSubmit = async (data: any) => {
+        try {
+            await addMoreEvidence({ variables: { assertionId: assertionId, contentUrl: data.contentUrl } })
+            setIsShowAddEvidence(false)
+            reset()
+            onAddEvidence()
+        } catch (e) {
+            console.log(e)
+            toast.error('Error adding evidence')
+        }
+    }
+    return (
+        <div className="flex flex-col">
+            <div>
+                <Button
+                    color="primary"
+                    variant="solid"
+                    onPress={() => {
+                        setIsShowAddEvidence(!isShowAddEvidence)
+                    }}
+                    className="my-3 "
+                    size="sm"
+                    fullWidth={false}
+                >
+                    Add more evidence
+                </Button>
+            </div>
+            {isShowAddEvidence &&
+                <div>
+                    <form onSubmit={handleSubmit(onSubmit)} className="">
+                        <Controller
+                            name="contentUrl"
+                            control={control}
+                            rules={{
+                                required: true,
+                                pattern: /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+                            }}
+                            render={({ field }) => (
+                                <Input
+                                    {...field}
+                                    isDisabled={loading}
+                                    label="Evidence URL"
+                                    variant="bordered"
+                                    size="lg"
+                                    color="primary"
+                                    startContent={
+                                        <div className="pointer-events-none flex items-center">
+                                            <Icon icon="material-symbols:link" />
+                                        </div>
+                                    }
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                    errorMessage={
+                                        !errors.contentUrl
+                                            ? ''
+                                            : 'Invalid URL'
+                                    }
+                                    isInvalid={!errors.contentUrl ? false : true}
+                                />
+                            )}
+                        />
+                        <div className="my-4 flex self-end w-full">
+                            <Button
+                                isDisabled={loading}
+                                isLoading={loading}
+                                color="primary"
+                                onPress={() => {
+                                    handleSubmit(onSubmit)()
+                                }}
+                            >
+                                Send
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            }
+        </div>
     )
 }

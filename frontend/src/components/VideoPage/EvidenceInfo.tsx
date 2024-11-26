@@ -20,6 +20,7 @@ export const EvidenceInfo = ({ evidence, refetch }: { evidence: any, refetch: ()
     const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
     const [updateEvidenceScore, { loading: isUpdatingEvidenceScore }] = useMutation(USER_UPDATE_EVIDENCE_SCORE_MUTATION)
     const [deleteContentRelationship, { loading: isDeletingContentRelationship }] = useMutation(DELETE_CONTENT_RELATIONSHIP_MUTATION)
+    console.log
     return (
         <>
             <Link href={evidence?.sourceUrl}>{evidence?.title ?? "Not yet downladed..."}</Link>

@@ -23,6 +23,9 @@ from .endpoints.actions.action_update_evidence_score_endpoint import (
 from .endpoints.actions.action_user_search_more_evidence_endpoint import (
     action_user_search_more_evidence_endpoint,
 )
+from .endpoints.actions.action_user_append_evidence_to_assertion_endpoint import (
+    action_user_append_evidence_to_assertion_endpoint,
+)
 from .utils.run_async import run_method_async
 from .scoring.update import update_content_aggregate_score
 from .store.assertions_content import get_content_assertions
@@ -95,6 +98,33 @@ def action_user_classify_evidence_method(input_data):
     try:
         return action_user_classify_evidence_endpoint(
             content_id=input_data["contentId"]
+        )
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
+
+
+@app.route("/action_user_append_evidence_to_assertion", methods=["POST"])
+@require_auth
+@validate_input(
+    required_fields=["assertionId", "contentUrl"],
+    payload_key="input",
+)
+def action_user_append_evidence_to_assertion_method(input_data):
+    """Action to add user content"""
+    try:
+        return action_user_append_evidence_to_assertion_endpoint(
+            assertion_id=input_data["assertionId"],
+            content_url=input_data["contentUrl"],
+        )
+    except Exception as e:
+        logger.error("Error adding content %s", e)
+        return (
+            jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
         )
     except Exception as e:
         logger.error("Error adding content %s", e)

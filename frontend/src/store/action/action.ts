@@ -8,3 +8,14 @@ mutation UserSearchMoreEvidenceMutation($assertionId: String!) {
   }
 }
 `
+
+
+export const USER_APPEND_EVIDENCE_TO_ASSERTION_MUTATION = gql`
+mutation UserAppendEvidenceToAssertionMutation($contentUrl: String!, $assertionId: String!) {
+  userAppendEvidenceToAssertion(assertionId: $assertionId, contentUrl: $contentUrl) {
+    message
+    success
+  }
+}
+
+`

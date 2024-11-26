@@ -149,7 +149,14 @@ def get_content_by_id(content_id: str):
                         slug
                     }
                 }
-            }
+                parent_content{
+                    id
+                    content{
+                        id
+                        title
+                    }
+                }
+                }
             }
         """,
     }
@@ -157,8 +164,8 @@ def get_content_by_id(content_id: str):
         response = make_graphql_call(query)
         return response["data"]["content"][0]
     except Exception:
-        # logger.error(f"Error getting content by URL: {e}")
-        # logger.info("response: %s", response)
+        logger.error(f"Error getting content by id: {e}")
+        logger.info("response: %s", response)
         return None
 
 
