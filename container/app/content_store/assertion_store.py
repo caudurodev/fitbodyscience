@@ -541,6 +541,7 @@ def get_assertion_content(assertion_id):
                         timestamp
                         contents_assertions{
                             content {
+                                id
                                 title
                                 doiNumber
                                 sourceUrl

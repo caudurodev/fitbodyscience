@@ -103,8 +103,11 @@ def get_content_by_url(url: str):
     query = {
         "variables": {"url": url},
         "query": """
-          query GetContentByUrl($url: String!) {
-            content(where: {canonicalUrl: {_eq: $url}}) {
+           query GetContentByUrl($url: String!) {
+            content(where: {_or: [
+                {canonicalUrl: {_eq: $url}},
+                {sourceUrl: {_eq: $url}}
+            ]}) {
                 id
                 slug
                 mediaType
@@ -117,7 +120,7 @@ def get_content_by_url(url: str):
                     }
                 }
             }
-            }
+        }
         """,
     }
     try:

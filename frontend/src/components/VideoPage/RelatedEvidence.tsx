@@ -156,13 +156,17 @@ export const UserAddMoreEvidenceToAssertion = ({ assertionId, onAddEvidence }: {
 
     const onSubmit = async (data: any) => {
         try {
-            await addMoreEvidence({ variables: { assertionId: assertionId, contentUrl: data.contentUrl } })
+            const result = await addMoreEvidence({ variables: { assertionId: assertionId, contentUrl: data.contentUrl } })
             setIsShowAddEvidence(false)
             reset()
             onAddEvidence()
+            if (!result?.data?.userAppendEvidenceToAssertion?.success) {
+                toast.error(`Error adding evidence: ${result?.data?.userAppendEvidenceToAssertion?.message}`)
+            }
+            console.log({ result })
         } catch (e) {
             console.log(e)
-            toast.error('Error adding evidence')
+            toast.error(`Error adding evidence: ${e}`)
         }
     }
     return (

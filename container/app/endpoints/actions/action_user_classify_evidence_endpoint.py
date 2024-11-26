@@ -96,46 +96,47 @@ def classify_evidence(content_id):
             )
         else:
             logger.info(f"Downloading content from {url_to_scrape}")
-            raw_html = download_website(url_to_scrape)
+            # raw_html = download_website(url_to_scrape)
 
-            if not raw_html:
-                logger.error(
-                    f"Error scrape_content_url empty result or error: {url_to_scrape}"
-                )
-                # Try alternative URL if available
-                if url_to_scrape != url and url:
-                    logger.info(f"Trying alternative URL: {url}")
-                    raw_html = download_website(url)
-                    if not raw_html:
-                        logger.error(f"Failed to download from alternative URL: {url}")
-                        return False
-                else:
-                    return False
+            # if not raw_html:
+            #     logger.error(
+            #         f"Error scrape_content_url empty result or error: {url_to_scrape}"
+            #     )
+            #     # Try alternative URL if available
+            #     if url_to_scrape != url and url:
+            #         logger.info(f"Trying alternative URL: {url}")
+            #         raw_html = download_website(url)
+            #         if not raw_html:
+            #             logger.error(f"Failed to download from alternative URL: {url}")
+            #             return False
+            #     else:
+            #         return False
 
-            # Process the HTML to extract main content
-            html_content = get_main_content(raw_html)
+            # # Process the HTML to extract main content
+            # html_content = get_main_content(raw_html)
 
-            if not html_content:
-                logger.error(f"Failed to extract main content from {url_to_scrape}")
-                return False
+            # if not html_content:
+            #     logger.error(f"Failed to extract main content from {url_to_scrape}")
+            #     return False
 
-            if (
-                not isinstance(html_content, dict)
-                or "title" not in html_content
-                or "text" not in html_content
-            ):
-                logger.error(
-                    f"Invalid content structure from {url_to_scrape}: {html_content}"
-                )
-                return False
+            # if (
+            #     not isinstance(html_content, dict)
+            #     or "title" not in html_content
+            #     or "text" not in html_content
+            # ):
+            #     logger.error(
+            #         f"Invalid content structure from {url_to_scrape}: {html_content}"
+            #     )
+            #     return False
 
             # Update content with extracted data
+            data = get_url_content(url_to_scrape=url_to_scrape)
             update_content(
                 content_id,
                 {
-                    "fullText": html_content["text"],
-                    "title": html_content["title"],
-                    "htmlJsonb": html_content,
+                    "fullText": data["text"],
+                    "title": data["title"],
+                    "htmlJsonb": data["htmlJsonb"],
                     "isParsed": True,
                 },
             )
@@ -195,3 +196,40 @@ def action_user_classify_evidence_endpoint(content_id):
     except Exception as e:
         logger.error("Error classifying content: %s", e)
         return jsonify({"message": str(e), "success": False}), 500
+
+
+def get_url_content(url_to_scrape):
+    """Download website content and extract main content"""
+    raw_html = download_website(url_to_scrape)
+    if not raw_html:
+        logger.error(f"Error scrape_content_url empty result or error: {url_to_scrape}")
+        # Try alternative URL if available
+        if url_to_scrape != url and url:
+            logger.info(f"Trying alternative URL: {url}")
+            raw_html = download_website(url)
+            if not raw_html:
+                logger.error(f"Failed to download from alternative URL: {url}")
+                return False
+        else:
+            return False
+
+    # Process the HTML to extract main content
+    html_content = get_main_content(raw_html)
+
+    if not html_content:
+        logger.error(f"Failed to extract main content from {url_to_scrape}")
+        return False
+
+    if (
+        not isinstance(html_content, dict)
+        or "title" not in html_content
+        or "text" not in html_content
+    ):
+        logger.error(f"Invalid content structure from {url_to_scrape}: {html_content}")
+        return False
+
+    return {
+        "fullText": html_content["text"],
+        "title": html_content["title"],
+        "htmlJsonb": html_content,
+    }
