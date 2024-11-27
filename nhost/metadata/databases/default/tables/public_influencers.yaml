@@ -3,8 +3,12 @@ table:
   schema: public
 configuration:
   column_config:
+    is_followed:
+      custom_name: isFollowed
     profile_img:
       custom_name: profileImg
+    user_requests_to_follow:
+      custom_name: userRequestsToFollow
     yt_channelinfo_jsonb:
       custom_name: ytChannelInfoJsonb
     yt_description:
@@ -14,7 +18,9 @@ configuration:
     yt_url:
       custom_name: ytUrl
   custom_column_names:
+    is_followed: isFollowed
     profile_img: profileImg
+    user_requests_to_follow: userRequestsToFollow
     yt_channelinfo_jsonb: ytChannelInfoJsonb
     yt_description: ytDescription
     yt_last_updated: ytLastUpdated
@@ -29,10 +35,43 @@ array_relationships:
           name: influencer_contents
           schema: public
 select_permissions:
+  - role: pro
+    permission:
+      columns:
+        - is_followed
+        - yt_last_updated
+        - yt_channelinfo_jsonb
+        - user_requests_to_follow
+        - name
+        - slug
+        - yt_description
+        - yt_url
+        - id
+        - profile_img
+      filter: {}
+      allow_aggregations: true
+    comment: ""
   - role: public
     permission:
       columns:
+        - is_followed
+        - yt_last_updated
+        - yt_channelinfo_jsonb
+        - user_requests_to_follow
+        - name
+        - slug
+        - yt_description
+        - yt_url
         - id
+        - profile_img
+      filter: {}
+      allow_aggregations: true
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - id
+        - is_followed
         - name
         - profile_img
         - slug
@@ -43,11 +82,14 @@ select_permissions:
       filter: {}
       allow_aggregations: true
     comment: ""
-  - role: user
+update_permissions:
+  - role: pro
     permission:
       columns:
+        - is_followed
         - yt_last_updated
         - yt_channelinfo_jsonb
+        - user_requests_to_follow
         - name
         - slug
         - yt_description
@@ -55,5 +97,12 @@ select_permissions:
         - id
         - profile_img
       filter: {}
-      allow_aggregations: true
+      check: null
+    comment: ""
+  - role: user
+    permission:
+      columns:
+        - user_requests_to_follow
+      filter: {}
+      check: null
     comment: ""

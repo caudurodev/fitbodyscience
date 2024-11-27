@@ -1,86 +1,103 @@
 'use client'
 
-import { 
-  Card, 
-  CardBody, 
-  CardHeader, 
-  Button, 
-  Chip,
+import {
+  Card,
+  CardBody,
+  Button,
   Input,
-  Textarea,
-  Spinner
+  Spinner,
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+  useDisclosure
 } from "@nextui-org/react"
 import { useHydration } from '@/hooks/useHydration'
 import { useQuery, useMutation } from '@apollo/client'
-import { useAuth } from '@nhost/nextjs'
+import { useUserData, useAuthenticationStatus } from '@nhost/nextjs'
 import { useState } from 'react'
 import { gql } from '@apollo/client'
 import { Icon } from '@iconify/react'
+import { useIsProUser } from '@/components/subscription/ProWarningModal'
+import { StorageImage } from '@/components/assets/StorageImage'
 
-const GET_SUGGESTIONS_QUERY = gql`
-  query GetSuggestions {
-    influencer_suggestions(order_by: {created_at: desc}) {
+const GET_INFLUENCERS_QUERY = gql`
+  query GetInfluencers {
+    followed: influencers(where: {isFollowed: {_eq: true}}) {
       id
-      youtube_channel_id
-      channel_name
-      status
-      subscriber_count
-      channel_description
-      thumbnail_url
-      created_at
-      suggested_by_user {
-        displayName
-      }
+      name
+      ytUrl
+      profileImg
+      userRequestsToFollow
     }
-  }
-`
-
-const INSERT_SUGGESTION_MUTATION = gql`
-  mutation InsertSuggestion($youtube_channel_id: String!, $channel_name: String!, $channel_description: String) {
-    insert_influencer_suggestions_one(object: {
-      youtube_channel_id: $youtube_channel_id,
-      channel_name: $channel_name,
-      channel_description: $channel_description
-    }) {
-      id
-    }
-  }
-`
-
-const UPDATE_SUGGESTION_STATUS = gql`
-  mutation UpdateSuggestionStatus($id: uuid!, $status: String!, $processed_by_user_id: uuid!) {
-    update_influencer_suggestions_by_pk(
-      pk_columns: {id: $id}, 
-      _set: {
-        status: $status,
-        processed_at: "now()",
-        processed_by_user_id: $processed_by_user_id
-      }
+    requested: influencers(
+      where: {isFollowed: {_eq: false}}
+      order_by: {userRequestsToFollow: desc}
     ) {
       id
-      status
+      name
+      ytUrl
+      profileImg
+      userRequestsToFollow
+    }
+  }
+`
+
+const INSERT_INFLUENCER_MUTATION = gql`
+  mutation InsertInfluencer($ytUrl: String!) {
+    insert_influencers_one(object: {
+      ytUrl: $ytUrl,
+      userRequestsToFollow: 1
+    }) {
+      id
+      ytUrl
+    }
+  }
+`
+
+const UPDATE_REQUESTS_MUTATION = gql`
+  mutation UpdateRequests($id: uuid!) {
+    update_influencers_by_pk(
+      pk_columns: {id: $id},
+      _inc: {userRequestsToFollow: 1}
+    ) {
+      id
+      userRequestsToFollow
     }
   }
 `
 
 export default function InfluencerQueue() {
-  const { isAuthenticated, isAdmin, user } = useAuth()
-  const [newChannel, setNewChannel] = useState({ id: '', name: '', description: '' })
-  const { data, loading } = useQuery(GET_SUGGESTIONS_QUERY)
-  const [insertSuggestion] = useMutation(INSERT_SUGGESTION_MUTATION, {
-    refetchQueries: [{ query: GET_SUGGESTIONS_QUERY }]
+  const { isAuthenticated, isLoading: isLoadingAuth } = useAuthenticationStatus()
+  const userData = useUserData()
+  const isPro = useIsProUser()
+  const [ytUrl, setYtUrl] = useState('')
+  const { data, loading } = useQuery(GET_INFLUENCERS_QUERY, {
+    fetchPolicy: 'cache-and-network'
   })
-  const [updateStatus] = useMutation(UPDATE_SUGGESTION_STATUS, {
-    refetchQueries: [{ query: GET_SUGGESTIONS_QUERY }]
+  const [insertInfluencer] = useMutation(INSERT_INFLUENCER_MUTATION, {
+    refetchQueries: [{ query: GET_INFLUENCERS_QUERY }]
+  })
+  const [updateRequests] = useMutation(UPDATE_REQUESTS_MUTATION, {
+    refetchQueries: [{ query: GET_INFLUENCERS_QUERY }]
   })
   const isHydrated = useHydration()
 
   if (!isHydrated) return null
+  if (isLoadingAuth) {
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner size="lg" />
+      </div>
+    )
+  }
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <h2 className="text-2xl font-bold">Please Login</h2>
-        <p className="text-default-500">You need to be logged in to view and suggest influencers.</p>
+        <p className="text-default-500">You need to be logged in to suggest influencers.</p>
       </div>
     )
   }
@@ -88,53 +105,86 @@ export default function InfluencerQueue() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await insertSuggestion({
-        variables: {
-          youtube_channel_id: newChannel.id,
-          channel_name: newChannel.name,
-          channel_description: newChannel.description
-        }
+      await insertInfluencer({
+        variables: { ytUrl }
       })
-      setNewChannel({ id: '', name: '', description: '' })
+      setYtUrl('')
     } catch (error) {
-      console.error('Error submitting suggestion:', error)
+      console.error('Error submitting influencer:', error)
     }
   }
 
-  const handleStatusUpdate = async (id: string, newStatus: 'approved' | 'rejected') => {
+  const handleVote = async (id: string) => {
     try {
-      await updateStatus({
-        variables: {
-          id,
-          status: newStatus,
-          processed_by_user_id: user?.id
-        }
+      await updateRequests({
+        variables: { id }
       })
     } catch (error) {
-      console.error('Error updating status:', error)
+      console.error('Error updating votes:', error)
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'success'
-      case 'rejected': return 'danger'
-      default: return 'warning'
-    }
-  }
+  const renderTable = (influencers: any[], title: string) => (
+    <Card className="my-4">
+      <CardBody>
+        <h3 className="text-xl font-bold mb-4">{title}</h3>
+        <Table aria-label={title}>
+          <TableHeader>
+            <TableColumn>INFLUENCER</TableColumn>
+            <TableColumn>CHANNEL</TableColumn>
+            <TableColumn>REQUESTS</TableColumn>
+            <TableColumn>ACTIONS</TableColumn>
+          </TableHeader>
+          <TableBody>
+            {influencers?.map((influencer) => (
+              <TableRow key={influencer.id}>
+                <TableCell className="flex items-center gap-2">
+                  {influencer.profileImg && (
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <StorageImage fileId={influencer.profileImg} />
+                    </div>
+                  )}
+                  {influencer.name || 'Unnamed Channel'}
+                </TableCell>
+                <TableCell>
+                  <a href={influencer.ytUrl} target="_blank" rel="noopener noreferrer" className="text-primary">
+                    View Channel
+                  </a>
+                </TableCell>
+                <TableCell>{influencer.userRequestsToFollow}</TableCell>
+                <TableCell>
+                  {!influencer.isFollowed && (
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      onClick={() => handleVote(influencer.id)}
+                      startContent={<Icon icon="mdi:thumb-up" />}
+                    >
+                      Vote
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardBody>
+    </Card>
+  )
 
   return (
     <>
       <section className="mb-24">
         <div className="space-y-4">
-          <p className="text-primary font-medium">Influencer Queue</p>
+          <p className="text-primary font-medium">Suggest Influencers</p>
           <h1 className="text-6xl font-bold tracking-tight">
-            Suggest new <span className="text-gradient">Influencers</span><br />
+            Add new <span className="text-gradient">Influencers</span><br />
             for analysis
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
             Help us grow our database by suggesting fitness influencers for analysis.
-            {!isAdmin && " Pro users get priority processing of their suggestions."}
+            {!isPro && " Pro users get priority processing of their suggestions."}
           </p>
         </div>
       </section>
@@ -142,39 +192,21 @@ export default function InfluencerQueue() {
       {/* Suggestion Form */}
       <section className="mb-12">
         <Card className="max-w-2xl">
-          <CardBody className="gap-4">
+          <CardBody>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                label="YouTube Channel ID"
-                placeholder="Enter channel ID"
-                value={newChannel.id}
-                onChange={(e) => setNewChannel(prev => ({ ...prev, id: e.target.value }))}
+                label="YouTube Channel or Video URL"
+                placeholder="Enter YouTube URL"
+                value={ytUrl}
+                onChange={(e) => setYtUrl(e.target.value)}
                 required
                 variant="bordered"
                 startContent={
                   <Icon icon="mdi:youtube" className="text-2xl text-default-400" />
                 }
               />
-              <Input
-                label="Channel Name"
-                placeholder="Enter channel name"
-                value={newChannel.name}
-                onChange={(e) => setNewChannel(prev => ({ ...prev, name: e.target.value }))}
-                required
-                variant="bordered"
-                startContent={
-                  <Icon icon="mdi:account" className="text-2xl text-default-400" />
-                }
-              />
-              <Textarea
-                label="Channel Description"
-                placeholder="Enter channel description"
-                value={newChannel.description}
-                onChange={(e) => setNewChannel(prev => ({ ...prev, description: e.target.value }))}
-                variant="bordered"
-              />
-              <Button 
-                color="primary" 
+              <Button
+                color="primary"
                 type="submit"
                 className="w-full"
                 startContent={<Icon icon="mdi:plus" />}
@@ -186,66 +218,18 @@ export default function InfluencerQueue() {
         </Card>
       </section>
 
-      {/* Queue List */}
+      {/* Influencers Tables */}
       <section className="mb-24">
-        <h2 className="text-gradient text-2xl font-bold uppercase py-2">Suggestion Queue</h2>
+        <h2 className="text-gradient text-2xl font-bold uppercase py-2">Current Influencers</h2>
         {loading ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.influencer_suggestions.map((suggestion: any) => (
-              <Card key={suggestion.id} className="bg-default-50 dark:bg-default-100">
-                <CardHeader className="flex justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">{suggestion.channel_name}</h3>
-                    <p className="text-small text-default-500">
-                      by {suggestion.suggested_by_user.displayName}
-                    </p>
-                  </div>
-                  <Chip 
-                    color={getStatusColor(suggestion.status)}
-                    variant="flat"
-                    startContent={
-                      suggestion.status === 'pending' ? 
-                        <Icon icon="mdi:clock-outline" /> :
-                      suggestion.status === 'approved' ?
-                        <Icon icon="mdi:check" /> :
-                        <Icon icon="mdi:close" />
-                    }
-                  >
-                    {suggestion.status}
-                  </Chip>
-                </CardHeader>
-                <CardBody>
-                  <p className="text-small text-default-500">
-                    {suggestion.channel_description || 'No description provided'}
-                  </p>
-                  {isAdmin && suggestion.status === 'pending' && (
-                    <div className="flex gap-2 mt-4">
-                      <Button 
-                        color="success" 
-                        size="sm"
-                        onClick={() => handleStatusUpdate(suggestion.id, 'approved')}
-                        startContent={<Icon icon="mdi:check" />}
-                      >
-                        Approve
-                      </Button>
-                      <Button 
-                        color="danger" 
-                        size="sm"
-                        onClick={() => handleStatusUpdate(suggestion.id, 'rejected')}
-                        startContent={<Icon icon="mdi:close" />}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
-            ))}
-          </div>
+          <>
+            {renderTable(data?.followed, 'Currently Following')}
+            {renderTable(data?.requested, 'Requested Influencers')}
+          </>
         )}
       </section>
     </>

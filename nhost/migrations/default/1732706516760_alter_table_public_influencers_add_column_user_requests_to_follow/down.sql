@@ -1,0 +1,4 @@
+-- Could not auto-generate a down migration.
+-- Please write an appropriate down migration for the SQL below:
+-- alter table "public"."influencers" add column "user_requests_to_follow" numeric
+--  null default '0';
