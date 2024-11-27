@@ -25,7 +25,7 @@ const config: Config = {
   plugins: [
     nextui({
       // prefix: 'nextui',
-      // addCommonColors: true,
+      addCommonColors: true,
       layout: {},
       themes: {
         light: {
@@ -40,7 +40,7 @@ const config: Config = {
             },
             secondary: {
               DEFAULT: "#cc8840",
-              foreground: "#0e0801",
+              foreground: "#ECE5DC",
             },
             default: {
               DEFAULT: "#f2e9bd",

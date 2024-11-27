@@ -109,6 +109,29 @@ insert_permissions:
         - id
     comment: ""
 select_permissions:
+  - role: pro
+    permission:
+      columns:
+        - is_fallacy
+        - citations
+        - against_evidence_aggregate_score
+        - pro_evidence_aggregate_score
+        - assertion_search_verify
+        - content_context
+        - evidence_type
+        - original_sentence
+        - source
+        - standalone_assertion_reliability
+        - text
+        - timestamp
+        - date_created
+        - date_last_modified
+        - citation_content_id
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
   - role: public
     permission:
       columns:

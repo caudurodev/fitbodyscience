@@ -37,7 +37,7 @@ def action_user_append_evidence_to_assertion_endpoint(assertion_id, content_url)
         # only science allowed here, no videos or other media
         assertion = get_assertion_content(assertion_id)
         parent_content_id = assertion.get("contentId")
-        # logger.warn("parent_content_id: %s", parent_content_id)
+        # logger.warn("parent_content_id: %s", parent_conx§tent_id)
         # logger.warn("content_id: %s", content_id)
 
         contents_assertions = assertion.get("contents_assertions", [])

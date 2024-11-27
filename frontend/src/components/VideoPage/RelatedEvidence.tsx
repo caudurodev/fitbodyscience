@@ -2,7 +2,7 @@
 'use client'
 
 import {
-    Spinner,
+    Spinner, Badge,
     Button, Chip, Accordion, AccordionItem,
     Input,
 } from "@nextui-org/react";
@@ -10,9 +10,15 @@ import { Icon } from '@iconify/react'
 import { useMutation } from '@apollo/client'
 import { EvidenceInfo } from '@/components/VideoPage/EvidenceInfo';
 import { USER_APPEND_EVIDENCE_TO_ASSERTION_MUTATION, USER_SEARCH_MORE_EVIDENCE_MUTATION } from '@/store/action/action'
-import { useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
+import { motion } from 'framer-motion'
+
+import { ProWarningModal, ProWarningModalHandle, useIsProUser } from "@/components/subscription/ProWarningModal";
+
+
+
 
 
 interface RelatedEvidenceProps {
@@ -27,8 +33,12 @@ export const RelatedEvidence = ({
     const proEvidence = contentAssertions?.filter((e: any) => e.isProAssertion) || [];
     const conEvidence = contentAssertions?.filter((e: any) => !e.isProAssertion) || [];
     const [userSearchMoreEvidence, { loading: isSearchingMoreEvidence }] = useMutation(USER_SEARCH_MORE_EVIDENCE_MUTATION)
+    const { isPro } = useIsProUser()
+    const proModalRef = useRef<ProWarningModalHandle>(null);
+
     return (
         <>
+            <ProWarningModal ref={proModalRef} />
             <Accordion
                 showDivider={false}
                 itemClasses={{
@@ -118,26 +128,32 @@ export const RelatedEvidence = ({
                             <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
                         </div>
                     }
-
                 </AccordionItem>
             </Accordion>
-            <div className="flex gap-2">
-                <Button
-                    color="primary"
-                    variant="solid"
-                    isLoading={isSearchingMoreEvidence}
-                    onPress={async () => {
-                        console.log('Search for evidence')
-                        await userSearchMoreEvidence({ variables: { assertionId: assertions_content?.assertion?.id } })
-                        refetch()
-                    }}
-                    className="my-3 "
-                    size="sm"
-                    fullWidth={false}
-                >
-                    Find more evidence
-                </Button>
-                <UserAddMoreEvidenceToAssertion assertionId={assertions_content?.assertion?.id} onAddEvidence={refetch} />
+            <div className="my-4">
+                <Badge content="PRO" color="default" size="sm" >
+                    <Button
+                        color="secondary"
+                        variant="solid"
+                        isLoading={isSearchingMoreEvidence}
+                        onPress={async () => {
+                            if (!isPro) {
+                                proModalRef.current?.open();
+                                return
+                            }
+                            console.log('Search for evidence')
+                            await userSearchMoreEvidence({ variables: { assertionId: assertions_content?.assertion?.id } })
+                            refetch()
+                        }}
+                        size="sm"
+                        fullWidth={false}
+                    >
+                        AI Search
+                    </Button>
+                </Badge>
+                <div className="my-4">
+                    <UserAddMoreEvidenceToAssertion assertionId={assertions_content?.assertion?.id} onAddEvidence={refetch} />
+                </div>
             </div>
         </>
     )
@@ -170,24 +186,29 @@ export const UserAddMoreEvidenceToAssertion = ({ assertionId, onAddEvidence }: {
         }
     }
     return (
-        <div className="flex flex-col">
+        <>
             <div>
-                <Button
-                    color="primary"
-                    variant="solid"
-                    onPress={() => {
-                        setIsShowAddEvidence(!isShowAddEvidence)
-                    }}
-                    className="my-3 "
-                    size="sm"
-                    fullWidth={false}
-                >
-                    Add more evidence
-                </Button>
+                <Badge content="PRO" color="default" size="sm">
+                    <Button
+                        color="secondary"
+                        variant="solid"
+                        onPress={() => {
+                            setIsShowAddEvidence(!isShowAddEvidence)
+                        }}
+                        size="sm"
+                    >
+                        {isShowAddEvidence ? 'Close' : 'Add'}
+                    </Button>
+                </Badge>
             </div>
             {isShowAddEvidence &&
-                <div>
-                    <form onSubmit={handleSubmit(onSubmit)} className="">
+                <motion.div
+                    className="my-4"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <form onSubmit={handleSubmit(onSubmit)} className="w-full">
                         <Controller
                             name="contentUrl"
                             control={control}
@@ -218,7 +239,7 @@ export const UserAddMoreEvidenceToAssertion = ({ assertionId, onAddEvidence }: {
                                 />
                             )}
                         />
-                        <div className="my-4 flex self-end w-full">
+                        <div className="my-4 flex justify-end">
                             <Button
                                 isDisabled={loading}
                                 isLoading={loading}
@@ -231,8 +252,8 @@ export const UserAddMoreEvidenceToAssertion = ({ assertionId, onAddEvidence }: {
                             </Button>
                         </div>
                     </form>
-                </div>
+                </motion.div>
             }
-        </div>
+        </>
     )
 }
