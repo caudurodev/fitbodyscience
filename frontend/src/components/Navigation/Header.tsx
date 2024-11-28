@@ -39,9 +39,41 @@ export const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const menuItems = [
-        { label: "Browse", route: "/" },
-        { label: "Influencers", route: "/influencers" },
-        { label: "Add", route: "/add" },
+        {
+            label: "Home",
+            href: "/",
+        },
+        {
+            label: "Influencers",
+            href: "/influencers",
+        },
+        {
+            label: "FAQ",
+            href: "/faq",
+        },
+        {
+            label: "Contact",
+            href: "/contact",
+        },
+    ];
+
+    const userMenuItems = [
+        {
+            label: "Account",
+            href: "/account",
+        },
+        {
+            label: "Privacy Policy",
+            href: "/privacy-policy",
+        },
+        {
+            label: "Terms & Conditions",
+            href: "/terms",
+        },
+        {
+            label: "Sign Out",
+            onClick: () => signOut(),
+        },
     ];
 
     return (
@@ -78,15 +110,13 @@ export const Header = () => {
                         <Button
                             variant="light"
                             color="secondary"
-                            className={pathname === item.route ? "bg-secondary/20 font-bold" : ""}
-                            onPress={() => { router.push(item.route) }}
+                            className={pathname === item.href ? "bg-secondary/20 font-bold" : ""}
+                            onPress={() => { router.push(item.href) }}
                         >
                             {item.label}
                         </Button>
                     </NavbarItem>
                 ))}
-
-
             </NavbarContent>
             {!isMobile &&
                 <NavbarContent justify="end">
@@ -149,24 +179,16 @@ export const Header = () => {
                                                 variant="flat"
                                                 color="primary"
                                             >
-                                                <DropdownItem
-                                                    key="account"
-                                                    as={Link}
-                                                    href="/account"
-                                                >
-                                                    My Account
-                                                </DropdownItem>
-                                                <DropdownItem
-                                                    key="logout"
-                                                    as={Link}
-                                                    href="#"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        signOut();
-                                                    }}
-                                                >
-                                                    Log Out
-                                                </DropdownItem>
+                                                {userMenuItems.map((item, index) => (
+                                                    <DropdownItem
+                                                        key={item.label}
+                                                        as={Link}
+                                                        href={item.href}
+                                                        onClick={item.onClick}
+                                                    >
+                                                        {item.label}
+                                                    </DropdownItem>
+                                                ))}
                                             </DropdownMenu>
                                         </Dropdown>
                                     </div>
@@ -239,14 +261,14 @@ export const Header = () => {
                                             }
                                         }}
                                     >
-                                        <NavbarMenuItem key={`${item.label}-${index}`} isActive={pathname === item.route}>
+                                        <NavbarMenuItem key={`${item.label}-${index}`} isActive={pathname === item.href}>
                                             <Button
                                                 variant="solid"
                                                 color="primary"
-                                                className={`w-full ${pathname === item.route ? "bg-primary-600 font-bold text-background" : ""}`}
+                                                className={`w-full ${pathname === item.href ? "bg-primary-600 font-bold text-background" : ""}`}
                                                 onPress={() => {
                                                     setIsMenuOpen(false);
-                                                    router.push(item.route);
+                                                    router.push(item.href);
                                                 }}
                                             >
                                                 {item.label}

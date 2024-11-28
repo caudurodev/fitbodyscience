@@ -6,7 +6,7 @@ import { Icon } from '@iconify/react';
 export const CardMosaic = ({ items }: { items: any[] }) => {
     if (!items) { return null }
     return (
-        <div className=" gap-6 grid grid-cols-3">
+        <div className=" gap-6 grid sm:grid-cols-3">
             {items.map((item, index) => (
                 <CardBottomCaptionItem key={index} item={item} />
             ))}

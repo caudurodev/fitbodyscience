@@ -134,7 +134,9 @@ export default function PlansPage() {
           <p className="text-default-500 mb-8 max-w-2xl mx-auto">
             Buy credits only when you need them. Each €5 pack includes 100 credits - use them anytime:
           </p>
-          <div className="overflow-x-auto">
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="mx-auto max-w-3xl w-full bg-default-50 dark:bg-default-100 rounded-lg overflow-hidden">
               <thead className="bg-default-200 dark:bg-default-50">
                 <tr>
@@ -167,6 +169,50 @@ export default function PlansPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4 px-4">
+            <Card className="bg-default-50 dark:bg-default-100">
+              <CardBody>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">AI Evidence Search</h4>
+                  <Chip size="sm" className="bg-primary/20 text-primary">1 credit</Chip>
+                </div>
+                <p className="text-default-500 text-sm">Use AI to search for more supporting or opposing evidence</p>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-default-50 dark:bg-default-100">
+              <CardBody>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">Study Analysis</h4>
+                  <Chip size="sm" className="bg-primary/20 text-primary">5 credits</Chip>
+                </div>
+                <p className="text-default-500 text-sm">Access to detailed study analysis</p>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-default-50 dark:bg-default-100">
+              <CardBody>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">Single Video</h4>
+                  <Chip size="sm" className="bg-primary/20 text-primary">10 credits</Chip>
+                </div>
+                <p className="text-default-500 text-sm">Fact-check claims in a specific video</p>
+              </CardBody>
+            </Card>
+
+            <Card className="bg-default-50 dark:bg-default-100">
+              <CardBody>
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold">Add Channel</h4>
+                  <Chip size="sm" className="bg-primary/20 text-primary">100 credits</Chip>
+                </div>
+                <p className="text-default-500 text-sm">Add to our list of followed channels</p>
+              </CardBody>
+            </Card>
+          </div>
+
           <p className="text-default-500 mt-4 text-sm">
             Credits never expire. Buy them once, use them anytime.
           </p>

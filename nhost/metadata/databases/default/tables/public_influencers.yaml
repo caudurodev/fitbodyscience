@@ -75,6 +75,7 @@ select_permissions:
         - name
         - profile_img
         - slug
+        - user_requests_to_follow
         - yt_channelinfo_jsonb
         - yt_description
         - yt_last_updated

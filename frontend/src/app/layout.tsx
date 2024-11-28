@@ -5,11 +5,13 @@ import { NhostProvider } from "@nhost/nextjs";
 import { NextUIProvider } from '@nextui-org/react'
 import { NhostApolloProvider } from '@nhost/react-apollo'
 import { Header } from "@/components/Navigation/Header";
+import { Footer } from '@/components/layout/Footer'
 import { useHydration } from '@/hooks/useHydration'
 import { ThemeProvider as NextThemeProvider, type ThemeProviderProps } from "next-themes";
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 import { nhost } from '@/utils/nhost';
+import { usePathname } from 'next/navigation';
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -23,6 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const isHydrated = useHydration()
+  const pathname = usePathname()
+  const hideFooter = pathname.includes('/video/')
   if (!isHydrated) { return <html><body></body></html> }
   return (
     <html lang="en" suppressHydrationWarning>
@@ -34,10 +38,13 @@ export default function RootLayout({
           <NhostApolloProvider nhost={nhost}>
             <NextUIProvider>
               <ThemeProvider attribute="class" defaultTheme="light">
-                <Header />
-                <main className="px-4 sm:px-8">
-                  {children}
-                </main>
+                <div className="min-h-screen flex flex-col">
+                  <Header />
+                  <main className="flex-grow px-4 sm:px-8">
+                    {children}
+                  </main>
+                  {!hideFooter && <Footer />}
+                </div>
                 <Toaster position="bottom-right" />
               </ThemeProvider>
             </NextUIProvider>

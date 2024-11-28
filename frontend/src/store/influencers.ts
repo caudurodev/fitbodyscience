@@ -1,9 +1,19 @@
-
 import { gql } from '@apollo/client'
 
 export const GET_INFLUENCERS_QUERY = gql`
-  query GetInfluencersQuery {
-    influencers {
+  query GetInfluencersQuery($search: String, $offset: Int, $limit: Int) {
+    influencers(
+      where: {
+        _or: [
+          { name: { _ilike: $search } },
+          { ytDescription: { _ilike: $search } }
+        ]
+      }
+      limit: $limit
+      offset: $offset
+      order_by: { name: asc }
+    ) {
+      id
       name
       slug
       profileImg
@@ -19,7 +29,14 @@ export const GET_INFLUENCERS_QUERY = gql`
         }
       }
     }
-    influencers_aggregate {
+    influencers_aggregate(
+      where: {
+        _or: [
+          { name: { _ilike: $search } },
+          { ytDescription: { _ilike: $search } }
+        ]
+      }
+    ) {
       aggregate {
         count
       }
