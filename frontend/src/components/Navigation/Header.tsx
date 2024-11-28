@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { Icon } from '@iconify/react'
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useResponsive } from "@/hooks/useResponsive";
 import { LoginModal } from "@/components/auth/LoginModal";
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSignOut, useUserData, useAuthenticationStatus } from '@nhost/nextjs'
 import {
     Navbar,
@@ -31,6 +32,7 @@ export const Header = () => {
     const { isAuthenticated, isLoading: isLoadingAuth } =
         useAuthenticationStatus()
     const router = useRouter()
+    const pathname = usePathname()
     const { signOut } = useSignOut()
 
     const { isMobile } = useResponsive()
@@ -47,6 +49,7 @@ export const Header = () => {
             maxWidth="2xl"
             onMenuOpenChange={setIsMenuOpen}
             isBlurred={false}
+            isMenuOpen={isMenuOpen}
             className="sm:mb-16 mb-8 px-4 sm:px-8"
         >
             <NavbarContent className="-ml-[20px]">
@@ -54,13 +57,13 @@ export const Header = () => {
                     <NavbarMenuToggle
                         icon={isMenuOpen ? <Icon icon="ic:outline-close" /> : <Icon icon="ic:outline-menu" />}
                         aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-                        className="sm:hidden text-8xl text-primary"
+                        className={`sm:hidden text-8xl  text-primary ${isMenuOpen ? "font-bold" : ""}`}
                     />
                 }
                 <NavbarBrand>
                     <Link
                         onPress={() => { router.push('/') }}
-                        className="font-bold sm:text-2xl text-xl cursor-pointer text-foreground"
+                        className="font-bold sm:text-2xl text-2xl cursor-pointer text-foreground"
                     >
                         <span className="text-primary">Fit</span>&nbsp;
                         <span className="text-gradient-logo">Body</span>&nbsp;
@@ -75,6 +78,7 @@ export const Header = () => {
                         <Button
                             variant="light"
                             color="secondary"
+                            className={pathname === item.route ? "bg-secondary/20 font-bold" : ""}
                             onPress={() => { router.push(item.route) }}
                         >
                             {item.label}
@@ -174,31 +178,148 @@ export const Header = () => {
                 </NavbarContent>
             }
 
-            <NavbarMenu>
-                <>
-                    {menuItems.map((item, index) => (
-                        <NavbarMenuItem key={`${item.label}-${index}`}>
-                            <Button
-                                variant="solid"
-                                color="primary"
-                                onPress={() => {
-                                    router.push(item.route);
-                                    setIsMenuOpen(false);
-                                }}
-                                className="w-full"
-                            >
-                                {item.label}
-                            </Button>
-                        </NavbarMenuItem>
-                    ))}
+            <NavbarMenu
+                motionProps={{
+                    initial: { opacity: 0, height: 0 },
+                    animate: {
+                        opacity: 1,
+                        height: "auto",
+                        transition: {
+                            duration: 0.2,
+                            ease: "easeInOut"
+                        }
+                    },
+                    exit: {
+                        opacity: 0,
+                        height: 0,
+                        transition: {
+                            delay: 0.1,
+                            duration: 0.3,
+                            ease: "easeInOut"
+                        }
+                    }
+                }}
+            >
+                <AnimatePresence mode="wait">
+                    {isMenuOpen && (
+                        <motion.div
+                            key="mobile-menu"
+                            initial={{ opacity: 0 }}
+                            animate={{
+                                opacity: 1, transition: {
+                                    duration: 0.2,
+                                    ease: "easeInOut"
+                                }
+                            }}
+                            exit={{ opacity: 0 }}
 
-                    <>
-                        <h6 className="flex items-center  mt-8">
-                            <span className="text-sm mr-3">Dark Mode</span>
-                            <ThemeSwitcher />
-                        </h6>
-                    </>
-                </>
+                            className="flex flex-col gap-2"
+                        >
+                            <AnimatePresence>
+                                {menuItems.map((item, index) => (
+                                    <motion.div
+                                        key={`div-${item.label}-${index}-motion`}
+                                        initial={{ opacity: 0, y: -20 }}
+                                        animate={{
+                                            opacity: 1,
+                                            y: 0,
+                                            transition: {
+                                                duration: 0.3,
+                                                delay: 0.2 + index * 0.1,
+                                                ease: "easeInOut"
+                                            }
+                                        }}
+                                        exit={{
+                                            opacity: 0,
+                                            y: -20,
+                                            transition: {
+                                                duration: 0.2,
+                                                delay: (menuItems.length - index - 1) * 0.1,
+                                                ease: "easeInOut"
+                                            }
+                                        }}
+                                    >
+                                        <NavbarMenuItem key={`${item.label}-${index}`} isActive={pathname === item.route}>
+                                            <Button
+                                                variant="solid"
+                                                color="primary"
+                                                className={`w-full ${pathname === item.route ? "bg-primary-600 font-bold text-background" : ""}`}
+                                                onPress={() => {
+                                                    setIsMenuOpen(false);
+                                                    router.push(item.route);
+                                                }}
+                                            >
+                                                {item.label}
+                                            </Button>
+                                        </NavbarMenuItem>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+
+                            {isAuthenticated ? (
+                                <>
+                                    <motion.div >
+                                        <h6 className="flex items-center mt-8">
+                                            <span className="text-sm mr-3">Dark Mode</span>
+                                            <ThemeSwitcher />
+                                        </h6>
+                                    </motion.div>
+
+                                    <motion.div>
+                                        <h6 className="text-lg mt-8">Hi {userData?.displayName}!</h6>
+                                        <Button
+                                            variant="solid"
+                                            color="secondary"
+                                            onPress={() => {
+                                                setIsMenuOpen(false);
+                                                router.push('/account');
+                                            }}
+                                            className="w-full mt-2"
+                                        >
+                                            My Account
+                                        </Button>
+                                        <Button
+                                            variant="solid"
+                                            color="danger"
+                                            onPress={() => {
+                                                setIsMenuOpen(false);
+                                                signOut();
+                                            }}
+                                            className="w-full mt-2"
+                                        >
+                                            Log Out
+                                        </Button>
+                                    </motion.div>
+                                </>
+                            ) : (
+                                <motion.div variants={{
+                                    open: {
+                                        opacity: 1,
+                                        y: 0,
+                                        transition: { duration: 0.4, ease: "easeOut" }
+                                    },
+                                    closed: {
+                                        opacity: 0,
+                                        y: -10,
+                                        transition: { duration: 0.4, ease: "easeIn" }
+                                    }
+                                }}>
+                                    <h6 className="flex items-center mt-8">
+                                        <span className="text-sm mr-3">Dark Mode</span>
+                                        <ThemeSwitcher />
+                                    </h6>
+                                    <div className="mt-8">
+                                        <LoginModal
+                                            buttonLabel="Login or join"
+                                            defaultTab="register"
+                                            setToggleOpen={() => setIsMenuOpen(false)}
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </NavbarMenu>
         </Navbar>
     );

@@ -11,6 +11,8 @@ export const GET_INFLUENCERS_QUERY = gql`
       ytDescription
       ytLastUpdated
       ytUrl
+      isFollowed
+      userRequestsToFollow
       influencer_contents_aggregate{
         aggregate{
           count

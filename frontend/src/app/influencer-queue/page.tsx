@@ -11,8 +11,8 @@ import {
   TableBody,
   TableColumn,
   TableRow,
+  Link,
   TableCell,
-  useDisclosure
 } from "@nextui-org/react"
 import { useHydration } from '@/hooks/useHydration'
 import { useQuery, useMutation } from '@apollo/client'
@@ -183,9 +183,9 @@ export default function InfluencerQueue() {
             for analysis
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
-            Help us grow our database by suggesting fitness influencers for analysis.
-            {!isPro && " Pro users get priority processing of their suggestions."}
+            Is there an science based fitness influencer you would like to see us follow and check?{' '}
           </p>
+          <Link size="lg" color="secondary" href="/plans">Note: Pro users have priority processing of their suggestions.</Link>
         </div>
       </section>
 
