@@ -12,6 +12,7 @@ import {
 import { ReactNode, forwardRef, useImperativeHandle } from "react"
 import { useUserData, useAuthenticationStatus } from '@nhost/nextjs'
 import { useCallback, useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface ProWarningModalProps {
     children?: ReactNode;
@@ -31,7 +32,8 @@ export const useIsProUser = () => {
     const showModalVerdict = useCallback(() => {
         if (isLoading) return false
         if (!isAuthenticated || !userData) return false
-        if (isAuthenticated && userData?.defaultRole !== 'pro') return false
+        const isProRoleFound = userData?.defaultRole === 'pro' || !!userData?.roles.find(role => role === 'pro')
+        if (!isProRoleFound) return false
         return true
     }, [userData, isAuthenticated, isLoading])
     useEffect(() => {
@@ -45,6 +47,7 @@ export const useIsProUser = () => {
 
 const ProWarningModalComponent = forwardRef<ProWarningModalHandle, ProWarningModalProps>((props, ref) => {
     const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure()
+    const router = useRouter()
     useImperativeHandle(ref, () => ({
         open: () => onOpen(),
         close: () => onClose()
@@ -78,7 +81,9 @@ const ProWarningModalComponent = forwardRef<ProWarningModalHandle, ProWarningMod
                             </Button>
                             <Button
                                 color="primary"
-                                onPress={onClose}
+                                onPress={() => {
+                                    router.push('/plans')
+                                }}
                                 className="bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
                             >
                                 Upgrade to Pro

@@ -10,7 +10,7 @@ def evidence_score(content_id):
     science_paper_classification = get_content_property_by_id(
         content_id, "sciencePaperClassification"
     )
-    # #logger.info("science_paper_classification: %s", science_paper_classification)
+    logger.info("science_paper_classification: %s", science_paper_classification)
     if not science_paper_classification:
         logger.error(
             "No sciencePaperClassification found for content_id: %s", content_id
@@ -27,7 +27,9 @@ def calculate_evidence_score(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Calculate the evidence score based on the provided payload"""
     # Handle case where payload is a list
     if isinstance(payload, list):
-        logger.warning("Received list instead of dict for evidence scoring, using first item")
+        logger.warning(
+            "Received list instead of dict for evidence scoring, using first item"
+        )
         if not payload:
             return {"totalScore": 0, "normalizedScore": 0}
         payload = payload[0]

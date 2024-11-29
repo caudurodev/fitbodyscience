@@ -2,7 +2,7 @@
 
 import os
 import json
-from crewai import Agent, Task, Crew
+from crewai import Agent, Task, Crew, LLM
 from crewai_tools import SerperDevTool
 from ..utils.config import logger, settings
 from ..content_store.assertion_store import get_assertion_content
@@ -11,6 +11,19 @@ from ..utils.llm import extract_json_part_from_string
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
 os.environ["OPENAI_MODEL_NAME"] = "gpt-4o"
 os.environ["SERPER_API_KEY"] = settings.SERPER_API_KEY
+
+os.environ["TOGETHERAI_API_KEY"] = settings.TOGETHER_API_KEY
+
+# Configure LiteLLM with Together.ai
+llm = LLM(
+    provider="together_ai",  # Using together_ai as per litellm docs
+    model="together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    api_key=settings.TOGETHER_API_KEY,
+    config={
+        "temperature": 0.7,
+        "max_tokens": 30096,
+    },
+)
 
 
 def get_opposing_viewpoints(assertion_id):
@@ -134,6 +147,7 @@ def get_opposing_viewpoints(assertion_id):
         verbose=False,
         allow_delegation=False,
         tools=[search_tool],
+        llm=llm,
     )
 
     science_reviewer = Agent(
@@ -156,6 +170,7 @@ def get_opposing_viewpoints(assertion_id):
         verbose=False,
         allow_delegation=True,
         tools=[search_tool],
+        llm=llm,
     )
 
     evidence = Task(
@@ -253,6 +268,7 @@ def get_opposing_viewpoints(assertion_id):
         output_format="json",
         output_json=True,
         verbose=0,
+        llm=llm,
     )
 
     result = crew.kickoff()

@@ -1,6 +1,6 @@
 'use client'
 
-import { Spinner, ScrollShadow, Button, Card, Chip } from "@nextui-org/react";
+import { Spinner, ScrollShadow, Button, Chip } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { motion } from 'framer-motion'
 import { useSubscription, useMutation, useQuery } from '@apollo/client'
@@ -12,7 +12,7 @@ import {
     USER_ANALYSE_CONTENT_MUTATION,
     DELETE_CONTENT_MUTATION,
     DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION,
-    USER_UPDATE_ASSERTIONS_SCORE_MUTATION
+    // USER_UPDATE_ASSERTIONS_SCORE_MUTATION
 } from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
 import { YouTubePlayer } from '@/components/YouTubePlayer';
@@ -20,13 +20,14 @@ import { SummarySkeleton, AssertionsSkeleton } from '@/components/ContentSkeleto
 import { ContentActivityFeed } from "@/components/notifications/ContentActivityFeed";
 import { AssertionCard } from '@/components/VideoPage/AssertionCard';
 import { convertTimestampToSeconds } from '@/utils/time'
+import { useResponsive } from '@/hooks/useResponsive'
 
 export default function Page({ params }: { params: { influencer_slug: string, content_slug: string } }) {
     const router = useRouter()
+    const { isMobile } = useResponsive()
     const [currentAssertionIndex, setCurrentAssertionIndex] = useState(-1);
     const [currentTimestamp, setCurrentTimestamp] = useState(0)
     const [player, setPlayer] = useState<any>(null);
-    const [highlightedAssertion, setHighlightedAssertion] = useState<number | null>(null);
 
     const { data: contentData, refetch } = useQuery(GET_CONTENT_QUERY, {
         variables: {
@@ -36,7 +37,6 @@ export default function Page({ params }: { params: { influencer_slug: string, co
         skip: !params.content_slug || !params.influencer_slug,
         fetchPolicy: 'network-only'
     })
-
     const { data: subscriptionData } = useSubscription(
         GET_CONTENT_SUBSCRIPTION,
         {
@@ -48,7 +48,6 @@ export default function Page({ params }: { params: { influencer_slug: string, co
         },
     )
 
-    // Use query data for initial load, then switch to subscription data when available
     const mainContent = subscriptionData?.content?.[0] || contentData?.content?.[0]
 
     const isParsed = mainContent?.isParsed === true
@@ -56,7 +55,7 @@ export default function Page({ params }: { params: { influencer_slug: string, co
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
     const [deleteRelatedContentAndRelationships, { loading: isDeletingRelatedContentAndRelationships }] = useMutation(DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION)
-    const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
+    // const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
 
     const assertions_contents = mainContent?.assertions_contents
     const isHydrated = useHydration()
@@ -72,12 +71,11 @@ export default function Page({ params }: { params: { influencer_slug: string, co
     if (!isHydrated) { return null }
     return (
         <>
-            <main className="h-[calc(100vh-180px)] overflow-hidden">
+            <main className="sm:h-[calc(100vh-180px)] overflow-hidden">
                 <div className="h-full flex flex-col lg:flex-row gap-4">
                     <ScrollShadow className="w-full lg:w-[400px] shrink-0 flex flex-col gap-4">
-                        <ContentActivityFeed contentId={mainContent?.id} />
-                        <div className="space-y-4">
-
+                        {!isMobile && <ContentActivityFeed contentId={mainContent?.id} />}
+                        <div className="sm:space-y-4">
                             <div className="w-full">
                                 <YouTubePlayer
                                     videoId={mainContent?.videoId}
@@ -99,6 +97,7 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                             <Button
                                 variant="light"
                                 color="secondary"
+                                className="pl-0 ml-1 my-2"
                                 size="sm"
                                 onPress={() => {
                                     router.push(`/video/${influencerInfo?.slug}`)
@@ -106,71 +105,83 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                             >
                                 By {influencerInfo?.name}
                             </Button>
-                            <h4 className="uppercase text-tiny my-2">Overall Score</h4>
-                            <div className="mb-2">
-                                <Chip color="success" size="lg" className="mr-2">
-                                    <Icon icon="mdi:approve" className="inline mr-2" />
-                                    {mainContent?.proAggregateContentScore} / 100
-                                </Chip>
-                                <Chip color="danger" size="lg" className="mr-2">
-                                    <Icon icon="ci:stop-sign" className="inline mr-2" />
-                                    {mainContent?.againstAggregateContentScore} / 100
-                                </Chip>
+                            <div className="flex gap-2 bg-primary-100 rounded-2xl p-4">
+                                <h4 className="uppercase font-bold text-primary-500 text-xs my-2">Our Score</h4>
+                                <div className="mb-2">
+                                    <Chip color="success" size="lg" className="mr-2">
+                                        <Icon icon="mdi:approve" className="inline mr-2" />
+                                        {mainContent?.proAggregateContentScore} / 100
+                                    </Chip>
+                                    <Chip color="danger" size="lg" className="mr-2">
+                                        <Icon icon="ci:stop-sign" className="inline mr-2" />
+                                        {mainContent?.againstAggregateContentScore} / 100
+                                    </Chip>
+                                </div>
                             </div>
-                            <h6 className="text-xs">{mainContent?.id}</h6>
-                            <Button
-                                size="sm"
-                                className="my-4"
-                                variant="solid"
-                                color="primary"
-                                isLoading={isRecalculating}
-                                isDisabled={!mainContent?.id}
-                                onPress={() => {
-                                    recalculateAggregateScores({ variables: { contentId: mainContent?.id } })
-                                }}
-                            >
-                                {!isRecalculating && <Icon icon="mdi:refresh" className="inline" />} recaulculate aggregate score
-                            </Button>
+                            {!isMobile &&
+                                <div className="p-4 bg-danger-100 rounded-lg">
+                                    <h6 className="text-xs uppercase font-bold text-primary-500 my-2">Admin</h6>
+                                    <h6 className="text-xs">
+                                        {mainContent?.id}
+                                        {isParsed === false ?
+                                            <h6 className="text-xs"><Spinner /> Parsing</h6> :
+                                            <h6 className="text-xs">Parsed.</h6>
+                                        }
+                                    </h6>
 
-                            <div className="flex flex-row items-center justify-start gap-2 mt-16">
-                                {isParsed === false ? <h6 className="text-xs"><Spinner /> Parsing</h6> : <h6 className="text-xs">Parsed.</h6>}
-                                <Button
-                                    className="my-2"
-                                    color="primary"
-                                    size="sm"
-                                    isLoading={isAnalysingContent}
-                                    onPress={() => {
-                                        userAnalyseContent({ variables: { contentId: mainContent?.id } })
-                                    }}
-                                >
-                                    Analyse
-                                </Button>
-                                <Button
-                                    className="my-2 mx-4"
-                                    size="sm"
-                                    color="danger"
-                                    isLoading={isDeletingContent || isDeletingRelatedContentAndRelationships}
-                                    onPress={async () => {
-                                        const contentId = mainContent?.id
-                                        await deleteContent({ variables: { contentId } })
-                                        await deleteRelatedContentAndRelationships({ variables: { contentId } })
-                                        router.push(`/`)
-                                    }}
-                                >
-                                    Delete
-                                </Button>
-                            </div>
+                                    <div className="flex flex-row items-center justify-start gap-2 ">
+                                        <Button
+                                            size="sm"
+                                            className="my-4"
+                                            variant="solid"
+                                            color="primary"
+                                            isLoading={isRecalculating}
+                                            isDisabled={!mainContent?.id}
+                                            onPress={() => {
+                                                recalculateAggregateScores({ variables: { contentId: mainContent?.id } })
+                                            }}
+                                        >
+                                            {!isRecalculating && <Icon icon="mdi:refresh" className="inline" />} Recalculate
+                                        </Button>
+                                        <Button
+                                            className="my-2"
+                                            color="primary"
+                                            size="sm"
+                                            isLoading={isAnalysingContent}
+                                            onPress={() => {
+                                                userAnalyseContent({ variables: { contentId: mainContent?.id } })
+                                            }}
+                                        >
+                                            Analyse
+                                        </Button>
+                                        <Button
+                                            className="my-2 mx-4"
+                                            size="sm"
+                                            color="danger"
+                                            isLoading={isDeletingContent || isDeletingRelatedContentAndRelationships}
+                                            onPress={async () => {
+                                                const contentId = mainContent?.id
+                                                await deleteContent({ variables: { contentId } })
+                                                await deleteRelatedContentAndRelationships({ variables: { contentId } })
+                                                router.push(`/`)
+                                            }}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </ScrollShadow>
-                    <ScrollShadow className="flex-1 h-full overflow-y-auto px-6">
-                        <div className="space-y-6 pb-8">
+                    <ScrollShadow className="flex-1 h-full overflow-y-auto sm:px-6 px-2">
+                        <div className="sm:space-y-6 sm:pb-8">
                             <h2 className="uppercase text-xs font-bold text-primary">Main point</h2>
                             {!mainContent?.summaryJsonb?.conclusion ? (
                                 <SummarySkeleton />
                             ) : (
                                 <h2 className="text-2xl">{mainContent?.summaryJsonb?.conclusion}</h2>
                             )}
-                            <div className="w-3/4 mx-auto">
+                            <div className="sm:w-3/4 px-6 sm:px-0 mx-auto">
                                 {mainContent?.summaryJsonb?.eli5 &&
                                     <div className="my-4">
                                         <h2 className="uppercase font-bold text-primary my-4">Tl;Dw:</h2>
@@ -191,7 +202,7 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                 )}
                             </div>
                         </div>
-                        <Button
+                        {/* <Button
                             color="primary"
                             size="sm"
                             className="mb-4"
@@ -204,7 +215,7 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                 })
                             }}>
                             {!isUpdatingAssertionsScore && <Icon icon="mdi:refresh" className="inline" />} score updateAssertionsScore
-                        </Button>
+                        </Button> */}
                         {!assertions_contents?.length ? (
                             <AssertionsSkeleton />
                         ) : (

@@ -23,7 +23,7 @@ lxml_html_clean
 bs4
 PyMuPDF
 py2neo
-
-crewai[tools]
+litellm>=1.21.0
+crewai[tools]>=0.13.0
 
 # openai-whisper

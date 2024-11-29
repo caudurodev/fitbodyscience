@@ -1,24 +1,16 @@
 
 'use client'
 
-import {
-    Spinner, Badge,
-    Button, Chip, Accordion, AccordionItem,
-    Input,
-} from "@nextui-org/react";
+import { Spinner, Badge, Button, Chip, Input } from "@nextui-org/react";
 import { Icon } from '@iconify/react'
 import { useMutation } from '@apollo/client'
 import { EvidenceInfo } from '@/components/VideoPage/EvidenceInfo';
 import { USER_APPEND_EVIDENCE_TO_ASSERTION_MUTATION, USER_SEARCH_MORE_EVIDENCE_MUTATION } from '@/store/action/action'
-import { useCallback, useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import { motion } from 'framer-motion'
-
 import { ProWarningModal, ProWarningModalHandle, useIsProUser } from "@/components/subscription/ProWarningModal";
-
-
-
 
 
 interface RelatedEvidenceProps {
@@ -29,6 +21,7 @@ export const RelatedEvidence = ({
     assertions_content,
     refetch,
 }: RelatedEvidenceProps) => {
+
     const contentAssertions = assertions_content?.assertion?.contents_assertions || [];
     const proEvidence = contentAssertions?.filter((e: any) => e.isProAssertion) || [];
     const conEvidence = contentAssertions?.filter((e: any) => !e.isProAssertion) || [];
@@ -39,98 +32,72 @@ export const RelatedEvidence = ({
     return (
         <>
             <ProWarningModal ref={proModalRef} />
-            <Accordion
-                showDivider={false}
-                itemClasses={{
-                    base: "py-0",
-                    title: "font-normal text-small",
-                    trigger: "px-0 py-0 data-[hover=true]:bg-default-100",
-                    content: "text-small px-2"
-                }}
-            >
-                <AccordionItem
-                    key="evidence"
-                    aria-label="Evidence related to assertion"
-                    title={
-                        <>
-                            <h5 className="uppercase text-xs">
-                                Evidence related to assertion
-                                ({contentAssertions?.length})
-                            </h5>
-                            <div className="flex gap-2 mt-2">
-                                {(() => {
-                                    return (
-                                        <>
-                                            {proEvidence.length > 0 && (
-                                                <Chip color="success" size="sm" className="text-white">
-                                                    <Icon icon="mdi:approve" className="inline" />{' '}
-                                                    {proEvidence.length} supporting ({
-                                                        Math.round(
-                                                            proEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / proEvidence.length
-                                                        )
-                                                    }/100)
-                                                </Chip>
-                                            )}
-                                            {conEvidence.length > 0 && (
-                                                <Chip color="danger" size="sm" className="text-white">
-                                                    <Icon icon="ci:stop-sign" className="inline" />{' '}
-                                                    {conEvidence.length} opposing ({
-                                                        Math.round(
-                                                            conEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / conEvidence.length
-                                                        )
-                                                    }/100)
-                                                </Chip>
-                                            )}
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </>
+            <h6 className="text-tiny uppercase my-2">Evidence ({contentAssertions?.length})</h6>
+            <>
+                <div className="flex gap-2 mb-3">
+                    {(() => {
+                        return (
+                            <>
+                                {proEvidence.length > 0 && (
+                                    <Chip color="success" size="sm" className="text-white">
+                                        <Icon icon="mdi:success-bold" className="inline" />{' '}
+                                        {proEvidence.length} supporting ({
+                                            Math.round(
+                                                proEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / proEvidence.length
+                                            )
+                                        }/100)
+                                    </Chip>
+                                )}
+                                {conEvidence.length > 0 && (
+                                    <Chip color="danger" size="sm" className="text-white">
+                                        <Icon icon="bx:error" className="inline" />{' '}
+                                        {conEvidence.length} opposing ({
+                                            Math.round(
+                                                conEvidence.reduce((acc: any, e: any) => acc + (e.content?.contentScore || 0), 0) / conEvidence.length
+                                            )
+                                        }/100)
+                                    </Chip>
+                                )}
+                            </>
+                        );
+                    })()}
+                </div>
+            </>
+            {!contentAssertions?.length || contentAssertions?.length === 0 &&
+                <Spinner />
+            }
+            {contentAssertions?.length > 0 ?
+                <>
+                    {
+                        contentAssertions.map(
+                            (o: any, i: number) => (
+                                <div key={i} id={`assertion_${i}`} className="mb-4">
+                                    <div className="flex gap-2 ">
+                                        <Chip
+                                            color={o?.isProAssertion ? 'success' : 'danger'}
+                                            className="text-white"
+                                            size="sm"
+                                        >
+                                            <Icon className="inline" icon={o?.isProAssertion ? "mdi:success-bold" : "ci:stop-sign"} />{' '}
+                                            {Math.round(o?.content?.contentScore || 0)} / 100
+                                        </Chip>
+                                        <span className="text-sm">{o?.content?.title ?? "Not yet evaluated"}</span>
+                                    </div>
+                                    <div className="ml-8 my-2">
+                                        <h6 className="text-tiny uppercase my-2">{o?.isCitationFromOriginalContent ? 'From Author' : 'AI Research'}</h6>
+                                        <h6><b>Relevance:</b> {o?.whyRelevant}</h6>
+                                        <EvidenceInfo refetch={refetch} evidence={o?.content} />
+                                    </div>
+                                </div>
+                            )
+                        )
                     }
-                >
-                    {!contentAssertions?.length || contentAssertions?.length === 0 &&
-                        <Spinner />
-                    }
-                    {contentAssertions?.length > 0 ?
-                        <>
-                            {
-                                contentAssertions.map(
-                                    (o: any, i: number) => (
-                                        <Accordion key={i} id={`assertion_${i}`} className="mb-4">
-                                            <AccordionItem
-                                                key="evidence-details"
-                                                aria-label={o?.content?.title || "Evidence details"}
-                                                title={
-                                                    <div className="flex items-top gap-2">
-                                                        <Chip
-                                                            color={o?.isProAssertion ? 'success' : 'danger'}
-                                                            className="text-white"
-                                                        >
-                                                            <Icon className="inline text-lg" icon={o?.isProAssertion ? "mdi:approve" : "ci:stop-sign"} />{' '}
-                                                            {Math.round(o?.content?.contentScore || 0)} / 100
-                                                        </Chip>
-                                                        <span className="text-sm">{o?.content?.title ?? "Not yet downladed..."}</span>
-                                                    </div>
-                                                }
-                                            >
-                                                <div className="ml-8 my-2">
-                                                    <h6 className="text-tiny uppercase">{o?.isCitationFromOriginalContent ? 'From Author' : 'Ai Research'}</h6>
-                                                    <h6>{o?.whyRelevant}</h6>
-                                                    <EvidenceInfo refetch={refetch} evidence={o?.content} />
-                                                </div>
-
-                                            </AccordionItem>
-                                        </Accordion>
-                                    ))
-                            }
-                        </> :
-                        <div>
-                            <h6 className="text-red-500 font-bold">* Evidence not yet found</h6>
-                        </div>
-                    }
-                </AccordionItem>
-            </Accordion>
-            <div className="my-4">
+                </> :
+                <div>
+                    <h6 className="text-red-500 font-bold">* No Evidence</h6>
+                </div>
+            }
+            <div className="my-4 flex gap-2">
                 <Badge content="PRO" color="default" size="sm" >
                     <Button
                         color="secondary"
@@ -151,9 +118,7 @@ export const RelatedEvidence = ({
                         AI Search
                     </Button>
                 </Badge>
-                <div className="my-4">
-                    <UserAddMoreEvidenceToAssertion assertionId={assertions_content?.assertion?.id} onAddEvidence={refetch} />
-                </div>
+                <UserAddMoreEvidenceToAssertion assertionId={assertions_content?.assertion?.id} onAddEvidence={refetch} />
             </div>
         </>
     )

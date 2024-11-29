@@ -64,9 +64,9 @@ def get_response(prompt, quality="fast"):
         """
     try:
         if quality == "fast":
-            model = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+            model = "togethercomputer/llama-2-7b-chat"
         else:
-            model = "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+            model = "togethercomputer/llama-2-70b-chat"
         response = client.chat.completions.create(
             model=model,
             messages=[
@@ -75,12 +75,12 @@ def get_response(prompt, quality="fast"):
             response_format={
                 "type": "json_object",
             },
-            max_tokens=32768,
+            max_tokens=4096,
             temperature=0.7,
             top_p=0.7,
             top_k=50,
             repetition_penalty=1,
-            stop=["<|eot_id|>", "<|eom_id|>"],
+            stop=["</s>", "Human:", "Assistant:"],
             stream=False,
         )
 

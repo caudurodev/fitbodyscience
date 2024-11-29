@@ -41,7 +41,6 @@ export const ContentActivityFeed = ({ contentId }: ContentNotificationProps) => 
     // Use subscription data if available, otherwise fall back to query data
     const data = subscriptionData || queryData;
     const loading = queryLoading;
-
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -57,13 +56,11 @@ export const ContentActivityFeed = ({ contentId }: ContentNotificationProps) => 
 
     return (
         <div className="p-2 ">
-            <h6 className="text-xs uppercase font-bold text-primary">Content Activity</h6>
-            <div className="my-2">
-                {loading && <Spinner />}
-            </div>
-            <ScrollShadow ref={scrollRef} className="max-h-[140px] bg-default-200 px-2 rounde">
+            <h6 className="text-xs uppercase font-bold text-primary-500">Content Activity</h6>
+            {loading && <div className="my-2"><Spinner /></div>}
+            <ScrollShadow offset={10} ref={scrollRef} className="max-h-[140px]">
                 <ul >
-                    {data?.content_activity?.map((activity, index) => {
+                    {data?.content_activity?.map((activity: any, index) => {
                         const firstActivityTime = data.content_activity[0]?.createdAt;
                         const currentActivityTime = activity.createdAt;
                         const diffInSeconds = differenceInSeconds(new Date(currentActivityTime), new Date(firstActivityTime));
@@ -83,7 +80,7 @@ export const ContentActivityFeed = ({ contentId }: ContentNotificationProps) => 
                                 <Card radius="sm" shadow="sm">
                                     <CardBody className="py-2">
                                         {activity.name}
-                                        <span className="ml-2 text-default-400">{timeDisplay}</span>
+                                        <span className="ml-2 text-gray-400">{timeDisplay}</span>
                                     </CardBody>
                                 </Card>
                             </motion.li>
