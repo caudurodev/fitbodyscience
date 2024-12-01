@@ -109,11 +109,11 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                 <h4 className="uppercase font-bold text-primary-500 text-xs my-2">Our Score</h4>
                                 <div className="mb-2">
                                     <Chip color="success" size="lg" className="mr-2">
-                                        <Icon icon="mdi:approve" className="inline mr-2" />
+                                        <Icon icon="mdi:success-bold" className="inline mr-2" />
                                         {mainContent?.proAggregateContentScore} / 100
                                     </Chip>
                                     <Chip color="danger" size="lg" className="mr-2">
-                                        <Icon icon="ci:stop-sign" className="inline mr-2" />
+                                        <Icon icon="maki:cross" className="inline mr-2" />
                                         {mainContent?.againstAggregateContentScore} / 100
                                     </Chip>
                                 </div>
@@ -242,7 +242,6 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                         assertions={assertions_contents}
                         currentAssertionIndex={currentAssertionIndex}
                         onSetCurrentAssertionIndex={(i) => {
-                            console.log('onSetCurrentAssertionIndex', i)
                             setCurrentAssertionIndex(i)
                         }}
                     />

@@ -33,11 +33,11 @@ export const AssertionCard = ({
                         <div className="flex items-center gap-4">
                             <span className="text-xs uppercase">Score</span>
                             <div className="flex items-center gap-2">
-                                <Icon icon="mdi:approve" className="text-success" />
+                                <Icon icon="mdi:success-bold" className="text-success" />
                                 <ScoreBar score={(assertions_content?.assertion?.proEvidenceAggregateScore || 0) / 10} />
                             </div>
                             <div className="flex items-center gap-2">
-                                <Icon icon="ci:stop-sign" className="text-danger" />
+                                <Icon icon="maki:cross" className="text-danger" />
                                 <ScoreBar score={(assertions_content?.assertion?.againstEvidenceAggregateScore || 0) / 10} />
                             </div>
 

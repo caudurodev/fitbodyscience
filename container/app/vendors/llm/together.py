@@ -29,15 +29,19 @@ def parse_llm_json(content):
     except json.JSONDecodeError as e:
         logger.warning(f"Standard JSON parsing failed: {str(e)}")
         logger.warning(f"Problem at position {e.pos}, line {e.lineno}, col {e.colno}")
-        logger.warning(f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}")
+        logger.warning(
+            f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}"
+        )
 
     # Try json5 parsing next
     try:
         return json5.loads(content)
     except Exception as e:
         logger.warning(f"JSON5 parsing failed: {str(e)}")
-        if hasattr(e, 'pos'):
-            logger.warning(f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}")
+        if hasattr(e, "pos"):
+            logger.warning(
+                f"Snippet around error: {content[max(0, e.pos-50):min(len(content), e.pos+50)]}"
+            )
 
     # Try json_repair as last resort
     try:
@@ -64,9 +68,9 @@ def get_response(prompt, quality="fast"):
         """
     try:
         if quality == "fast":
-            model = "togethercomputer/llama-2-7b-chat"
+            model = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
         else:
-            model = "togethercomputer/llama-2-70b-chat"
+            model = "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
         response = client.chat.completions.create(
             model=model,
             messages=[

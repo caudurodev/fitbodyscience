@@ -9,21 +9,37 @@ from ..content_store.assertion_store import get_assertion_content
 from ..utils.llm import extract_json_part_from_string
 
 os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-os.environ["OPENAI_MODEL_NAME"] = "gpt-4o"
+# os.environ["OPENAI_MODEL_NAME"] = "gpt-4o"
+os.environ["OPENAI_MODEL_NAME"] = "gpt-4o-mini"
+
+
 os.environ["SERPER_API_KEY"] = settings.SERPER_API_KEY
 
 os.environ["TOGETHERAI_API_KEY"] = settings.TOGETHER_API_KEY
 
 # Configure LiteLLM with Together.ai
-llm = LLM(
-    provider="together_ai",  # Using together_ai as per litellm docs
-    model="together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-    api_key=settings.TOGETHER_API_KEY,
-    config={
-        "temperature": 0.7,
-        "max_tokens": 30096,
-    },
-)
+# llm = LLM(
+#     provider="together_ai",  # Using together_ai as per litellm docs
+#     # model="together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+#     # model="together_ai/meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
+#     # model="together_ai/meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+#     model="together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+#     api_key=settings.TOGETHER_API_KEY,
+#     config={
+#         "temperature": 0.7,
+#         "max_tokens": 4096,
+#         "context_window": 4096,
+#         "output_types": ["text"],
+#         "messages": [
+#             {
+#                 "role": "system",
+#                 "content": "You are a helpful AI assistant. Always structure your responses as valid JSON objects.",
+#             }
+#         ],
+#     },
+#     set_verbose=True,
+# )
+# llm = LLM(provider="openai", model="gpt-4o-mini", api_key=settings.OPENAI_API_KEY)
 
 
 def get_opposing_viewpoints(assertion_id):
@@ -147,7 +163,7 @@ def get_opposing_viewpoints(assertion_id):
         verbose=False,
         allow_delegation=False,
         tools=[search_tool],
-        llm=llm,
+        # llm=llm,
     )
 
     science_reviewer = Agent(
@@ -170,7 +186,7 @@ def get_opposing_viewpoints(assertion_id):
         verbose=False,
         allow_delegation=True,
         tools=[search_tool],
-        llm=llm,
+        # llm=llm,
     )
 
     evidence = Task(
@@ -267,24 +283,47 @@ def get_opposing_viewpoints(assertion_id):
         tasks=[evidence, review_research],
         output_format="json",
         output_json=True,
-        verbose=0,
-        llm=llm,
+        verbose=True,
+        # llm=llm,
     )
+
+    # logger.info("######################")
+    # logger.info("agent crewai kickoff...")
 
     result = crew.kickoff()
 
     # logger.info("######################")
-    # logger.info("agent crewai result %s", result)
+    # logger.info("agent crewai raw result: %s", result)
 
     try:
         # Convert CrewOutput to string if needed
         if hasattr(result, "raw_output"):
             result_str = result.raw_output
+            logger.info(
+                "Using raw_output from CrewOutput: %s",
+                result_str[:200] + "..." if len(result_str) > 200 else result_str,
+            )
         else:
             result_str = str(result)
+            logger.info(
+                "Using string representation of result: %s",
+                result_str[:200] + "..." if len(result_str) > 200 else result_str,
+            )
 
         result_json_string = extract_json_part_from_string(result_str)
-        return json.loads(result_json_string)
+        logger.info(
+            "Extracted JSON string: %s",
+            (
+                result_json_string[:200] + "..."
+                if len(result_json_string) > 200
+                else result_json_string
+            ),
+        )
+
+        parsed_json = json.loads(result_json_string)
+        logger.info("Successfully parsed JSON")
+        return parsed_json
     except Exception as e:
         logger.error("Error converting result to json: %s", e)
+        logger.error("Full error context:", exc_info=True)
         return None

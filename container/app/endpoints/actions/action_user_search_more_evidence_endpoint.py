@@ -29,9 +29,7 @@ def search_more_evidence(assertion_id):
         )
 
         result = insert_assertions_opposing(assertion_id)
-        # update assertion score
         update_assertion_score_by_id(assertion_id)
-        # update content score
         assertion = get_assertion_content(assertion_id)
         content_id = assertion.get("contentId")
         add_content_activity(

@@ -20,14 +20,13 @@ export const EvidenceInfo = ({ evidence, refetch }: { evidence: any, refetch: ()
     const [classifyContent, { loading: isClassifyingContent }] = useMutation(CLASSIFY_CONTENT_MUTATION)
     const [updateEvidenceScore, { loading: isUpdatingEvidenceScore }] = useMutation(USER_UPDATE_EVIDENCE_SCORE_MUTATION)
     const [deleteContentRelationship, { loading: isDeletingContentRelationship }] = useMutation(DELETE_CONTENT_RELATIONSHIP_MUTATION)
-    console.log
     return (
         <>
             <Link href={evidence?.sourceUrl}>{evidence?.title ?? "Not yet downladed..."}</Link>
             <h6 className="text-tiny my-3">DOI: {evidence?.doiNumber ? evidence?.doiNumber : "N/a"}</h6>
-            {evidence?.id}
+            <h6 className="text-tiny my-3">{evidence?.id}</h6>
             <div className="my-3">
-                <Chip color="warning" className="text-white">{evidence?.contentType}</Chip>
+                <Chip color="warning" className="text-white">{evidence?.contentType.replace('_', ' ')}</Chip>
             </div>
             {evidence?.sciencePaperClassification ?
                 <>

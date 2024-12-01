@@ -37,13 +37,6 @@ def user_analyse_content_endpoint(content_id):
         update_content_is_parsed(content_id=content_id, is_parsed=False)
 
         add_content_activity(
-            name="Start analysis",
-            content_id=content_id,
-            activity_type="info",
-            description="Starting to review video content",
-        )
-
-        add_content_activity(
             name="Summarising video content",
             content_id=content_id,
             activity_type="info",

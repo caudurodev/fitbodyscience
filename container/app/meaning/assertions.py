@@ -30,7 +30,8 @@ def extract_assertions_from_long_text(
 
             **Instructions:**
 
-            Extract all important assertions from the long text that make up the core of the argument. For each assertion, provide detailed information as specified below, and return a valid JSON object.
+            Extract all important assertions from the long text that make up the core of the argument. 
+            For each assertion, provide detailed information as specified below, and return a valid JSON object.
 
             ---
 
@@ -40,7 +41,7 @@ def extract_assertions_from_long_text(
             "main_conclusion": "The main conclusion of the text for which most assertions are relevant.",
             "assertions": [
                 {{
-                "assertion": "The specific assertion from the text.",
+                "assertion": "The specific assertion from the text as a standalone sentence that explains the assertion.",
                 "assertion_weight": "An integer from 0 to 10 indicating how important the assertion is to the main point (0 = irrelevant, 10 = critical).",
                 "standalone_assertion_reliability": "An integer from 0 to 10 evaluating the reliability of the assertion by itself without larger context (0 = completely unreliable, 10 = completely reliable).",
                 "why_relevant_main_point": "A short explanation of why the assertion is relevant to the main conclusion.",
@@ -60,7 +61,7 @@ def extract_assertions_from_long_text(
                     "content_weight_to_assertion": "An integer from 0 to 10 indicating how critical the evidence is to support the assertion (0 = irrelevant, 10 = critical)."
                     }}
                 ],
-                "tags": ["List", "of", "tags", "describing", "the", "text"]
+                "tags": ["concepts from the assertion (e.g., astronomy, geology, science)"]
                 }}
             ]
             }}

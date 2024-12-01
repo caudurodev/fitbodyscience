@@ -69,7 +69,9 @@ def calculate_assertion_score(assertion: Dict[str, Any]) -> Dict[str, int]:
                 else:
                     logger.error("isProAssertion is neither True nor False: %s", is_pro)
             else:
-                logger.error("No sciencePaperClassification found in content.")
+                logger.error(
+                    f"No sciencePaperClassification found in content. {content}"
+                )
         else:
             logger.error("Content is not a dictionary: %s", content.get("content"))
 
