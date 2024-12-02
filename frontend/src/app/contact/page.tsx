@@ -1,22 +1,54 @@
 'use client'
 
 import { Input, Textarea, Button } from "@nextui-org/react"
-import { useForm } from "react-hook-form"
+import { useForm, SubmitHandler } from "react-hook-form"
+import { useState } from 'react'
 
 type FormData = {
   name: string
   email: string
   subject: string
   message: string
+  honeypot: string
 }
 
 export default function Contact() {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>()
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
 
-  const onSubmit = (data: FormData) => {
-    // TODO: Implement form submission
+
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    // Check if honeypot field is filled (bot detection)
     console.log('Form submitted:', data)
+    if (data.honeypot) {
+      console.log('Bot detected')
+      return
+    }
+
+    setStatus('sending')
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          subject: data.subject,
+          message: data.message
+        }),
+      })
+
+      if (response.ok) {
+        setStatus('success')
+        reset() // Clear form fields
+      } else {
+        setStatus('error')
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setStatus('error')
+    }
   }
+
 
   return (
     <div className="y-8 px-4">
@@ -71,6 +103,14 @@ export default function Contact() {
               errorMessage={errors.subject?.message}
               isRequired
             />
+            {/* Honeypot field (hidden from users) */}
+            <input
+              type="text"
+              {...register('honeypot')}
+              style={{ display: 'none' }}
+              tabIndex={-1}
+              autoComplete="off"
+            />
             <Textarea
               label="Message"
               color="secondary"
@@ -91,6 +131,8 @@ export default function Contact() {
             <Button color="primary" type="submit">
               Send Message
             </Button>
+            {status === 'success' && <p className="text-green-500">Message sent successfully!</p>}
+            {status === 'error' && <p className="text-red-500">Error sending message. Please try again.</p>}
           </form>
         </div>
       </div>

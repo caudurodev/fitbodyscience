@@ -1,6 +1,5 @@
 """ User add content endpoint """
 
-from flask import jsonify
 from ...config.logging import logger
 from ...store.content import get_content_by_id
 from ...content_get.classify_study import classify_evidence_content
@@ -22,10 +21,7 @@ def classify_evidence(content_id):
         content = get_content_by_id(content_id)
         if not content:
             logger.error(f"No content found for id {content_id}")
-            return (
-                jsonify({"message": "No content found", "success": False}),
-                400,
-            )
+            return {"message": "No content found", "success": False}
 
         doi_number = content.get("doiNumber", None)
         url_to_scrape = content.get("canonicalUrl", None)
@@ -37,15 +33,10 @@ def classify_evidence(content_id):
         logger.info(f"URL: {url_to_scrape}")
 
         if doi_number is None or url_to_scrape is None:
-            return (
-                jsonify(
-                    {
-                        "message": "No DOI or URL found, cannot continue",
-                        "success": False,
-                    }
-                ),
-                400,
-            )
+            return {
+                "message": "No DOI or URL found, cannot continue",
+                "success": False,
+            }
 
         # Try to get crossref data if not already present
         if crossref_info is None and doi_number is not None:
@@ -83,20 +74,12 @@ def classify_evidence(content_id):
 
                 if not content_text:
                     logger.error(f"No content returned from {url}")
-                    return (
-                        jsonify({"message": "No content returned", "success": False}),
-                        400,
-                    )
+                    return {"message": "No content returned", "success": False}
 
                 content = content_text.get("content", "")
                 if not content:
                     logger.error(f"No text content extracted from {url}")
-                    return (
-                        jsonify(
-                            {"message": "No text content extracted", "success": False}
-                        ),
-                        400,
-                    )
+                    return {"message": "No text content extracted", "success": False}
 
                 content_length = len(content)
                 if content_length < 100:  # Too short to be meaningful
@@ -105,12 +88,7 @@ def classify_evidence(content_id):
                     )
                     if content_length > 0:
                         logger.error(f"Content preview: {content}")
-                    return (
-                        jsonify(
-                            {"message": "Extracted content too short", "success": False}
-                        ),
-                        400,
-                    )
+                    return {"message": "Extracted content too short", "success": False}
 
                 update_content(content_id, {"content": content})
                 logger.info(
@@ -118,38 +96,6 @@ def classify_evidence(content_id):
                 )
             else:
                 logger.info(f"Downloading content from {url_to_scrape}")
-                # raw_html = download_website(url_to_scrape)
-
-                # if not raw_html:
-                #     logger.error(
-                #         f"Error scrape_content_url empty result or error: {url_to_scrape}"
-                #     )
-                #     # Try alternative URL if available
-                #     if url_to_scrape != url and url:
-                #         logger.info(f"Trying alternative URL: {url}")
-                #         raw_html = download_website(url)
-                #         if not raw_html:
-                #             logger.error(f"Failed to download from alternative URL: {url}")
-                #             return False
-                #     else:
-                #         return False
-
-                # # Process the HTML to extract main content
-                # html_content = get_main_content(raw_html)
-
-                # if not html_content:
-                #     logger.error(f"Failed to extract main content from {url_to_scrape}")
-                #     return False
-
-                # if (
-                #     not isinstance(html_content, dict)
-                #     or "title" not in html_content
-                #     or "text" not in html_content
-                # ):
-                #     logger.error(
-                #         f"Invalid content structure from {url_to_scrape}: {html_content}"
-                #     )
-                #     return False
 
                 # Update content with extracted data
                 data = get_url_content(url_to_scrape=url_to_scrape)
@@ -175,12 +121,7 @@ def classify_evidence(content_id):
                 logger.warning(
                     f"Failed to classify content - no classification returned {classify}"
                 )
-                return (
-                    jsonify(
-                        {"message": "Failed to classify content", "success": False}
-                    ),
-                    400,
-                )
+                return {"message": "Failed to classify content", "success": False}
 
             update_science_paper_classification_content(
                 content_id=content_id, classification_jsonb=classify
@@ -209,33 +150,24 @@ def classify_evidence(content_id):
                 },
             )
 
-            return jsonify(
-                {"message": "Content classified successfully", "success": True}
-            )
+            return {"message": "Content classified successfully", "success": True}
         except Exception as e:
             logger.error(f"Error in classification process: {e}")
-            return (
-                jsonify(
-                    {"message": "Error in classification process", "success": False}
-                ),
-                400,
-            )
+            return {"message": "Error in classification process", "success": False}
+
     except Exception as e:
         logger.error(f"Error in classify evidence: {e}")
-        return (
-            jsonify({"message": "Error in classify evidence", "success": False}),
-            400,
-        )
+        return {"message": "Error in classify evidence", "success": False}
 
 
 def action_user_classify_evidence_endpoint(content_id):
     """Analyze a scientific paper and save the data to the database"""
     try:
         classify_evidence(content_id)
-        return jsonify({"message": "Content classified successfully", "success": True})
+        return {"message": "Content classified successfully", "success": True}
     except Exception as e:
         logger.error("Error classifying content: %s", e)
-        return jsonify({"message": str(e), "success": False}), 500
+        return {"message": str(e), "success": False}
 
 
 def get_url_content(url_to_scrape):

@@ -72,7 +72,7 @@ export const RelatedEvidence = ({
                         contentAssertions.map(
                             (o: any, i: number) => (
                                 <div key={i} id={`assertion_${i}`} className="mb-4">
-                                    <div className="flex gap-2 ">
+                                    <div className="flex gap-2 items-center">
                                         <Chip
                                             color={o?.isProAssertion ? 'success' : 'danger'}
                                             className="text-white"
@@ -81,10 +81,10 @@ export const RelatedEvidence = ({
                                             <Icon className="inline" icon={o?.isProAssertion ? "mdi:success-bold" : "ci:stop-sign"} />{' '}
                                             {Math.round(o?.content?.contentScore || 0)} / 100
                                         </Chip>
-                                        <span className="text-sm">{o?.content?.title ?? "Not yet evaluated"}</span>
+                                        <h6 className="text-tiny uppercase my-2">{o?.isCitationFromOriginalContent ? 'From Author' : 'AI Research'}</h6>
+                                        {/* <span className="text-sm">{o?.content?.title ?? "Not yet evaluated"}</span> */}
                                     </div>
                                     <div className="ml-8 my-2">
-                                        <h6 className="text-tiny uppercase my-2">{o?.isCitationFromOriginalContent ? 'From Author' : 'AI Research'}</h6>
                                         <h6><b>Relevance:</b> {o?.whyRelevant}</h6>
                                         <EvidenceInfo refetch={refetch} evidence={o?.content} />
                                     </div>
