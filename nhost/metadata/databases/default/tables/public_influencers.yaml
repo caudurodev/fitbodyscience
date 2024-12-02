@@ -83,27 +83,3 @@ select_permissions:
       filter: {}
       allow_aggregations: true
     comment: ""
-update_permissions:
-  - role: pro
-    permission:
-      columns:
-        - is_followed
-        - yt_last_updated
-        - yt_channelinfo_jsonb
-        - user_requests_to_follow
-        - name
-        - slug
-        - yt_description
-        - yt_url
-        - id
-        - profile_img
-      filter: {}
-      check: null
-    comment: ""
-  - role: user
-    permission:
-      columns:
-        - user_requests_to_follow
-      filter: {}
-      check: null
-    comment: ""

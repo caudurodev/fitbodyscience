@@ -40,20 +40,41 @@ export const Header = () => {
 
     const menuItems = [
         {
-            label: "Home",
-            href: "/",
+            label: "Creators",
+            href: "/creators",
+            showInDesktopMain: true
         },
         {
-            label: "Influencers",
-            href: "/influencers",
+            label: "Assertions",
+            href: "/assertions",
+            showInDesktopMain: true
         },
+        {
+            label: "Studies",
+            href: "/studies",
+            showInDesktopMain: true
+        },
+
+
         {
             label: "FAQ",
             href: "/faq",
+            showInDesktopMain: false
         },
         {
             label: "Contact",
             href: "/contact",
+            showInDesktopMain: false
+        },
+        {
+            label: "Terms & Conditions",
+            href: "/terms",
+            showInDesktopMain: false
+        },
+        {
+            label: "Privacy Policy",
+            href: "/privacy-policy",
+            showInDesktopMain: false
         },
     ];
 
@@ -105,7 +126,7 @@ export const Header = () => {
             </NavbarContent>
 
             <NavbarContent className="hidden sm:flex gap-4" justify="center">
-                {menuItems.map((item, index) => (
+                {menuItems.filter(item => item.showInDesktopMain).map((item, index) => (
                     <NavbarItem key={`${item.label}-${index}`}>
                         <Button
                             variant="light"
@@ -117,6 +138,34 @@ export const Header = () => {
                         </Button>
                     </NavbarItem>
                 ))}
+
+                {menuItems.some(item => !item.showInDesktopMain) && (
+                    <NavbarItem>
+                        <Dropdown>
+                            <DropdownTrigger>
+                                <Button
+                                    isIconOnly
+                                    variant="light"
+                                    color="secondary"
+                                    endContent={<Icon icon="mage:dots" className="text-xl" />}
+                                >
+                                </Button>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label="More menu items">
+                                {menuItems.filter(item => !item.showInDesktopMain).map((item, index) => (
+                                    <DropdownItem
+                                        key={`dropdown-${item.label}-${index}`}
+                                        onPress={() => {
+                                            router.push(item.href);
+                                        }}
+                                    >
+                                        {item.label}
+                                    </DropdownItem>
+                                ))}
+                            </DropdownMenu>
+                        </Dropdown>
+                    </NavbarItem>
+                )}
             </NavbarContent>
             {!isMobile &&
                 <NavbarContent justify="end">
@@ -234,7 +283,6 @@ export const Header = () => {
                                 }
                             }}
                             exit={{ opacity: 0 }}
-
                             className="flex flex-col gap-2"
                         >
                             <AnimatePresence>
@@ -277,7 +325,6 @@ export const Header = () => {
                                     </motion.div>
                                 ))}
                             </AnimatePresence>
-
                             {isAuthenticated ? (
                                 <>
                                     <motion.div >

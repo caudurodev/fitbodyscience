@@ -120,6 +120,7 @@ select_permissions:
         - content_context
         - evidence_type
         - original_sentence
+        - slug
         - source
         - standalone_assertion_reliability
         - text
@@ -143,6 +144,7 @@ select_permissions:
         - content_context
         - evidence_type
         - original_sentence
+        - slug
         - source
         - standalone_assertion_reliability
         - text
@@ -166,6 +168,7 @@ select_permissions:
         - content_context
         - evidence_type
         - original_sentence
+        - slug
         - source
         - standalone_assertion_reliability
         - text
@@ -177,60 +180,4 @@ select_permissions:
         - id
       filter: {}
       allow_aggregations: true
-    comment: ""
-update_permissions:
-  - role: public
-    permission:
-      columns:
-        - is_fallacy
-        - citations
-        - against_evidence_aggregate_score
-        - pro_evidence_aggregate_score
-        - assertion_search_verify
-        - content_context
-        - evidence_type
-        - original_sentence
-        - source
-        - standalone_assertion_reliability
-        - text
-        - timestamp
-        - date_created
-        - date_last_modified
-        - citation_content_id
-        - content_id
-        - id
-      filter: {}
-      check: {}
-    comment: ""
-  - role: user
-    permission:
-      columns:
-        - is_fallacy
-        - citations
-        - against_evidence_aggregate_score
-        - pro_evidence_aggregate_score
-        - assertion_search_verify
-        - content_context
-        - evidence_type
-        - original_sentence
-        - source
-        - standalone_assertion_reliability
-        - text
-        - timestamp
-        - date_created
-        - date_last_modified
-        - citation_content_id
-        - content_id
-        - id
-      filter: {}
-      check: {}
-    comment: ""
-delete_permissions:
-  - role: public
-    permission:
-      filter: {}
-    comment: ""
-  - role: user
-    permission:
-      filter: {}
     comment: ""

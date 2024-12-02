@@ -42,28 +42,18 @@ object_relationships:
         remote_table:
           name: content
           schema: public
-insert_permissions:
-  - role: public
-    permission:
-      check: {}
-      columns:
-        - date_added
-        - date_updated
-        - child_content_id
-        - id
-        - parent_content_id
-    comment: ""
-  - role: user
-    permission:
-      check: {}
-      columns:
-        - date_added
-        - date_updated
-        - child_content_id
-        - id
-        - parent_content_id
-    comment: ""
 select_permissions:
+  - role: pro
+    permission:
+      columns:
+        - date_added
+        - date_updated
+        - child_content_id
+        - id
+        - parent_content_id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
   - role: public
     permission:
       columns:
@@ -85,36 +75,4 @@ select_permissions:
         - parent_content_id
       filter: {}
       allow_aggregations: true
-    comment: ""
-update_permissions:
-  - role: public
-    permission:
-      columns:
-        - date_added
-        - date_updated
-        - child_content_id
-        - id
-        - parent_content_id
-      filter: {}
-      check: {}
-    comment: ""
-  - role: user
-    permission:
-      columns:
-        - date_added
-        - date_updated
-        - child_content_id
-        - id
-        - parent_content_id
-      filter: {}
-      check: {}
-    comment: ""
-delete_permissions:
-  - role: public
-    permission:
-      filter: {}
-    comment: ""
-  - role: user
-    permission:
-      filter: {}
     comment: ""

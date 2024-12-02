@@ -126,7 +126,7 @@ export default function Home() {
         <div className="space-y-4">
           <p className="text-primary font-medium">We are currently checking</p>
           <h1 className="text-6xl font-bold tracking-tight">
-            Science <span className="text-gradient">Influencers</span> we<br />
+            Science <span className="text-gradient">Creators</span> we<br />
             have researched
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
@@ -135,7 +135,7 @@ export default function Home() {
                 <Icon icon="fa:arrow-down" />
               </Chip>
             </span>
-            our list of influencers being researched.
+            our list of Science Content Creators being researched.
           </p>
           <div className="flex flex-col justify-between sm:flex-row gap-4 pt-4" ref={searchInputRef}>
             <Input
@@ -152,15 +152,15 @@ export default function Home() {
               }}
             />
             <div className="text-right">
-              <h6 className="text-xs my-2">Not finding who you are looking for?</h6>
               <Button
                 size="sm"
                 color="primary"
                 variant="solid"
-                onPress={() => { router.push('/influencer-queue') }}
+                onPress={() => { router.push('/creator-queue') }}
               >
-                Add Influencer
+                Add Creator
               </Button>
+              <h6 className="text-xs my-2">Not finding who you are looking for?</h6>
             </div>
           </div>
         </div>
@@ -168,12 +168,12 @@ export default function Home() {
 
       <div className="flex sm:flex-row flex-col justify-between sm:items-center mb-4" ref={resultsRef}>
         <h2 className="text-gradient text-lg sm:text-2xl font-bold uppercase">
-          Influencers we have researched
+          Creators we have researched
           {loading && <Chip size="sm" variant="flat" color="default" className="ml-2">Searching...</Chip>}
         </h2>
         {totalCount > 0 && (
           <p className="text-default-500 text-small">
-            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} influencers
+            Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} creators
           </p>
         )}
       </div>
@@ -242,7 +242,7 @@ export default function Home() {
                 className="col-span-full min-h-[50vh] flex items-start"
               >
                 <div className="flex flex-col items-start justify-start gap-4">
-                  <p className="text-default-500">No influencers found matching your search criteria.</p>
+                  <p className="text-default-500">No creators found matching your search criteria.</p>
                   <Button
                     color="primary"
                     variant="flat"

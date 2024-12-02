@@ -1,4 +1,3 @@
-
 import { gql } from '@apollo/client'
 
 
@@ -191,3 +190,22 @@ export const GET_ALL_CONTENT_QUERY = gql`
   }
 `
 
+
+
+export const SEARCH_SCIENCE_PAPERS_QUERY = gql`
+query SearchSciencePapersQuery($search: String = "%%", $offset: Int = 0, $limit: Int = 10) {
+  content(limit: $limit, offset: $offset, where: {_or: [{title: {_ilike: $search}}, {contentType: {_eq: "scientific_paper"}}]}) {
+    id
+    title
+    doiNumber
+    slug
+    contentScore
+    sciencePaperClassification
+  }
+  content_aggregate(where: {_or: [{title: {_ilike: $search}}, {contentType: {_eq: "scientific_paper"}}]}) {
+    aggregate {
+      count
+    }
+  }
+}
+  `

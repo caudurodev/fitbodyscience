@@ -74,6 +74,8 @@ export default function Page({ params }: { params: { influencer_slug: string, co
             <main className="sm:h-[calc(100vh-180px)] overflow-hidden">
                 <div className="h-full flex flex-col lg:flex-row gap-4">
                     <ScrollShadow className="w-full lg:w-[400px] shrink-0 flex flex-col gap-4">
+
+                        <h6 className="uppercase text-xs text-gray-500 ml-2"><b>Scoring</b> v0.1 - <b>AI</b> v0.1</h6>
                         {!isMobile && <ContentActivityFeed contentId={mainContent?.id} />}
                         <div className="sm:space-y-4">
                             <div className="w-full">
@@ -202,20 +204,6 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                 )}
                             </div>
                         </div>
-                        {/* <Button
-                            color="primary"
-                            size="sm"
-                            className="mb-4"
-                            isLoading={isUpdatingAssertionsScore}
-                            onPress={async () => {
-                                await updateAssertionsScore({
-                                    variables: {
-                                        contentId: mainContent?.id
-                                    }
-                                })
-                            }}>
-                            {!isUpdatingAssertionsScore && <Icon icon="mdi:refresh" className="inline" />} score updateAssertionsScore
-                        </Button> */}
                         {!assertions_contents?.length ? (
                             <AssertionsSkeleton />
                         ) : (

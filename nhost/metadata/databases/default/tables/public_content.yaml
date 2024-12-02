@@ -198,6 +198,41 @@ insert_permissions:
         - id
     comment: ""
 select_permissions:
+  - role: pro
+    permission:
+      columns:
+        - is_parsed
+        - is_science_based
+        - crossref_info
+        - html_jsonb
+        - science_based_evaluation
+        - science_paper_classification
+        - summary_jsonb
+        - video_transcript
+        - against_aggregate_content_score
+        - content_score
+        - pro_aggregate_content_score
+        - abstract
+        - canonical_url
+        - conclusion
+        - content_type
+        - direct_download_url
+        - doi_number
+        - error_message
+        - full_text
+        - media_type
+        - slug
+        - source_url
+        - summary
+        - title
+        - video_description
+        - video_id
+        - date_added
+        - date_last_modified
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
   - role: public
     permission:
       columns:
@@ -267,78 +302,6 @@ select_permissions:
         - id
       filter: {}
       allow_aggregations: true
-    comment: ""
-update_permissions:
-  - role: public
-    permission:
-      columns:
-        - abstract
-        - against_aggregate_content_score
-        - canonical_url
-        - conclusion
-        - content_score
-        - content_type
-        - crossref_info
-        - date_added
-        - date_last_modified
-        - direct_download_url
-        - doi_number
-        - error_message
-        - full_text
-        - id
-        - is_parsed
-        - media_type
-        - pro_aggregate_content_score
-        - science_paper_classification
-        - slug
-        - source_url
-        - summary
-        - title
-        - video_description
-        - video_id
-        - video_transcript
-      filter: {}
-      check: {}
-    comment: ""
-  - role: user
-    permission:
-      columns:
-        - abstract
-        - against_aggregate_content_score
-        - canonical_url
-        - conclusion
-        - content_score
-        - content_type
-        - crossref_info
-        - date_added
-        - date_last_modified
-        - direct_download_url
-        - doi_number
-        - error_message
-        - full_text
-        - id
-        - is_parsed
-        - media_type
-        - pro_aggregate_content_score
-        - science_paper_classification
-        - slug
-        - source_url
-        - summary
-        - title
-        - video_description
-        - video_id
-        - video_transcript
-      filter: {}
-      check: {}
-    comment: ""
-delete_permissions:
-  - role: public
-    permission:
-      filter: {}
-    comment: ""
-  - role: user
-    permission:
-      filter: {}
     comment: ""
 event_triggers:
   - name: on_insert_contents

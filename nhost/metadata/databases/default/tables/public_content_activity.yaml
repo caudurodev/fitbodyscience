@@ -3,30 +3,53 @@ table:
   schema: public
 configuration:
   column_config:
+    ai_version:
+      custom_name: aiVersion
     content_id:
       custom_name: contentId
     created_at:
       custom_name: createdAt
     expires_at:
       custom_name: expiresAt
+    score_version:
+      custom_name: scoreVersion
   custom_column_names:
+    ai_version: aiVersion
     content_id: contentId
     created_at: createdAt
     expires_at: expiresAt
+    score_version: scoreVersion
   custom_root_fields: {}
 object_relationships:
   - name: content
     using:
       foreign_key_constraint_on: content_id
 select_permissions:
+  - role: pro
+    permission:
+      columns:
+        - ai_version
+        - description
+        - name
+        - score_version
+        - type
+        - created_at
+        - expires_at
+        - content_id
+        - id
+      filter: {}
+      allow_aggregations: true
+    comment: ""
   - role: public
     permission:
       columns:
-        - created_at
-        - expires_at
+        - ai_version
         - description
         - name
+        - score_version
         - type
+        - created_at
+        - expires_at
         - content_id
         - id
       filter: {}
@@ -35,18 +58,15 @@ select_permissions:
   - role: user
     permission:
       columns:
-        - created_at
-        - expires_at
+        - ai_version
         - description
         - name
+        - score_version
         - type
+        - created_at
+        - expires_at
         - content_id
         - id
       filter: {}
       allow_aggregations: true
-    comment: ""
-delete_permissions:
-  - role: user
-    permission:
-      filter: {}
     comment: ""
