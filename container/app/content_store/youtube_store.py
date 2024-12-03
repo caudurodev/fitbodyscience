@@ -124,5 +124,6 @@ def video_exists_in_db(content_id):
         return result["data"]["content"][0]
 
     except Exception as e:
-        logger.error("video_exists_in_db Error making graphql call: %s", e)
+        logger.info("video_exists_in_db Error making graphql call: %s", e)
+        logger.info("result: %s", result)
         return False

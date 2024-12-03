@@ -146,6 +146,7 @@ def get_content_by_id(content_id: str):
                 isParsed
                 doiNumber
                 canonicalUrl
+                title
                 sciencePaperClassification
                 assertions_contents {
                     assertionContext

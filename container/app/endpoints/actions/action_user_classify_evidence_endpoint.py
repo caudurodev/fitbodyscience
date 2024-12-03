@@ -29,7 +29,7 @@ def connect_content_to_assertions(content_id):
 
     response = get_response(
         f"""
-        Given the following content: {content['fullText']}
+        Given the following content: {content['title']}
 
         Which has the content ID: {content_id}
 
@@ -49,10 +49,13 @@ def connect_content_to_assertions(content_id):
         - content_weight_to_assertion: The weight of the content to the assertion, or how much the content supports or opposes the assertion from 1 to 10.
         - is_pro_assertion: Whether the assertion is a pro assertion - true or false.
 
+        only return connected assertions, ignore the rest of the assertions
+
         Return valid JSON response like this:
         {{
             "connected_assertions":[
-                {{
+                {{  
+                    "content_id": "<content_id>",
                     "assertion_id": "<assertion_id>",
                     "why_relevant": "<why_relevant>",
                     "why_not_relevant": "<why_not_relevant>",
@@ -74,7 +77,7 @@ def connect_content_to_assertions(content_id):
         # connect assertions to content
         for connection in connections.get("connected_assertions", []):
             assertion_id = connection.get("assertion_id", None)
-            evidence_content_id = connection.get("content", None)
+            evidence_content_id = connection.get("content_id", None)
             why_relevant = connection.get("why_relevant", "")
             why_not_relevant = connection.get("why_not_relevant", "")
             content_weight_to_assertion = connection.get(
