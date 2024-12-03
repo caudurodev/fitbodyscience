@@ -6,6 +6,7 @@ from ..utils.config import logger
 from ..utils.graphql import make_graphql_call
 from ..meaning.assertions import extract_assertions_from_long_text
 from ..content_get.related_links import retrieve_video_description_links_and_save
+from ..store.slug import generate_unique_slug
 
 
 def parse_assertions_long_text(content_id, long_text, additional_information=""):
@@ -20,15 +21,11 @@ def parse_assertions_long_text(content_id, long_text, additional_information="")
         logger.error("Error get_content_related_links related links: %s", e)
 
     if related_content is None or len(related_content) == 0:
-        # logger.info("links not yet extracted, trying to extract now")
         related_content = retrieve_video_description_links_and_save(
             content_id, additional_information
         )
     else:
         logger.error("links already extracted")
-
-    # logger.info(f"parse_assertions_long_text long_text: {long_text}")
-    # TODO: check if assertions already exist for content
 
     assertions = get_assertion_content_ids(content_id)
     if assertions and len(assertions) > 0:
@@ -179,6 +176,7 @@ def add_assertion_to_content(content_id, assertion):
         assertion.get("standalone_assertion_reliability", "0")
     )
 
+    slug = generate_unique_slug(title=assertion_text, table_name="assertions")
     try:
         variables = {
             "contentId": content_id,
@@ -192,6 +190,7 @@ def add_assertion_to_content(content_id, assertion):
             "timestamp": timestamp,
             "dateCreated": now.strftime("%Y-%m-%d %H:%M:%S"),
             "standaloneAssertionReliability": standalone_assertion_reliability,
+            "slug": slug,
         }
         logger.info("add_assertion_to_content variables: %s", variables)
     except Exception as e:
@@ -213,7 +212,8 @@ def add_assertion_to_content(content_id, assertion):
                     $citationContentId: uuid,
                     $assertionSearchVerify: String!,
                     $dateCreated: timestamptz!,
-                    $standaloneAssertionReliability: String!
+                    $standaloneAssertionReliability: String!,
+                    $slug: String!
                 ) {
                     insert_assertions(
                         objects: {
@@ -227,7 +227,8 @@ def add_assertion_to_content(content_id, assertion):
                             timestamp: $timestamp,
                             dateCreated: $dateCreated,
                             citationContentId: $citationContentId,
-                            standaloneAssertionReliability: $standaloneAssertionReliability
+                            standaloneAssertionReliability: $standaloneAssertionReliability,
+                            slug: $slug
                         },
                         on_conflict: {
                             constraint: assertions_pkey,
@@ -239,7 +240,8 @@ def add_assertion_to_content(content_id, assertion):
                                 originalSentence,
                                 timestamp,
                                 citationContentId,
-                                standaloneAssertionReliability
+                                standaloneAssertionReliability,
+                                slug
                             ]
                         }
                     ) {

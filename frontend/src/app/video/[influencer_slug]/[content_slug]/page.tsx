@@ -11,8 +11,6 @@ import {
     RECALCULATE_AGGREGATE_SCORES_MUTATION,
     USER_ANALYSE_CONTENT_MUTATION,
     DELETE_CONTENT_MUTATION,
-    DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION,
-    // USER_UPDATE_ASSERTIONS_SCORE_MUTATION
 } from '@/store/content/mutation'
 import { useHydration } from '@/hooks/useHydration'
 import { YouTubePlayer } from '@/components/YouTubePlayer';
@@ -21,6 +19,7 @@ import { ContentActivityFeed } from "@/components/notifications/ContentActivityF
 import { AssertionCard } from '@/components/VideoPage/AssertionCard';
 import { convertTimestampToSeconds } from '@/utils/time'
 import { useResponsive } from '@/hooks/useResponsive'
+import toast from "react-hot-toast";
 
 export default function Page({ params }: { params: { influencer_slug: string, content_slug: string } }) {
     const router = useRouter()
@@ -54,7 +53,7 @@ export default function Page({ params }: { params: { influencer_slug: string, co
     const [recalculateAggregateScores, { loading: isRecalculating }] = useMutation(RECALCULATE_AGGREGATE_SCORES_MUTATION)
     const [userAnalyseContent, { loading: isAnalysingContent }] = useMutation(USER_ANALYSE_CONTENT_MUTATION)
     const [deleteContent, { loading: isDeletingContent }] = useMutation(DELETE_CONTENT_MUTATION)
-    const [deleteRelatedContentAndRelationships, { loading: isDeletingRelatedContentAndRelationships }] = useMutation(DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION)
+    // const [deleteRelatedContentAndRelationships, { loading: isDeletingRelatedContentAndRelationships }] = useMutation(DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION)
     // const [updateAssertionsScore, { loading: isUpdatingAssertionsScore }] = useMutation(USER_UPDATE_ASSERTIONS_SCORE_MUTATION)
 
     const assertions_contents = mainContent?.assertions_contents
@@ -160,12 +159,16 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                             className="my-2 mx-4"
                                             size="sm"
                                             color="danger"
-                                            isLoading={isDeletingContent || isDeletingRelatedContentAndRelationships}
+                                            isLoading={isDeletingContent}
                                             onPress={async () => {
                                                 const contentId = mainContent?.id
-                                                await deleteContent({ variables: { contentId } })
-                                                await deleteRelatedContentAndRelationships({ variables: { contentId } })
-                                                router.push(`/`)
+                                                try {
+                                                    await deleteContent({ variables: { contentId } })
+                                                    router.push(`/`)
+                                                } catch (e) {
+                                                    toast.error('error deleting content')
+                                                    console.error(e)
+                                                }
                                             }}
                                         >
                                             Delete

@@ -16,6 +16,10 @@ def get_content_relationship(
             query GetContentRelationship($parentContentId: uuid!) {
                 content_relationship(where: {parentContentId: {_eq: $parentContentId}}) {
                     childContentId
+                    child_content {
+                        title
+                        doiNumber
+                    }
                 }
             }
         """,

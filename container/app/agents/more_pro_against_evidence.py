@@ -249,7 +249,7 @@ def get_opposing_viewpoints(assertion_id):
         Remove research found that is not correctly classified or that is missing information. 
         Remove research that is not a scientific paper.
 
-        Make sure there was at least one search attempt for supporting evidence and one search attempt for evidence to disprove the assertion. 
+        Make sure there was at least one search attempt to find supporting evidence and one search attempt to find evidence to disprove the assertion. 
         We want both pro and contrary evidence to be provided so we can evaluate the assertion.
 
         """,

@@ -55,6 +55,7 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
                 {{
                     "links": [
                         {{
+                            "link_title": "The title of the link",
                             "full_url": "https://www.example.com/full/path/",
                             "evidence_type": "evidence",
                             "source":"pubmed",
@@ -83,11 +84,18 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
                 content_type = link.get("content_type")
                 media_type = link.get("media_type")
                 doi_number = link.get("doi")
+                link_title = link.get("link_title")
 
                 try:
                     link_content_id = save_related_link(
-                        full_url, canonical_url, content_type, media_type, doi_number
+                        title=link_title,
+                        source_url=full_url,
+                        canonical_url=canonical_url,
+                        content_type=content_type,
+                        media_type=media_type,
+                        doi_number=doi_number,
                     )
+
                     if link_content_id is None or parent_content_id is None:
                         logger.error("Error saving related link: %s", link)
                         continue

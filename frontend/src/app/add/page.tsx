@@ -1,29 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { Icon } from '@iconify/react'
 import { useRouter } from 'next/navigation'
-import {
-  Button,
-  useDisclosure,
-  Input,
-} from '@nextui-org/react'
+import { Button, Input } from '@nextui-org/react'
 import { useMutation } from '@apollo/client'
 import { useForm, Controller } from 'react-hook-form'
 import { ADD_VIDEO_MUTATION } from '@/store/content/mutation'
 
 export default function Home() {
   const router = useRouter()
-  const [success, setSuccess] = useState(false)
-  const { isOpen, onOpen, onClose, onOpenChange } = useDisclosure()
   const [addVideoMutation, { loading }] = useMutation(ADD_VIDEO_MUTATION)
-  const {
-    handleSubmit,
-    control,
-    formState: { errors },
-    reset,
-  } = useForm()
+  const { handleSubmit, control, formState: { errors } } = useForm()
 
   const onSubmit = async (data: any) => {
     try {
@@ -34,32 +22,26 @@ export default function Home() {
           url: data.videoUrl,
         },
       })
-      console.log({ result })
       const slug = result?.data?.userAddContent?.slug
-      console.log({ slug })
-      if (slug?.length > 0) {
+      const isSuccess = result?.data?.userAddContent?.success
+      if (slug?.length > 0 && isSuccess) {
         toast.success(`Added!`)
         router.push('/video/' + slug)
       } else {
         toast.error(`Server Error saving feedback!`)
       }
     } catch (e) {
-      setSuccess(false)
-      //console.log((e)
       toast.error(`Server Error saving feedback!`)
     }
   }
 
-  useEffect(() => {
-    if (isOpen) {
-      reset()
-      setSuccess(false)
-    }
-  }, [isOpen, setSuccess, reset])
   return (
     <main className="py-8">
-      <h1>Add Video</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="">
+      <h1 className="text-6xl font-bold tracking-tight mb-8">
+        Add a <span className="text-gradient">Youtube Video</span> to be<br />
+        researched
+      </h1>
+      <form onSubmit={handleSubmit(onSubmit)} className=" flex gap-4">
         <Controller
           name="videoUrl"
           control={control}
@@ -74,9 +56,9 @@ export default function Home() {
               isDisabled={loading}
               label="Youtube Video URL"
               placeholder="Type here..."
-              variant="bordered"
-              size="lg"
-              color="primary"
+              variant="flat"
+              size="md"
+              color="secondary"
               startContent={
                 <div className="pointer-events-none flex items-center">
                   <Icon icon="material-symbols:link" />
@@ -92,20 +74,19 @@ export default function Home() {
             />
           )}
         />
-        <div className="my-4 flex self-end w-full">
-          <Button
-            isDisabled={loading}
-            isLoading={loading}
-            color="primary"
-            onPress={() => {
-              handleSubmit(onSubmit)()
-            }}
-          >
-            Send
-          </Button>
-        </div>
+        <Button
+          isDisabled={loading}
+          isLoading={loading}
+          color="primary"
+          size="lg"
+          variant="solid"
+          onPress={() => {
+            handleSubmit(onSubmit)()
+          }}
+        >
+          {loading ? 'Adding...' : 'Add'}
+        </Button>
       </form>
-
     </main>
   );
 }

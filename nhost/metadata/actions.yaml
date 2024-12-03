@@ -5,6 +5,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/recalculate_aggregate_score
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: recalculate_aggregate_score
   - name: updateAssertionsScore
@@ -13,6 +14,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_update_assertions_score
       timeout: 600
     permissions:
+      - role: pro
       - role: user
     comment: updateAssertionsScore
   - name: userAddContent
@@ -21,6 +23,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_user_add_content
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: userAddContent
   - name: userAnalyseContent
@@ -29,6 +32,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_user_analyse_content
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: userAnalyseContent
   - name: userAppendEvidenceToAssertion
@@ -37,6 +41,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_user_append_evidence_to_assertion
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: userAppendEvidenceToAssertion
   - name: userClassifyEvidence
@@ -45,14 +50,23 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_user_classify_evidence
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: userClassifyEvidence
+  - name: userRemoveContent
+    definition:
+      kind: synchronous
+      handler: http://run-ai-fitbodyscience:5000/action_user_remove_content
+    permissions:
+      - role: pro
+    comment: userRemoveContent
   - name: userSearchMoreEvidence
     definition:
       kind: synchronous
       handler: http://run-ai-fitbodyscience:5000/action_user_search_more_evidence
       timeout: 600
     permissions:
+      - role: pro
       - role: user
     comment: userSearchMoreEvidence
   - name: userUpdateAssertionScore
@@ -60,6 +74,7 @@ actions:
       kind: synchronous
       handler: http://run-ai-fitbodyscience:5000/action_update_assertion_score
     permissions:
+      - role: pro
       - role: user
     comment: userUpdateAssertionScore
   - name: userUpdateEvidenceScore
@@ -68,6 +83,7 @@ actions:
       handler: http://run-ai-fitbodyscience:5000/action_update_evidence_score
       timeout: 120
     permissions:
+      - role: pro
       - role: user
     comment: userUpdateEvidenceScore
 custom_types:
@@ -83,4 +99,5 @@ custom_types:
     - name: UpdateAssertionsScoreOutput
     - name: UserSearchMoreEvidenceOutput
     - name: UserAppendEvidenceToAssertionOutput
+    - name: UserRemoveContentOutput
   scalars: []

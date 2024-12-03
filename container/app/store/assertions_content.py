@@ -17,6 +17,7 @@ def get_content_assertions(
                 assertions_content(where: {contentId: {_eq: $contentId}}) {
                     assertion{
                         id
+                        text
                     }
                 }
             }

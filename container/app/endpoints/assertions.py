@@ -1,5 +1,6 @@
 """This module contains the logic for analyzing a scientific paper and saving the data to the database"""
 
+import json
 from ..utils.config import logger
 from ..content_store.reference_store import (
     save_related_link,
@@ -14,7 +15,7 @@ from ..content_store.assertion_store import get_assertion_content
 from ..endpoints.actions.action_user_classify_evidence_endpoint import (
     classify_evidence,
 )
-import json
+from ..store.slug import generate_unique_slug
 
 
 def insert_assertions_opposing(assertion_id):
@@ -110,7 +111,7 @@ def add_evidence_to_assertion(assertion_id, evidence):
             title=title,
             url=url,
             doi_number=doi,
-            content_type="SCIENCE_PAPER",
+            content_type="scientific_paper",
         )
 
         if not new_content_id:
@@ -150,6 +151,7 @@ def create_content(title, url, doi_number, content_type):
     new_content_id = check_if_related_link_content_exists(url)
     if new_content_id is None:
         new_content_id = save_related_link(
+            title=title,
             source_url=url,
             canonical_url=url,
             content_type=content_type,

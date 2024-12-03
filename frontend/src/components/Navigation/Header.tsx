@@ -50,12 +50,10 @@ export const Header = () => {
             showInDesktopMain: true
         },
         {
-            label: "Studies",
-            href: "/studies",
+            label: "Papers",
+            href: "/papers",
             showInDesktopMain: true
         },
-
-
         {
             label: "FAQ",
             href: "/faq",

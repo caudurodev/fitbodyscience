@@ -147,6 +147,17 @@ def get_content_by_id(content_id: str):
                 doiNumber
                 canonicalUrl
                 sciencePaperClassification
+                assertions_contents {
+                    assertionContext
+                    whyRelevant
+                    whyNotRelevant
+                    isProContent
+                    assertion {
+                        citations
+                        text
+                        id
+                    }
+                }
                 influencer_contents {
                     influencer {
                         slug
@@ -166,7 +177,7 @@ def get_content_by_id(content_id: str):
     try:
         response = make_graphql_call(query)
         return response["data"]["content"][0]
-    except Exception:
+    except Exception as e:
         logger.error(f"Error getting content by id: {e}")
         logger.info("response: %s", response)
         return None
@@ -355,4 +366,60 @@ def update_content_score(content_id: str, score: float):
         return True
     except Exception as e:
         logger.error(f"Error updating content score: {e}")
+        return False
+
+
+def remove_content_and_relations_by_id(content_id: str):
+    """Remove content and relations by ID"""
+    query = {
+        "variables": {"contentId": content_id},
+        "query": """
+                mutation DeleteContentMutation($contentId: uuid!) {
+                    delete_content_activity(where: {contentId: {_eq: $contentId}}) {
+                        affected_rows
+                    }
+                    delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
+                        affected_rows
+                    }
+                    delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
+                        affected_rows
+                    }
+                    delete_contents_assertion(where: {_or: [{contentId: {_eq: $contentId}}, {assertion: {contentId: {_eq: $contentId}}}]}) {
+                        affected_rows
+                    }
+                    delete_assertions(where: {_or: [{contentId: {_eq: $contentId}}, {citationContentId: {_eq: $contentId}}]}) {
+                        affected_rows
+                    }
+                }
+        """,
+    }
+    try:
+        response = make_graphql_call(query)
+        logger.info(f"DeleteContentMutation result: {response}")
+    except Exception as e:
+        logger.error(f"Error removing content and relations by ID: {e}")
+
+    query = {
+        "variables": {"contentId": content_id},
+        "query": """
+            mutation DeleteRelatedContentAndRelationshipsMutation($contentId: uuid!) {
+                delete_content_relationship(where: {parentContentId: {_eq: $contentId}}) {
+                    affected_rows
+                }
+                delete_content(where: {_or: [{content_relationships: {parentContentId: {_eq: $contentId}}}, {id: {_eq: $contentId}}]}) {
+                    affected_rows
+                    returning {
+                        id
+                    }
+                }
+            }
+        """,
+    }
+    try:
+        response = make_graphql_call(query)
+        logger.info(f"DeleteRelatedContentAndRelationshipsMutation result: {response}")
+        return True
+    except Exception as e:
+        logger.error(f"Error removing content relationship and relations by ID: {e}")
+        logger.info(f"DeleteRelatedContentAndRelationshipsMutation result: {response}")
         return False

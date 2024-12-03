@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from .config.logging import logger
 from .endpoints.get_channel_data import upsert_influencer_endpoint
-from .utils.auth.user import require_auth
+from .utils.auth.user import require_auth, require_role
 from .utils.validators import validate_input
 from .endpoints.actions.user_analyse_content import (
     user_analyse_content_endpoint,
@@ -29,6 +29,7 @@ from .endpoints.actions.action_user_append_evidence_to_assertion_endpoint import
 from .utils.run_async import run_method_async
 from .scoring.update import update_content_aggregate_score
 from .store.assertions_content import get_content_assertions
+from .store.content import remove_content_and_relations_by_id
 
 app = Flask(__name__)
 CORS(app)
@@ -36,6 +37,7 @@ CORS(app)
 
 @app.route("/action_user_add_content", methods=["POST"])
 @require_auth
+@require_role("pro")
 @validate_input(
     required_fields=["url"],
     optional_fields=["mediaType", "contentType"],
@@ -65,6 +67,39 @@ def action_user_add_content_method(input_data):
         logger.error("Error adding content %s", e)
         return (
             jsonify({"message": f"Error adding content {str(e)}", "success": False}),
+            500,
+        )
+
+
+@app.route("/action_user_remove_content", methods=["POST"])
+@require_auth
+@require_role("pro")
+@validate_input(
+    required_fields=["contentId"],
+    payload_key="input",
+)
+def action_user_remove_content_method(input_data):
+    """Action to add user content"""
+    try:
+        # logger.info(f"action_user_remove_content_method user_role: {user_role}")
+        logger.info(f"action_user_remove_content_method input_data: {input_data}")
+        response = remove_content_and_relations_by_id(
+            content_id=input_data["contentId"]
+        )
+        logger.info("response: %s", response)
+        return (
+            jsonify(
+                {
+                    "message": "Content removed",
+                    "success": True,
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        logger.error("Error removing content %s", e)
+        return (
+            jsonify({"message": f"Error removing content {str(e)}", "success": False}),
             500,
         )
 

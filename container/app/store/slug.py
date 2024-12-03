@@ -3,9 +3,9 @@
 import re
 import json
 from urllib.parse import urlparse
-from unidecode import unidecode
 from typing import Optional
 from datetime import datetime
+from unidecode import unidecode
 from ..utils.graphql import make_graphql_call
 from ..utils.config import logger
 
@@ -28,8 +28,12 @@ def generate_unique_slug(title: str, table_name: str = "content") -> str:
     """
     Generate a unique slug from a title for any content type
     """
-    slug = generate_slug(title)
-    return make_unique_slug(slug, table_name)
+    try:
+        slug = generate_slug(title)
+        return make_unique_slug(slug, table_name)
+    except Exception as e:
+        logger.error(f"Error generating unique slug: {e}")
+        return title.replace(" ", "-")
 
 
 def make_unique_slug(slug: str, table_name: str) -> str:

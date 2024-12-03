@@ -25,7 +25,6 @@ def extract_assertions_from_long_text(
             3. **Saved Links Related to the Text in JSON Format:**
 
             {related_content}
-
             ---
 
             **Instructions:**
@@ -41,13 +40,13 @@ def extract_assertions_from_long_text(
             "main_conclusion": "The main conclusion of the text for which most assertions are relevant.",
             "assertions": [
                 {{
-                "assertion": "The specific assertion from the text as a standalone sentence that explains the assertion.",
+                "assertion": "A standalone sentence that clearly and completely conveys the specific assertion, rephrased if necessary to be self-contained.",
                 "assertion_weight": "An integer from 0 to 10 indicating how important the assertion is to the main point (0 = irrelevant, 10 = critical).",
                 "standalone_assertion_reliability": "An integer from 0 to 10 evaluating the reliability of the assertion by itself without larger context (0 = completely unreliable, 10 = completely reliable).",
                 "why_relevant_main_point": "A short explanation of why the assertion is relevant to the main conclusion.",
                 "assertion_context": "Context to help readers understand the topics the assertion refers to.",
                 "assertion_search_verify": "A precise sentence encapsulating the assertion for verification via a search engine.",
-                "part_of_text_assertion_made": "The exact sentence from the original text where the assertion was made.",
+                "part_of_text_assertion_made": "The exact sentence from the original text where the assertion was made, ensuring it directly corresponds to the assertion.",
                 "part_of_transcript_assertion_timestamp": "The timestamp from the video transcript where the assertion appears, if available.",
                 "assertion_type": "The most likely type of assertion (e.g., 'true', 'false').",
                 "fallacy": "Type of fallacy if the assertion is likely false; otherwise, 'none'.",
@@ -70,10 +69,13 @@ def extract_assertions_from_long_text(
 
             **Additional Guidelines:**
 
+            - **Assertion Standalone:** Ensure that each "assertion" is written as a standalone sentence that clearly and completely conveys the specific assertion, and can be understood and verified independently, without requiring additional context. Rephrase the original text if necessary to achieve this.
             - **Source Integrity:** Only include assertions and evidence present in the provided text or additional information. Do not add any content not found in these sources.
             - **Promotional Content:** Ignore any promotional or sponsored content. If sponsored content presents a conflict of interest, note it in the "conflict_of_interest" property.
             - **Assertion Clarity:** Ensure each assertion is clear and accurately reflects the original text.
             - **Evidence Accuracy:** Only include evidence that is directly mentioned in the text. Do not infer or add external evidence.
+            - **Exact Match for Original Text:** For "part_of_text_assertion_made", include the exact sentence from the original text where the assertion is made. Ensure that this sentence directly corresponds to the assertion, and avoid including unrelated or contextually dependent text.
+            - **Avoid Paraphrasing Original Text in Assertions:** Do not include the original text verbatim in the "assertion" field unless it is already a standalone assertion. Rephrase if necessary to make it standalone and clear.
             - **JSON Validity:** Return a well-formatted JSON without syntax errors, such as unnecessary trailing commas.
             - **Exclusions:** Do not include any assertions or evidence not found in the provided text.
 
@@ -85,10 +87,10 @@ def extract_assertions_from_long_text(
             "main_conclusion": "The main point most of the assertions are trying to make.",
             "assertions": [
                 {{
-                "assertion": "The earth is round.",
+                "assertion": "The Earth is round, as evidenced by satellite images and space missions.",
                 "assertion_weight": "10",
                 "standalone_assertion_reliability": "10",
-                "why_relevant_main_point": "This assertion supports the main conclusion about the earth's shape.",
+                "why_relevant_main_point": "This assertion supports the main conclusion about the Earth's shape.",
                 "assertion_context": "Discussion about the shape of the Earth in a geographical context.",
                 "assertion_search_verify": "Is there scientific evidence that the Earth is round?",
                 "part_of_text_assertion_made": "Scientists have proven that the Earth is round through satellite imagery.",
@@ -118,10 +120,12 @@ def extract_assertions_from_long_text(
             - Provide comprehensive details for each assertion to facilitate verification through primary scientific studies.
             - Ensure all information is accurate and derived solely from the provided text and additional information.
             - Avoid adding any content not found in the provided text or additional information.
+            - Ensure that each assertion is a clear, standalone statement that can be verified by evidence.
 
             ---
             """
         )
+
         # #logger.info("Assertions found: %s", assertions)
         try:
             assertions_json = json.loads(assertions)

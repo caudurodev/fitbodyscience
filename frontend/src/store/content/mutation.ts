@@ -29,47 +29,16 @@ export const USER_ANALYSE_CONTENT_MUTATION = gql`
   }
 `
 
-
 export const DELETE_CONTENT_MUTATION = gql`
-mutation DeleteContentMutation($contentId: uuid!) {
-  delete_content_activity(where: {contentId: {_eq: $contentId}}) {
-    affected_rows
-  }
-  delete_influencer_contents(where: {contentId: {_eq: $contentId}}) {
-    affected_rows
-  }
-  delete_assertions_content(where: {contentId: {_eq: $contentId}}) {
-    affected_rows
-  }
-  delete_contents_assertion(where: {_or: [{contentId: {_eq: $contentId}}, {assertion: {contentId: {_eq: $contentId}}}]}) {
-    affected_rows
-  }
-  delete_assertions(where: {_or: [{contentId: {_eq: $contentId}}, {citationContentId: {_eq: $contentId}}]}) {
-    affected_rows
+mutation UserRemoveContentMutation($contentId: String!) {
+  userRemoveContent(contentId: $contentId) {
+    message
+    success
   }
 }
 `
 
-export const DELETE_RELATED_CONTENT_AND_RELATIONSHIPS_MUTATION = gql`
-  mutation DeleteRelatedContentAndRelationshipsMutation($contentId: uuid!) {
-    delete_content_relationship(where: {parentContentId: {_eq: $contentId}}) {
-      affected_rows
-    }
-    delete_content(
-      where: {
-        _or: [
-          {content_relationships: {parentContentId: {_eq: $contentId}}},
-          {id: {_eq: $contentId}}
-        ]
-      }
-    ) {
-      affected_rows
-      returning {
-        id
-      }
-    }
-  }
-`
+
 
 export const CLASSIFY_CONTENT_MUTATION = gql`
   mutation UserClassifyEvidenceMutation($contentId: String!) {

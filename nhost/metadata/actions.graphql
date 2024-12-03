@@ -38,6 +38,12 @@ type Mutation {
 }
 
 type Mutation {
+  userRemoveContent(
+    contentId: String!
+  ): UserRemoveContentOutput
+}
+
+type Mutation {
   userSearchMoreEvidence(
     assertionId: String!
   ): UserSearchMoreEvidenceOutput
@@ -96,6 +102,11 @@ type UserSearchMoreEvidenceOutput {
 }
 
 type UserAppendEvidenceToAssertionOutput {
+  message: String
+  success: Boolean
+}
+
+type UserRemoveContentOutput {
   message: String
   success: Boolean
 }

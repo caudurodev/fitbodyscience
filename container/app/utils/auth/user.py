@@ -46,3 +46,26 @@ def require_auth(f):
             return jsonify({"message": "Error: invalid request"}), 400
 
     return decorated_function
+
+
+def require_role(role):
+    """Decorator to require a specific role for the endpoint"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            data = request.get_json() or {}
+            session_vars = data.get("session_variables")
+            if not session_vars and "input" in data:
+                session_vars = data["input"].get("session_variables")
+
+            user_role = session_vars.get("x-hasura-role") if session_vars else None
+
+            if user_role != role:
+                return (
+                    jsonify({"message": f"Error: requires {role} role"}),
+                    403,
+                )
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator

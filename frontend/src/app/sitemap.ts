@@ -193,6 +193,86 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
+  // Fetch assertions pages
+  try {
+    console.log('Fetching assertions for sitemap...')
+    const assertionsQuery = `
+      query GetAssertionsQuery {
+        assertions {
+          slug
+          updated_at
+        }
+      }
+    `
+
+    const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT!, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: assertionsQuery }),
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`)
+    }
+
+    const { data } = await response.json()
+    if (data?.assertions) {
+      const assertionRoutes = data.assertions.map((assertion: any) => ({
+        url: `${baseUrl}/assertions/${assertion.slug}`,
+        lastModified: assertion.updated_at ? new Date(assertion.updated_at) : new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.9,
+      }))
+      console.log('Generated assertion routes:', assertionRoutes)
+      dynamicRoutes.push(...assertionRoutes)
+    }
+  } catch (error) {
+    console.error('Error fetching assertions for sitemap:', error)
+  }
+
+  // Fetch studies pages
+  try {
+    console.log('Fetching studies for sitemap...')
+    const studiesQuery = `
+      query GetStudiesQuery {
+        content(where: {contentType: {_eq: "scientific_paper"}}) {
+          slug
+          updated_at
+        }
+      }
+    `
+
+    const response = await fetch(process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT!, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: studiesQuery }),
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`)
+    }
+
+    const { data } = await response.json()
+    if (data?.content) {
+      const studyRoutes = data.content.map((study: any) => ({
+        url: `${baseUrl}/studies/${study.slug}`,
+        lastModified: study.updated_at ? new Date(study.updated_at) : new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }))
+      console.log('Generated study routes:', studyRoutes)
+      dynamicRoutes.push(...studyRoutes)
+    }
+  } catch (error) {
+    console.error('Error fetching studies for sitemap:', error)
+  }
+
   const allRoutes = [...routes, ...dynamicRoutes]
   console.log('All routes in sitemap:', allRoutes)
 

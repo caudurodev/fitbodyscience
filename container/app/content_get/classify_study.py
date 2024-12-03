@@ -159,7 +159,7 @@ def classify_evidence_content(content_id):
             quality="best",
         )
         # Log the raw response for debugging
-        logger.debug("Raw classification response: %s", raw_response)
+        # logger.debug("Raw classification response: %s", raw_response)
 
         if not raw_response:
             logger.error("Empty response from classification")
@@ -168,14 +168,14 @@ def classify_evidence_content(content_id):
         try:
             # Try to parse the response
             if isinstance(raw_response, str):
-                logger.debug("Response is string, attempting to parse")
-                logger.debug("Response length: %d", len(raw_response))
-                logger.debug("Response content: %s", raw_response)
+                # logger.debug("Response is string, attempting to parse")
+                # logger.debug("Response length: %d", len(raw_response))
+                # logger.debug("Response content: %s", raw_response)
                 classification = json.loads(raw_response)
             else:
                 classification = raw_response
 
-            logger.debug("Parsed classification: %s", classification)
+            # logger.debug("Parsed classification: %s", classification)
             return classification
         except json.JSONDecodeError as e:
             logger.error("Failed to parse classification response: %s", str(e))

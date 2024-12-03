@@ -3,6 +3,7 @@
 import datetime
 from ..utils.config import logger
 from ..utils.graphql import make_graphql_call
+from ..store.slug import generate_unique_slug
 
 
 def check_if_related_link_content_exists(canonical_url):
@@ -37,7 +38,7 @@ def check_if_related_link_content_exists(canonical_url):
 
 
 def save_related_link(
-    source_url, canonical_url, content_type, media_type, doi_number=None
+    title, source_url, canonical_url, content_type, media_type, doi_number=None
 ):
     """save related link content to database"""
     if not source_url:
@@ -45,18 +46,23 @@ def save_related_link(
         return None
 
     now = datetime.datetime.now()
+    slug = generate_unique_slug(title=title, table_name="content")
     query = {
         "variables": {
+            "title": title or "",
+            "slug": slug,
             "sourceURL": source_url,
-            "canonicalUrl": canonical_url or "",
-            "contentType": content_type or "",
-            "mediaType": media_type or "",
-            "doiNumber": doi_number or "",
+            "canonicalUrl": canonical_url,
+            "contentType": content_type,
+            "mediaType": media_type,
+            "doiNumber": doi_number,
             "dateAdded": now.strftime("%Y-%m-%d %H:%M:%S"),
             "dateLastModified": now.strftime("%Y-%m-%d %H:%M:%S"),
         },
         "query": """
             mutation InsertRelatedLinkMutation(
+                $title: String!,
+                $slug: String!,
                 $sourceURL: String!,
                 $canonicalUrl: String!,
                 $contentType: String!,
@@ -67,6 +73,8 @@ def save_related_link(
             ) {
                 insert_content_one(
                     object: {
+                        title: $title,
+                        slug: $slug,
                         sourceUrl: $sourceURL,
                         canonicalUrl: $canonicalUrl,
                         contentType: $contentType,
@@ -77,7 +85,7 @@ def save_related_link(
                     },
                     on_conflict: {
                         constraint: content_source_url_key,
-                        update_columns: [contentType, mediaType, doiNumber, canonicalUrl, dateLastModified]
+                        update_columns: [title,slug,contentType, mediaType, doiNumber, canonicalUrl, dateLastModified]
                     }
                 ) {
                     id
