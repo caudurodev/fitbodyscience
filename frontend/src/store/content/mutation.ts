@@ -10,7 +10,6 @@ export const ADD_VIDEO_MUTATION = gql`
   }
 `
 
-
 export const RECALCULATE_AGGREGATE_SCORES_MUTATION = gql`
   mutation RecalculateAggregateScoreMutation($contentId: String!) {
     recalculateAggregateScore(contentId: $contentId) {
@@ -18,7 +17,6 @@ export const RECALCULATE_AGGREGATE_SCORES_MUTATION = gql`
     }
   }
 `
-
 
 export const USER_ANALYSE_CONTENT_MUTATION = gql`
   mutation UserAnalyseContentMutation($contentId: String!) {
@@ -37,8 +35,6 @@ mutation UserRemoveContentMutation($contentId: String!) {
   }
 }
 `
-
-
 
 export const CLASSIFY_CONTENT_MUTATION = gql`
   mutation UserClassifyEvidenceMutation($contentId: String!) {

@@ -125,8 +125,8 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                     <h6 className="text-xs">
                                         {mainContent?.id}
                                         {isParsed === false ?
-                                            <h6 className="text-xs"><Spinner /> Parsing</h6> :
-                                            <h6 className="text-xs">Parsed.</h6>
+                                            <span className="text-xs"><Spinner /> Parsing</span> :
+                                            <span className="text-xs">Parsed.</span>
                                         }
                                     </h6>
 
@@ -149,8 +149,13 @@ export default function Page({ params }: { params: { influencer_slug: string, co
                                             color="primary"
                                             size="sm"
                                             isLoading={isAnalysingContent}
-                                            onPress={() => {
-                                                userAnalyseContent({ variables: { contentId: mainContent?.id } })
+                                            onPress={async () => {
+                                                try {
+                                                    await userAnalyseContent({ variables: { contentId: mainContent?.id } })
+                                                } catch (e) {
+                                                    toast.error('error analysing content')
+                                                    console.error(e)
+                                                }
                                             }}
                                         >
                                             Analyse

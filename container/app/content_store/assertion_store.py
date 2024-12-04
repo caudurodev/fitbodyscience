@@ -5,7 +5,6 @@ import uuid
 from ..utils.config import logger
 from ..utils.graphql import make_graphql_call
 from ..meaning.assertions import extract_assertions_from_long_text
-from ..content_get.related_links import retrieve_video_description_links_and_save
 from ..store.slug import generate_unique_slug
 
 
@@ -19,13 +18,6 @@ def parse_assertions_long_text(content_id, long_text, additional_information="")
         related_content = get_content_related_links(content_id)
     except Exception as e:
         logger.error("Error get_content_related_links related links: %s", e)
-
-    if related_content is None or len(related_content) == 0:
-        related_content = retrieve_video_description_links_and_save(
-            content_id, additional_information
-        )
-    else:
-        logger.error("links already extracted")
 
     assertions = get_assertion_content_ids(content_id)
     if assertions and len(assertions) > 0:
@@ -192,7 +184,7 @@ def add_assertion_to_content(content_id, assertion):
             "standaloneAssertionReliability": standalone_assertion_reliability,
             "slug": slug,
         }
-        logger.info("add_assertion_to_content variables: %s", variables)
+        # logger.info("add_assertion_to_content variables: %s", variables)
     except Exception as e:
         logger.error("Error adding assertions to content: %s", e)
         return None
@@ -264,23 +256,23 @@ def add_assertion_to_content(content_id, assertion):
 def add_content_relation_to_assertion(
     assertion_id,
     content_id,
-    content_weight_to_assertion="0",
+    content_weight_to_assertion=0,
     why_relevant="",
     why_not_relevant="",
     is_pro_assertion=True,
     is_citation_from_original_content=False,
 ):
     """add assertions to content"""
-    logger.info(
-        "params: 1 %s  2 %s 3 %s 4 %s 5 %s 6 %s 7 %s",
-        assertion_id,
-        content_id,
-        content_weight_to_assertion,
-        why_relevant,
-        why_not_relevant,
-        is_pro_assertion,
-        is_citation_from_original_content,
-    )
+    # logger.info(
+    #     "params: 1 %s  2 %s 3 %s 4 %s 5 %s 6 %s 7 %s",
+    #     assertion_id,
+    #     content_id,
+    #     content_weight_to_assertion,
+    #     why_relevant,
+    #     why_not_relevant,
+    #     is_pro_assertion,
+    #     is_citation_from_original_content,
+    # )
 
     if not assertion_id or not content_id:
         logger.error(
@@ -296,7 +288,11 @@ def add_content_relation_to_assertion(
             "variables": {
                 "assertionId": assertion_id,
                 "contentId": content_id,
-                "weightConclusion": int(content_weight_to_assertion),
+                "weightConclusion": int(
+                    content_weight_to_assertion
+                    if content_weight_to_assertion is not None
+                    else 0
+                ),
                 "whyRelevant": why_relevant,
                 "whyNotRelevant": why_not_relevant,
                 "dateCreated": now.strftime("%Y-%m-%d %H:%M:%S"),
@@ -307,12 +303,12 @@ def add_content_relation_to_assertion(
                 mutation InsertContentAssertionRelationMutation(
                     $assertionId: uuid!, 
                     $contentId: uuid!, 
-                    $weightConclusion: numeric!,
+                    $weightConclusion: numeric,
                     $whyRelevant: String = "",
                     $whyNotRelevant: String = "",
                     $dateCreated: timestamptz!,
-                    $isProAssertion: Boolean = true,
-                    $isCitationFromOriginalContent: Boolean = true
+                    $isProAssertion: Boolean,
+                    $isCitationFromOriginalContent: Boolean
                 ) {
                     insert_contents_assertion(objects: {
                         assertionId: $assertionId, 
@@ -332,20 +328,12 @@ def add_content_relation_to_assertion(
                 }
             """,
         }
-
-        # logger.info("InsertContentAssertionMutation query: %s", query)
         result = make_graphql_call(query, user_id=None, user_role=None, is_admin=True)
-        # logger.info(
-        #     "InsertContentAssertionMutation insert_contents_assertion result: %s",
-        #     result,
-        # )
-        assertion_id = (
-            result.get("data", {})
-            .get("insert_contents_assertion", {})
-            .get("returning", [{}])[0]
-            .get("id", None)
+        logger.info(
+            "InsertContentAssertionMutation insert_contents_assertion result: %s",
+            result,
         )
-        return assertion_id
+        return result["data"]["insert_contents_assertion"]["returning"][0]["id"]
     except Exception as e:
         logger.error("Error adding add_assertion_relation_to_content : %s", e)
         return None
@@ -389,7 +377,9 @@ def add_assertion_relation_to_content(
             "variables": {
                 "assertionId": assertion_id,
                 "contentId": content_id,
-                "weightConclusion": int(assertion_weight),
+                "weightConclusion": int(
+                    assertion_weight if assertion_weight is not None else 0
+                ),
                 "whyRelevant": why_relevant,
                 "assertionContext": assertion_context,
                 "dateCreated": now.strftime("%Y-%m-%d %H:%M:%S"),
@@ -453,6 +443,8 @@ def get_content_related_links(content_id):
                     content_relationship(where: {parentContentId: {_eq: $contentId}}) {
                         child_content {
                             id
+                            title
+                            summaryJsonb
                             sourceUrl
                             doiNumber
                             contentType

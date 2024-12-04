@@ -14,23 +14,24 @@ def summarise_text_and_add_to_content(video_content_id, long_text, video_descrip
 
     try:
         existing_summary = get_content_summary_by_id(video_content_id)
-        if existing_summary:
+        if existing_summary is not None:
+            logger.info("Summary already exists for content")
             return existing_summary
     except Exception as e:
         logger.error("Error getting existing summary: %s", e)
 
     try:
-        result = summarise_text(
+        summary_jsonb = summarise_text(
             long_text=long_text, additional_information=video_description
         )
-        summary = result.get("summary", "")
-        conclusion = result.get("conclusion", "")
+        summary = summary_jsonb.get("summary", "")
+        conclusion = summary_jsonb.get("conclusion", "")
         if summary:
             add_summary_to_content(
                 content_id=video_content_id,
                 summary=summary,
                 conclusion=conclusion,
-                summary_jsonb=result,
+                summary_jsonb=summary_jsonb,
             )
             return summary
         else:
@@ -118,22 +119,23 @@ def summarise_text(long_text, additional_information):
                 # Simple extraction based on field markers
                 summary = extract_between(summary, '"summary":', ',"')
                 conclusion = extract_between(summary, '"conclusion":', ',"')
-                
+
                 if summary and conclusion:
                     result = {
                         "summary": summary.strip('" '),
                         "conclusion": conclusion.strip('" '),
-                        "eli5": []  # Default empty for failed parsing
+                        "eli5": [],  # Default empty for failed parsing
                     }
                 else:
                     return None
             else:
                 return None
-                
+
             return result
     except Exception as e:
         logger.error("Error extracting summary: %s", e)
         return None
+
 
 def extract_between(text, start_marker, end_marker):
     """Helper function to extract text between markers"""

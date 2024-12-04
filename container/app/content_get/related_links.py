@@ -10,11 +10,6 @@ from ..utils.config import logger
 
 def retrieve_video_description_links_and_save(parent_content_id, video_description):
     """gets links from description"""
-    # logger.info(
-    # "retrieve_video_description_links_and_save parent_content_id %s",
-    # parent_content_id,
-    # )
-    # #logger.info("Getting evidence links from video description: %s", video_description)
 
     has_links = contains_link(video_description)
     if not has_links:
@@ -67,9 +62,7 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
                 }}
             """
         )
-        # logger.info("parent_content_id %s", parent_content_id)
-        # logger.info("video_description %s", video_description)
-        # logger.info("Evidence links found: %s", evidence_links)
+
         evidence_links_json = json.loads(evidence_links)
         new_links_saved = []
 
@@ -99,6 +92,7 @@ def retrieve_video_description_links_and_save(parent_content_id, video_descripti
                     if link_content_id is None or parent_content_id is None:
                         logger.error("Error saving related link: %s", link)
                         continue
+
                     new_links_saved.append(
                         {
                             "link_content_id": link_content_id,

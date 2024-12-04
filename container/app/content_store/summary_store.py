@@ -63,6 +63,7 @@ def get_content_summary_by_id(content_id):
             query GetContentSummary($contentId: uuid!) {
                 content(where: {id: {_eq: $contentId}}) {
                     summary
+                    summaryJsonb
                 }
             }
         """,

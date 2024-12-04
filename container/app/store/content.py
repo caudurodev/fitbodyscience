@@ -147,6 +147,7 @@ def get_content_by_id(content_id: str):
                 doiNumber
                 canonicalUrl
                 title
+                summaryJsonb
                 sciencePaperClassification
                 assertions_contents {
                     assertionContext
@@ -155,6 +156,8 @@ def get_content_by_id(content_id: str):
                     isProContent
                     assertion {
                         citations
+                        originalSentence
+                        assertionSearchVerify
                         text
                         id
                     }

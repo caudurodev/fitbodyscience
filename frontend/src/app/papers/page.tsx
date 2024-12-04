@@ -117,21 +117,10 @@ export default function Home() {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            className="flex flex-col gap-4"
           >
             {loading ? (
-              Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                <motion.div key={index} variants={item}>
-                  <Card className="w-full h-[200px] space-y-5 p-4" radius="lg">
-                    <div className="h-24 rounded-lg bg-default-300"></div>
-                    <div className="space-y-3">
-                      <div className="w-3/5 h-3 rounded-lg bg-default-300"></div>
-                      <div className="w-4/5 h-3 rounded-lg bg-default-200"></div>
-                      <div className="w-2/5 h-3 rounded-lg bg-default-300"></div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))
+              <div>Loading</div>
             ) : (
               filteredPapers.map((paper: any) => (
                 <motion.div key={paper.id} variants={item}>
@@ -142,7 +131,7 @@ export default function Home() {
                   >
                     <CardBody className="gap-4">
                       <p className="text-lg font-semibold line-clamp-2">
-                        {paper.title}
+                        {paper?.sciencePaperClassification?.paperDetails?.title}
                       </p>
                       {paper.doiNumber && (
                         <p className="text-sm text-default-500">
@@ -152,14 +141,17 @@ export default function Home() {
                     </CardBody>
                     <CardFooter className="gap-2 justify-between">
                       <div className="flex gap-1">
+                        <Chip color={paper.contentScore >= 70 ? "success" : "warning"} size="sm">
+                          Score: {Math.round(paper.contentScore) || paper.contentScore}/100
+                        </Chip>
+
+                      </div>
+                      <div className="flex gap-1">
                         <Chip color="primary" size="sm" className="mr-2">
                           {paper?.sciencePaperClassification?.studyClassification?.type}
                         </Chip>
                         <Chip color="primary" size="sm" className="mr-2">
                           {paper?.sciencePaperClassification?.studyClassification?.methodology?.studySubjects}
-                        </Chip>
-                        <Chip color={paper.contentScore >= 70 ? "success" : "warning"} size="sm">
-                          Score: {Math.round(paper.contentScore) || paper.contentScore}/100
                         </Chip>
                       </div>
                     </CardFooter>

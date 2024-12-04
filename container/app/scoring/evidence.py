@@ -10,10 +10,11 @@ def evidence_score(content_id):
     science_paper_classification = get_content_property_by_id(
         content_id, "sciencePaperClassification"
     )
-    logger.info("science_paper_classification: %s", science_paper_classification)
+    # logger.info("science_paper_classification: %s", science_paper_classification)
     if not science_paper_classification:
-        logger.error(
-            "No sciencePaperClassification found for content_id: %s", content_id
+        logger.warn(
+            "Skipping - No sciencePaperClassification found for content_id: %s",
+            content_id,
         )
         return {"totalScore": 0, "normalizedScore": 0}
 

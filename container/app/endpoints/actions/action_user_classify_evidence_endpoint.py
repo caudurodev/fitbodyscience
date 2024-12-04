@@ -15,57 +15,86 @@ from ...vendors.llm.get_response import get_response
 from ...content_store.assertion_store import add_content_relation_to_assertion
 
 
-def connect_content_to_assertions(content_id):
+def connect_evidence_content_to_assertions(main_content_id, evidence_content_id):
     """
     Connect a content_id to an assertion_id
     """
-    content = get_content_by_id(content_id)
-    content_assertions = content.get("assertions_contents", "")
-    science_paper_classification = content.get("sciencePaperClassification", "")
+    main_content = get_content_by_id(main_content_id)
+    content_assertions = main_content.get("assertions_contents", "")
+    summary_jsonb = main_content.get("summaryJsonb", "")
+
+    evidence_content = get_content_by_id(evidence_content_id)
+    science_paper_classification = evidence_content.get(
+        "sciencePaperClassification", ""
+    )
+
     if not content_assertions:
-        logger.error(f"No assertions found for content_id {content_id}")
+        logger.error(f"No assertions found for content_id {evidence_content_id}")
 
         return
 
+    title = evidence_content.get("title", "")
+
     response = get_response(
         f"""
-        Given the following content: {content['title']}
+        Given the following content: 
+        
+        Title: {title}
+        Summary: {summary_jsonb}
 
-        Which has the content ID: {content_id}
 
         And has been classified as: {science_paper_classification}
 
         and the following assertions: {content_assertions}
 
-        Connect the assertions, if any, to the content, if the conent directly supports
-        or goes against the assertion.
+        Your task is to identify assertions that are **directly and specifically** supported or refuted by the evidence provided in the content.
 
-        If the assertions are not related to the content, return an empty array. 
+        For each assertion:
 
-        Explanation of json properties:
-        - assertion_id: The ID of the assertion that is connected to the content.
-        - why_relevant: Why the assertion might beelevant to the content.
-        - why_not_relevant: Why the assertion might not be relevant to the content.
-        - content_weight_to_assertion: The weight of the content to the assertion, or how much the content supports or opposes the assertion from 1 to 10.
-        - is_pro_assertion: Whether the assertion is a pro assertion - true or false.
+        - If the evidence **clearly and definitively** supports or refutes the assertion, create a connection between the content and the assertion.
+        - If the evidence does not directly support or refute the assertion, or if the connection is only tangential or indirect, **do not** connect it.
 
-        only return connected assertions, ignore the rest of the assertions
+        Please note:
 
-        Return valid JSON response like this:
+        - **Only** consider connections where the evidence provides **clear and specific** support or refutation of the assertion.
+        - Do **not** consider general, indirect, or tangential connections.
+
+        Provide your response in **valid JSON** format as follows:
+
         {{
-            "connected_assertions":[
-                {{  
-                    "content_id": "<content_id>",
+            "connected_assertions": [
+                {{
                     "assertion_id": "<assertion_id>",
-                    "why_relevant": "<why_relevant>",
-                    "why_not_relevant": "<why_not_relevant>",
-                    "content_weight_to_assertion": "<content_weight_to_assertion>",
-                    "is_pro_assertion": "<is_pro_assertion>",
+                    "assertion_text": "<The text of the assertion>",
+                    "why_relevant": "<A concise explanation of why the content is directly relevant to the assertion>",
+                    "content_weight_to_assertion": "<An integer from 1 to 10 indicating the strength of the support or refutation>",
+                    "is_pro_assertion": "<true if the content supports the assertion, false if it refutes it>"
                 }}
+                // Repeat for each connected assertion
             ]
         }}
+
+        Explanation of JSON properties:
+
+        - **content_id**: The ID of the content that is connected to the assertion.
+        - **assertion_id**: The ID of the assertion that is connected to the content.
+        - **why_relevant**: A concise explanation of why the content evidence is definitively relevant to support or refute the assertion.
+        - **content_weight_to_assertion**: An integer from 1 to 10 indicating how strongly the content supports or opposes the assertion.
+        - **is_pro_assertion**: true if the content evidence supports the assertion, false if it refutes the assertion.
+
+        If **no** assertions are directly supported or refuted by the evidence in the content, return:
+
+        {{
+            "connected_assertions": []
+        }}
+
+        Additional instructions:
+
+        - Only return connected assertions as specified; ignore the rest.
+        - Ensure the JSON is valid and correctly formatted.
         """
     )
+
     logger.info("connect_content_to_assertions Response from LLM: %s", response)
 
     if not response:
@@ -77,7 +106,6 @@ def connect_content_to_assertions(content_id):
         # connect assertions to content
         for connection in connections.get("connected_assertions", []):
             assertion_id = connection.get("assertion_id", None)
-            evidence_content_id = connection.get("content_id", None)
             why_relevant = connection.get("why_relevant", "")
             why_not_relevant = connection.get("why_not_relevant", "")
             content_weight_to_assertion = connection.get(
@@ -104,6 +132,10 @@ def classify_evidence(content_id):
     if not content:
         logger.error(f"No content found for id {content_id}")
         return {"message": "No content found", "success": False}
+
+    if content.get("sciencePaperClassification") is not None:
+        logger.info(f"Content already classified: {content_id}")
+        return {"message": "Content already classified", "success": True}
 
     doi_number = content.get("doiNumber", None)
     url_to_scrape = content.get("canonicalUrl", None)

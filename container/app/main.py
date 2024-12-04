@@ -113,7 +113,8 @@ def action_user_remove_content_method(input_data):
 def action_analyse_content_method(input_data):
     """Action to add user content"""
     try:
-        return user_analyse_content_endpoint(content_id=input_data["contentId"])
+        result = user_analyse_content_endpoint(content_id=input_data["contentId"])
+        return jsonify(result), 200
     except Exception as e:
         logger.error("Error adding content %s", e)
         return (

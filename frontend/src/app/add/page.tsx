@@ -41,7 +41,7 @@ export default function Home() {
         Add a <span className="text-gradient">Youtube Video</span> to be<br />
         researched
       </h1>
-      <form onSubmit={handleSubmit(onSubmit)} className=" flex gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className=" flex gap-4 max-w-3xl">
         <Controller
           name="videoUrl"
           control={control}

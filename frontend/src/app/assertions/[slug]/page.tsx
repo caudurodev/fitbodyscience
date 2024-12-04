@@ -1,58 +1,56 @@
 'use client'
 
-import { Spinner } from "@nextui-org/react";
 import { useHydration } from '@/hooks/useHydration'
-import { CardMosaic } from '@/components/Cards/CardMosaic'
 import { useQuery } from '@apollo/client'
-import { GET_INFLUENCER_CONTENT_QUERY } from '@/store/content/query'
-import { useRouter } from "next/navigation";
+import { GET_ASSERTION_FROM_SLUG_QUERY } from '@/store/assertion/query'
+import { Link, Chip } from "@nextui-org/react";
+import { Icon } from '@iconify/react'
 
 export default function Page({ params }: { params: { slug: string } }) {
-  const router = useRouter()
   const { data, loading } = useQuery(
-    GET_INFLUENCER_CONTENT_QUERY,
-    { variables: { influencerSlug: params?.slug, mediaType: 'youtube_video' }, fetchPolicy: 'network-only' }
+    GET_ASSERTION_FROM_SLUG_QUERY,
+    { variables: { assertionSlug: params?.slug }, fetchPolicy: 'network-only' }
   )
-  const influencerInfo = data?.influencers?.[0]
-  const influencerName = influencerInfo?.name
-  const influencerContent = influencerInfo?.influencer_contents.map((content: any) => content.content)
+  const assertionInfo = data?.assertions?.[0]
+  const assertionEvidence = assertionInfo?.contents_assertions
+  console.log({ assertionEvidence })
+
   const isHydrated = useHydration()
   if (!isHydrated) { return null }
   return (
-    <>
-      <section className="mb-24">
-        <div className="space-y-4">
-          <p className="text-primary font-medium">The science of fitness</p>
-          <h1 className="text-6xl font-bold tracking-tight">
-            Content from <span className="text-gradient">{influencerName}</span><br />
-            Added
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-xl max-w-2xl">
-            See below our list of content from <span className="text-secondary">{influencerName}</span>.
-            Where we have <span className="text-secondary">analysed the content</span> and evaluated the science behind what as
-            stated in the content.
-          </p>
-
+    <section className="mb-24">
+      <h6 className="text-tiny uppercase text-primary font-bold my-2">Assertion</h6>
+      <h1 className="text-6xl font-bold tracking-tight">{assertionInfo?.text}</h1>
+      <div className="flex gap-2 p-4 my-4">
+        <h4 className="uppercase font-bold text-primary-500 text-xs my-2">Our Score</h4>
+        <div className="mb-2">
+          <Chip color="success" size="lg" className="mr-2">
+            <Icon icon="mdi:success-bold" className="inline mr-2" />
+            {assertionInfo?.proEvidenceAggregateScore} / 100
+          </Chip>
+          <Chip color="danger" size="lg" className="mr-2">
+            <Icon icon="maki:cross" className="inline mr-2" />
+            {assertionInfo?.againstEvidenceAggregateScore} / 100
+          </Chip>
         </div>
-      </section>
-
-      {influencerContent?.length > 0 ?
-        <h2 className="text-gradient text-2xl font-bold uppercase py-2">
-          Videos
-        </h2> :
-        <p className=" text-lg font-bold py-2">
-          No videos analysed for {influencerName}
-        </p>
-      }
-      <section className="mb-24">
-        {
-          loading ?
-            <Spinner /> :
-            <CardMosaic items={influencerContent} />
-        }
-      </section>
-
-    </>
+      </div>
+      <h2 className="text-2xl font-bold mb-4">Evidence</h2>
+      <ul>
+        {assertionEvidence?.map((contents_assertion, index) => (
+          <li key={index}>
+            <AssertionEvidence content={contents_assertion?.content} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
+}
+
+export const AssertionEvidence = ({ content }) => {
+  return (
+    <div>
+      <Link href={`/papers/${content?.slug}`}><h3>{content?.title}</h3></Link>
+    </div>
+  )
 }
 

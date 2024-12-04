@@ -40,6 +40,7 @@ export const GET_CONTENT_SUBSCRIPTION = gql`
         assertion {
           id
           text
+          slug
           standaloneAssertionReliability
           citationContentId
           evidenceType
@@ -109,6 +110,7 @@ export const GET_CONTENT_QUERY = gql`
         assertion {
           id
           text
+          slug
           standaloneAssertionReliability
           citationContentId
           evidenceType
@@ -205,6 +207,26 @@ query SearchSciencePapersQuery($search: String = "%%", $offset: Int = 0, $limit:
   content_aggregate(where: {_or: [{title: {_ilike: $search}}, {contentType: {_eq: "scientific_paper"}}]}) {
     aggregate {
       count
+    }
+  }
+}
+  `
+
+
+export const GET_PAPER_FROM_SLUG_QUERY = gql`
+query GetPaperFromSlugQuery($paperSlug: String!) {
+  content(where: {slug: {_eq: $paperSlug}, contentType: {_eq: "scientific_paper"}}) {
+    id
+    title
+    doiNumber
+    slug
+    contentScore
+    sciencePaperClassification
+    contents_assertions {
+      assertion {
+        text
+        slug
+      }
     }
   }
 }

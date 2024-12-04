@@ -60,7 +60,7 @@ export const YouTubePlayer = ({
         return (
             <div
                 className={`${className} relative cursor-pointer group overflow-hidden rounded-xl border-4 border-primary`}
-                onClick={() => setShowPlayer(true)}
+            // onClick={() => setShowPlayer(true)}
             >
                 <Image
                     src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
